@@ -1,0 +1,4 @@
+interface:
+  display_name: "Advanced Skill Creator"
+  short_description: "Build and benchmark complex skills"
+  default_prompt: "Use $anthropic-skill-creator to draft or improve a skill, create eval prompts, benchmark with and without the skill, and iterate on trigger quality or output quality."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Planning with Files"
+  short_description: "Persist complex task state to markdown files"
+  default_prompt: "Use $planning-with-files for a multi-step task that needs durable task state, planning files, and session recovery across long runs."

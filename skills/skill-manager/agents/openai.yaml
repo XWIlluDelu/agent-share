@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Manager"
+  short_description: "Audit and update shared skill libraries"
+  default_prompt: "Use $skill-manager to inspect a local skill library, compare skills against upstream sources, audit model/provider references, or update the registry for shared skills."

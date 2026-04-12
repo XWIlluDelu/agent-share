@@ -1,0 +1,319 @@
+# Skill source registry for the canonical shared library.
+# Each entry maps an installed shared skill to its upstream source and local modification status.
+# modified: true means there are intentional local changes that must survive any upstream update.
+# source: null means no public upstream (custom/local-only origin).
+# Some public upstream paths are metadata-only until the corresponding source repo is cloned locally.
+
+base_paths:
+  anthropic:    /home/wangzixiong/.claude/skill-sources/anthropic/skills
+  openai:       /home/wangzixiong/.claude/skill-sources/openai/skills/.system
+  k_dense:      /home/wangzixiong/.claude/skill-sources/community/claude-scientific-skills/scientific-skills
+  scicraft_sci: /home/wangzixiong/.claude/skill-sources/community/scicraft/skills/scientific-writing
+  scicraft_bio: /home/wangzixiong/.claude/skill-sources/community/scicraft/skills/genomics-bioinformatics
+  scicraft_sta: /home/wangzixiong/.claude/skill-sources/community/scicraft/skills/biostatistics
+  scicraft_cmp: /home/wangzixiong/.claude/skill-sources/community/scicraft/skills/scientific-computing
+  obsidian:     /home/wangzixiong/.claude/skill-sources/community/obsidian-skills/skills
+  evil_read:    /home/wangzixiong/.claude/skill-sources/community/evil-read-arxiv
+  coworker:     /home/wangzixiong/.claude/skill-sources/coworker
+  research_ski: /home/wangzixiong/.claude/skill-sources/community/research-skills/skills
+  tapestry:     /home/wangzixiong/.claude/skill-sources/community/tapestry-skills
+  planning:     /home/wangzixiong/.claude/skill-sources/community/planning-with-files/skills
+  skill_metric: /home/wangzixiong/.claude/skill-sources/community/skill-metric
+  minimax:      /home/wangzixiong/.claude/skill-sources/minimax
+  superpowers:  /home/wangzixiong/.claude/skill-sources/community/superpowers/skills
+  zhanlincui:   /home/wangzixiong/.claude/skill-sources/community/ZhanlinCui-Agent-Skills-Hunter
+
+skills:
+  # --- Anthropic official ---
+  anthropic-skill-creator:
+    source: "{anthropic}/skill-creator"
+    modified: true
+    modifications:
+      - "Renamed from skill-creator to avoid collision with openai-skill-creator"
+      - "description updated to distinguish from OpenAI version"
+      - "bundled automation generalized to support claude/codex/gemini CLI runtimes"
+      - "added cross-runtime evaluation and improvement helper scripts"
+
+  pdf:
+    source: "{anthropic}/pdf"
+    modified: false
+
+  pptx-generator:
+    source: "{minimax}/pptx-generator"
+    modified: false
+    notes: "Replaced Anthropic pptx with MiniMax pptx-generator after local quality comparison"
+
+  mcp-builder:
+    source: "{anthropic}/mcp-builder"
+    modified: true
+    modifications:
+      - "Claude-specific tool naming replaced with agent-agnostic instructions"
+      - "added agents/openai.yaml for Codex metadata"
+      - "evaluation harness generalized beyond Anthropic-only runtime"
+      - "added local smoke-test assets and selftest script"
+
+  frontend-design:
+    source: "{anthropic}/frontend-design"
+    modified: false
+
+  web-artifacts-builder:
+    source: "{anthropic}/web-artifacts-builder"
+    modified: false
+
+  doc-coauthoring:
+    source: "{anthropic}/doc-coauthoring"
+    modified: true
+    modifications:
+      - "Claude.ai / Claude Code naming replaced with agent-agnostic wording"
+      - "reader-test stage rewritten to talk about fresh agent instances generically"
+
+  webapp-testing:
+    source: "{anthropic}/webapp-testing"
+    modified: false
+
+  # --- OpenAI official ---
+  openai-skill-creator:
+    source: "{openai}/skill-creator"
+    modified: true
+    modifications:
+      - "Renamed from skill-creator to avoid collision with anthropic-skill-creator"
+      - "description updated to distinguish from Anthropic version"
+
+  # --- K-Dense / claude-scientific-skills ---
+  citation-management:
+    source: "{k_dense}/citation-management"
+    modified: true
+    modifications:
+      - "python → python3 throughout (Linux env compatibility)"
+
+  hypothesis-generation:
+    source: "{k_dense}/hypothesis-generation"
+    modified: true
+    modifications:
+      - "Claude-specific tool naming replaced with agent-agnostic web/search wording"
+      - "added agents/openai.yaml for Codex metadata"
+
+  scientific-brainstorming:
+    source: "{k_dense}/scientific-brainstorming"
+    modified: false
+
+  scientific-critical-thinking:
+    source: "{k_dense}/scientific-critical-thinking"
+    modified: false
+
+  scientific-writing:
+    source: "{k_dense}/scientific-writing"
+    modified: false
+    notes: "Contains a strong recommendation to use scientific-schematics when figures are needed"
+
+  markitdown:
+    source: "{k_dense}/markitdown"
+    modified: false
+
+  literature-review:
+    source: "{k_dense}/literature-review"
+    modified: true
+    modifications:
+      - "Claude-specific tool naming replaced with agent-agnostic wording"
+      - "added agents/openai.yaml for Codex metadata"
+
+  scientific-schematics:
+    source: "{k_dense}/scientific-schematics"
+    modified: false
+    models:
+      - name: google/gemini-3.1-flash-image-preview
+        role: image generation
+        provider: openrouter
+        env_key: OPENROUTER_API_KEY
+      - name: google/gemini-3.1-pro-preview
+        role: quality review
+        provider: openrouter
+        env_key: OPENROUTER_API_KEY
+
+  # --- scicraft ---
+  openalex-database:
+    source: "{scicraft_sci}/openalex-database"
+    modified: false
+
+  pubmed-database:
+    source: "{scicraft_bio}/pubmed-database"
+    modified: false
+
+  statistical-analysis:
+    source: "{scicraft_sta}/statistical-analysis"
+    modified: false
+
+  sympy-symbolic-math:
+    source: "{scicraft_cmp}/sympy-symbolic-math"
+    modified: false
+
+  # --- obsidian-skills (kepano) ---
+  obsidian-markdown:
+    source: "{obsidian}/obsidian-markdown"
+    modified: false
+
+  obsidian-cli:
+    source: "{obsidian}/obsidian-cli"
+    modified: false
+
+  obsidian-bases:
+    source: "{obsidian}/obsidian-bases"
+    modified: false
+
+  defuddle:
+    source: "{obsidian}/defuddle"
+    modified: true
+    modifications:
+      - "tool references rewritten to describe generic URL-reading capability instead of Claude WebFetch"
+
+  json-canvas:
+    source: "{obsidian}/json-canvas"
+    modified: false
+
+  # --- evil-read-arxiv (juliye2025) ---
+  extract-paper-images:
+    source: "{evil_read}/extract-paper-images"
+    modified: false
+    runtime_deps:
+      - python3-pymupdf (installed)
+
+  paper-analyze:
+    source: "{evil_read}/paper-analyze"
+    modified: true
+    runtime_deps:
+      - python3-pymupdf (installed)
+    modifications:
+      - "Claude-specific tool naming replaced with agent-agnostic wording"
+      - "bundled helper scripts copied into the shared canonical version"
+    notes: "Shared copy keeps the original bilingual workflow"
+
+  paper-search:
+    source: "{evil_read}/paper-search"
+    modified: false
+
+  # --- other community ---
+  research-paper-writing:
+    source: "{research_ski}/research-paper-writing"
+    modified: true
+    modifications:
+      - "description: ML/CV/NLP-style → Neuroscience/ML-style"
+
+  youtube-transcript:
+    source: "{tapestry}/youtube-transcript"
+    modified: false
+
+  planning-with-files:
+    source: "{planning}/planning-with-files"
+    modified: true
+    modifications:
+      - "removed Claude-only hook assumptions from the shared SKILL body"
+      - "bundled templates, examples, reference docs, and scripts into the shared copy"
+      - "added Codex hook adapter scripts and runtime-adapters reference"
+      - "session catchup extended to best-effort cross-runtime recovery"
+
+  skill-metric:
+    source: "{skill_metric}/skill-metric"
+    modified: false
+
+  # --- custom / coworker ---
+  paper-annotated-html:
+    source: null
+    modified: true
+    modifications:
+      - "vault path: 03_阅读/论文/ → 30_Reading/Annotated/"
+      - "vault path: 06_素材/ → 60_Assets/Figures/"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  paper-derivation-html:
+    source: null
+    modified: true
+    modifications:
+      - "vault path: 03_阅读/论文/ → 30_Reading/Derivations/"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  paper-derivation-markdown:
+    source: null
+    modified: true
+    modifications:
+      - "vault path: 03_阅读/论文/ → 30_Reading/Derivations/"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  ml-concept-study:
+    source: null
+    modified: true
+    modifications:
+      - "scope expanded: ML-only → ML + computational neuroscience + math tools"
+      - "description updated to include GPFA, LFADS, attractor dynamics, state-space models"
+      - "default output path: 04_领域知识/机器学习/ → 20_Research/Concepts/"
+      - "subfolder taxonomy rebuilt into three tracks: ML/AI, Comp Neuro, Math Tools"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  author-homepage:
+    source: null
+    modified: true
+    modifications:
+      - "vault path: 04_领域知识/作者/ → 20_Research/People/"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  semantic-scholar-daily:
+    source: null
+    modified: true
+    env_key: SEMANTIC_SCHOLAR_API_KEY
+    modifications:
+      - "Claude-specific task/tool naming replaced with agent-agnostic wording"
+      - "bundled helper script copied into the shared canonical version"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+
+  research-refine:
+    source: null
+    modified: true
+    modifications:
+      - "removed direct dependency on mcp__codex__codex and mcp__codex__codex-reply"
+      - "added CLI-first reviewer backend for codex/claude/gemini runtimes"
+      - "added runtime_cli.py and reviewer_call.py to preserve threaded reviewer history locally"
+      - "API backends retained only as fallback, not as the primary path"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+    models:
+      - name: gpt-5.4
+        role: default reviewer model
+        provider: CLI-auth runtime (codex preferred, claude/gemini supported)
+        auth: local coding-CLI login
+
+  research-refine-pipeline:
+    source: null
+    modified: true
+    modifications:
+      - "pipeline rewritten to rely on the shared CLI-first research-refine reviewer path"
+      - "added run_pipeline.py orchestrator for PIPELINE_GATE.md and PIPELINE_SUMMARY.md"
+      - "internalized experiment-planning guidance as a bundled reference so the top-level shared library stays one-to-one with the original .claude skill set"
+    notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+    models:
+      - name: gpt-5.4
+        role: default reviewer model inherited from research-refine
+        provider: CLI-auth runtime (codex preferred, claude/gemini supported)
+        auth: local coding-CLI login
+
+  skill-manager:
+    source: null
+    modified: true
+    modifications:
+      - "generalized from a local .claude-specific maintenance skill into a shared-library manager"
+      - "bundled registry now tracks the canonical ~/.agent-share/skills/ library"
+      - "instructions updated to support shared canonical roots and agent-local mounts"
+    notes: "Custom local maintenance skill with no public upstream"
+
+  # --- obra/superpowers ---
+  systematic-debugging:
+    source: "{superpowers}/systematic-debugging"
+    modified: false
+
+  verification-before-completion:
+    source: "{superpowers}/verification-before-completion"
+    modified: false
+
+  # --- ZhanlinCui-Agent-Skills-Hunter ---
+  chat-compactor:
+    source: "{zhanlincui}/chat-compactor"
+    modified: true
+    modifications:
+      - "default save locations generalized from Claude-specific paths to ~/.agent-sessions/"
