@@ -1,0 +1,6 @@
+<evaluation>
+  <qa_pair>
+    <question>Use the available tool to add 2 and 3. Return only the final number.</question>
+    <answer>5</answer>
+  </qa_pair>
+</evaluation>

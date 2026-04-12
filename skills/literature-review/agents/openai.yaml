@@ -1,0 +1,5 @@
+---
+interface:
+  display_name: "Literature Review"
+  short_description: "Run a structured literature review with verified citations"
+  default_prompt: "Use $literature-review to plan and execute a structured literature review on this topic, including search strategy, synthesis, and verified citations: [topic + scope + constraints]."

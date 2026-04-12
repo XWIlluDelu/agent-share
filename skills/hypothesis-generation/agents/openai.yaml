@@ -1,0 +1,5 @@
+---
+interface:
+  display_name: "Hypothesis Generation"
+  short_description: "Turn observations into testable scientific hypotheses"
+  default_prompt: "Use $hypothesis-generation to turn these observations or preliminary findings into competing hypotheses, testable predictions, and a concrete experiment plan: [observations + context]."
