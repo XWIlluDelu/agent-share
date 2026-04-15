@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: 'Manage a local skill library and its upstream/source registry. Use when you want to check skill updates, compare local skills with upstream copies, audit hardcoded model/provider names, replace a model or provider across skills, inspect source/modification status, or register/remove skills in a shared registry. Triggers on: "check skill updates", "update skill", "audit models", "replace model", "swap provider", "skill status", "skill来源", "更新skill", "换模型".'
+description: 'Manage a local skill library and its upstream/source registry. Use when you want to check skill updates, compare local skills with upstream copies, audit hardcoded model/provider names, replace or migrate a model across skills, inspect API key / service status, clone upstream source repos, inspect source/modification status, or register/remove skills in a shared registry. Triggers on: "check skill updates", "update skill", "audit models", "replace model", "migrate model", "swap provider", "check API keys", "check services", "clone sources", "skill status", "skill来源", "更新skill", "换模型", "检查API key", "更新上游源".'
 allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, WebSearch
 ---
 
@@ -150,10 +150,59 @@ Remove a skill from the library and registry.
 
 ---
 
+### `check-services`
+
+Inventory all external services and API keys required by the installed skill library.
+
+1. Collect service requirements from two sources:
+   - Structured `models:` and `services:` entries in `sources.yaml`
+   - Grep for env var patterns in all SKILL.md and scripts: `[A-Z_]+_API_KEY`, `OPENROUTER`, `export.*KEY`, `os.environ`
+2. Deduplicate and group by env key.
+3. For each required key, check whether it is currently set: `printenv <KEY>` (show only set/unset, never the value).
+4. Output a table: Service | Required by | Env key | Status (set / unset)
+5. Optionally, for HTTP-based services where a lightweight check is safe (Semantic Scholar, OpenRouter), offer to run a `curl` health-check with the key — ask the user before doing so.
+
+---
+
+### `clone-sources [source-name]`
+
+Bootstrap or refresh upstream source repos using the `source_repos:` section of `sources.yaml`.
+
+1. Read all entries from `source_repos:` in the active `sources.yaml`.
+2. If `source-name` is given, clone/pull only that entry. Otherwise process all.
+3. For each entry:
+   - If `url` is null: report as "no upstream URL, skipping".
+   - If the target `path` does not exist: run `git clone <url> <path>`.
+   - If the target `path` exists and is a git repo: run `git -C <path> pull --ff-only`.
+   - If the target `path` exists but is not a git repo: warn and skip.
+4. After cloning, report which repos were cloned, updated, or skipped.
+5. Do not delete existing clones — only add or fast-forward.
+
+---
+
+### `migrate-model <old-model> <new-model> [--skill <name>] [--dry-run]`
+
+Replace a model name across skills with safety checks.
+
+1. Run `audit-models` first and show all matches for `old-model`.
+2. If `--skill` is given, restrict to that skill.
+3. For each match, show file:line with surrounding context.
+4. If `--dry-run`: print what would change and stop.
+5. Otherwise confirm with the user, then:
+   - Edit files to replace `old-model` with `new-model`.
+   - If the skill had `modified: false`, mark it `modified: true` and add a modification entry.
+   - Update `models:` entries in `sources.yaml`.
+6. Optionally do a web lookup to confirm the new model is available on the declared provider.
+7. If the env key changes (e.g. provider switch), flag it explicitly and remind the user to update their environment.
+
+---
+
 ## Key Rules
 
 - Never auto-overwrite a modified skill.
 - Always update `sources.yaml` when a skill is installed, updated, modified, or removed.
 - Treat `sources.yaml` as the ground truth for source paths and modification status.
 - When comparing with upstream, consider the whole skill directory, not just `SKILL.md`.
+- When running `check-updates` on K-Dense skills, ignore missing `generate_schematic*.py` files — these are intentionally omitted (see K-Dense bundling note in `sources.yaml`).
 - Use web lookup only when the user wants a current recommendation about newer model versions or providers.
+- Never print API key values. Only report set / unset status.

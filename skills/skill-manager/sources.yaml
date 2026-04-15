@@ -3,6 +3,13 @@
 # modified: true means there are intentional local changes that must survive any upstream update.
 # source: null means no public upstream (custom/local-only origin).
 # Some public upstream paths are metadata-only until the corresponding source repo is cloned locally.
+#
+# K-Dense bundling note:
+#   The K-Dense upstream bundles generate_schematic.py + generate_schematic_ai.py into EVERY
+#   skill directory as a cross-cutting schematic-generation utility. Our shared library only keeps
+#   these scripts in scientific-schematics/ (their proper home). When running check-updates against
+#   K-Dense skills, ignore missing generate_schematic*.py in non-schematics skills — these are
+#   intentional omissions, not drift.
 
 base_paths:
   anthropic:    /home/wangzixiong/.claude/skill-sources/anthropic/skills
@@ -19,9 +26,48 @@ base_paths:
   tapestry:     /home/wangzixiong/.claude/skill-sources/community/tapestry-skills
   planning:     /home/wangzixiong/.claude/skill-sources/community/planning-with-files/skills
   skill_metric: /home/wangzixiong/.claude/skill-sources/community/skill-metric
-  minimax:      /home/wangzixiong/.claude/skill-sources/minimax
+  minimax:      /home/wangzixiong/.claude/skill-sources/minimax/skills
   superpowers:  /home/wangzixiong/.claude/skill-sources/community/superpowers/skills
   zhanlincui:   /home/wangzixiong/.claude/skill-sources/community/ZhanlinCui-Agent-Skills-Hunter
+
+# Source repo Git URLs — used by the `clone-sources` command to bootstrap or refresh upstream clones.
+source_repos:
+  anthropic:
+    url: https://github.com/anthropics/skills.git
+    path: /home/wangzixiong/.claude/skill-sources/anthropic
+  k_dense:
+    url: https://github.com/K-Dense-AI/claude-scientific-skills.git
+    path: /home/wangzixiong/.claude/skill-sources/community/claude-scientific-skills
+  scicraft:
+    url: https://github.com/jaechang-hits/scicraft.git
+    path: /home/wangzixiong/.claude/skill-sources/community/scicraft
+  obsidian:
+    url: https://github.com/kepano/obsidian-skills.git
+    path: /home/wangzixiong/.claude/skill-sources/community/obsidian-skills
+  evil_read:
+    url: https://github.com/juliye2025/evil-read-arxiv.git
+    path: /home/wangzixiong/.claude/skill-sources/community/evil-read-arxiv
+  superpowers:
+    url: https://github.com/obra/superpowers.git
+    path: /home/wangzixiong/.claude/skill-sources/community/superpowers
+  tapestry:
+    url: https://github.com/michalparkola/tapestry-skills.git
+    path: /home/wangzixiong/.claude/skill-sources/community/tapestry-skills
+  planning:
+    url: https://github.com/OthmanAdi/planning-with-files.git
+    path: /home/wangzixiong/.claude/skill-sources/community/planning-with-files
+  research_ski:
+    url: https://github.com/ceasonen/research-skills.git
+    path: /home/wangzixiong/.claude/skill-sources/community/research-skills
+  zhanlincui:
+    url: https://github.com/ZhanlinCui/Agent-Skills-Hunter.git
+    path: /home/wangzixiong/.claude/skill-sources/community/ZhanlinCui-Agent-Skills-Hunter
+  minimax:
+    url: https://github.com/MiniMax-AI/skills.git
+    path: /home/wangzixiong/.claude/skill-sources/minimax
+  skill_metric:
+    url: null
+    notes: "Author: Juntao Deng. No standalone public repo found; treat as no-upstream."
 
 skills:
   # --- Anthropic official ---
@@ -41,7 +87,7 @@ skills:
   pptx-generator:
     source: "{minimax}/pptx-generator"
     modified: false
-    notes: "Replaced Anthropic pptx with MiniMax pptx-generator after local quality comparison"
+    notes: "Replaced Anthropic pptx with MiniMax pptx-generator after local quality comparison. Confirmed identical to upstream (2026-04-15)."
 
   mcp-builder:
     source: "{anthropic}/mcp-builder"
@@ -80,11 +126,15 @@ skills:
       - "description updated to distinguish from Anthropic version"
 
   # --- K-Dense / claude-scientific-skills ---
+  # Note: K-Dense bundles generate_schematic*.py into every upstream skill directory.
+  # Our copies intentionally omit these from non-schematics skills. This is not drift —
+  # see the K-Dense bundling note at the top of this file.
   citation-management:
     source: "{k_dense}/citation-management"
     modified: true
     modifications:
       - "python → python3 throughout (Linux env compatibility)"
+      - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to citation workflow)"
 
   hypothesis-generation:
     source: "{k_dense}/hypothesis-generation"
@@ -92,6 +142,7 @@ skills:
     modifications:
       - "Claude-specific tool naming replaced with agent-agnostic web/search wording"
       - "added agents/openai.yaml for Codex metadata"
+      - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to hypothesis workflow)"
 
   scientific-brainstorming:
     source: "{k_dense}/scientific-brainstorming"
@@ -100,15 +151,17 @@ skills:
   scientific-critical-thinking:
     source: "{k_dense}/scientific-critical-thinking"
     modified: false
+    notes: "Upstream has bundled generate_schematic*.py; omitted intentionally — see K-Dense bundling note."
 
   scientific-writing:
     source: "{k_dense}/scientific-writing"
     modified: false
-    notes: "Contains a strong recommendation to use scientific-schematics when figures are needed"
+    notes: "Upstream has bundled generate_schematic*.py and generate_image.py; omitted intentionally. Contains recommendation to use scientific-schematics when figures are needed."
 
   markitdown:
     source: "{k_dense}/markitdown"
     modified: false
+    notes: "Upstream has bundled generate_schematic*.py; omitted intentionally — see K-Dense bundling note."
 
   literature-review:
     source: "{k_dense}/literature-review"
@@ -116,10 +169,14 @@ skills:
     modifications:
       - "Claude-specific tool naming replaced with agent-agnostic wording"
       - "added agents/openai.yaml for Codex metadata"
+      - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to literature review workflow)"
 
   scientific-schematics:
     source: "{k_dense}/scientific-schematics"
-    modified: false
+    modified: true
+    modifications:
+      - ".env discovery extended to walk up to 5 parent directories (more robust in monorepo layouts)"
+      - "API key passed via environment variable instead of CLI flag to avoid process listing exposure"
     models:
       - name: google/gemini-3.1-flash-image-preview
         role: image generation
@@ -173,9 +230,12 @@ skills:
   # --- evil-read-arxiv (juliye2025) ---
   extract-paper-images:
     source: "{evil_read}/extract-paper-images"
-    modified: false
+    modified: true
     runtime_deps:
       - python3-pymupdf (installed)
+    modifications:
+      - "extract_pdf_figures() kept at earlier interface (no min_width/min_height/min_bytes params)"
+    notes: "Upstream added image-size filtering (min 200x200px, 5KB) in extract_images.py. Local copy predates this. Consider syncing upstream improvement."
 
   paper-analyze:
     source: "{evil_read}/paper-analyze"
@@ -212,8 +272,9 @@ skills:
       - "session catchup extended to best-effort cross-runtime recovery"
 
   skill-metric:
-    source: "{skill_metric}/skill-metric"
+    source: null
     modified: false
+    notes: "Author: Juntao Deng. No standalone public upstream repo found; treated as no-upstream. Source declared in sources.yaml as skill_metric base_path is a placeholder only."
 
   # --- custom / coworker ---
   paper-annotated-html:
@@ -258,11 +319,15 @@ skills:
   semantic-scholar-daily:
     source: null
     modified: true
-    env_key: SEMANTIC_SCHOLAR_API_KEY
     modifications:
       - "Claude-specific task/tool naming replaced with agent-agnostic wording"
       - "bundled helper script copied into the shared canonical version"
     notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
+    services:
+      - name: Semantic Scholar API
+        env_key: SEMANTIC_SCHOLAR_API_KEY
+        provider: Semantic Scholar (free tier available)
+        url: https://www.semanticscholar.org/product/api
 
   research-refine:
     source: null
@@ -300,6 +365,8 @@ skills:
       - "generalized from a local .claude-specific maintenance skill into a shared-library manager"
       - "bundled registry now tracks the canonical ~/.agent-share/skills/ library"
       - "instructions updated to support shared canonical roots and agent-local mounts"
+      - "added check-services, clone-sources, migrate-model commands"
+      - "added source_repos section for automated upstream clone management"
     notes: "Custom local maintenance skill with no public upstream"
 
   # --- obra/superpowers ---
@@ -313,7 +380,7 @@ skills:
 
   # --- ZhanlinCui-Agent-Skills-Hunter ---
   chat-compactor:
-    source: "{zhanlincui}/chat-compactor"
+    source: "{zhanlincui}/planning/chat-compactor"
     modified: true
     modifications:
       - "default save locations generalized from Claude-specific paths to ~/.agent-sessions/"
