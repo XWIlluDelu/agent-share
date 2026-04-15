@@ -116,8 +116,16 @@ def find_figures_from_source(temp_dir):
     return figures
 
 
-def extract_pdf_figures(pdf_path, output_dir):
-    """从PDF中提取图片（备选方案）"""
+def extract_pdf_figures(pdf_path, output_dir, min_width=200, min_height=200, min_bytes=5000):
+    """从PDF中提取图片（备选方案）
+
+    Args:
+        pdf_path: PDF文件路径
+        output_dir: 输出目录
+        min_width: 最小宽度（像素），过滤图标/logo
+        min_height: 最小高度（像素），过滤图标/logo
+        min_bytes: 最小文件大小（字节），过滤小碎片
+    """
     print("从PDF直接提取图片（备选方案）...")
 
     try:
@@ -127,6 +135,7 @@ def extract_pdf_figures(pdf_path, output_dir):
         return []
 
     image_list = []
+    skipped = 0
 
     try:
         for page_num in range(len(pdf_doc)):
@@ -145,6 +154,16 @@ def extract_pdf_figures(pdf_path, output_dir):
                     if base_image:
                         image_bytes = base_image['image']
                         image_ext = base_image['ext']
+                        img_width = base_image.get('width', 0)
+                        img_height = base_image.get('height', 0)
+
+                        # 过滤小图标、logo和UI碎片
+                        if img_width < min_width or img_height < min_height:
+                            skipped += 1
+                            continue
+                        if len(image_bytes) < min_bytes:
+                            skipped += 1
+                            continue
 
                         filename = f'page{page_num + 1}_fig{img_index + 1}.{image_ext}'
                         filepath = os.path.join(output_dir, filename)
@@ -158,10 +177,15 @@ def extract_pdf_figures(pdf_path, output_dir):
                             'filename': filename,
                             'path': f'images/{filename}',
                             'size': len(image_bytes),
+                            'width': img_width,
+                            'height': img_height,
                             'ext': image_ext
                         })
     finally:
         pdf_doc.close()
+
+    if skipped:
+        print(f"  已过滤 {skipped} 张小图片/图标 (< {min_width}x{min_height}px 或 < {min_bytes/1024:.0f}KB)")
 
     return image_list
 

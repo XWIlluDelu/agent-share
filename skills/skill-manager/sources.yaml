@@ -232,12 +232,9 @@ skills:
   # --- evil-read-arxiv (juliye2025) ---
   extract-paper-images:
     source: "{evil_read}/extract-paper-images"
-    modified: true
+    modified: false
     runtime_deps:
       - python3-pymupdf (installed)
-    modifications:
-      - "extract_pdf_figures() kept at earlier interface (no min_width/min_height/min_bytes params)"
-    notes: "Upstream added image-size filtering (min 200x200px, 5KB) in extract_images.py. Local copy predates this. Consider syncing upstream improvement."
 
   paper-analyze:
     source: "{evil_read}/paper-analyze"
