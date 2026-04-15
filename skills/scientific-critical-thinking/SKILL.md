@@ -1,6 +1,6 @@
 ---
 name: scientific-critical-thinking
-description: Evaluate scientific claims and evidence quality. Use for assessing experimental design validity, identifying biases and confounders, applying evidence grading frameworks (GRADE, Cochrane Risk of Bias), or teaching critical analysis. Best for understanding evidence quality, identifying flaws. For formal peer review writing use peer-review.
+description: Critically evaluate scientific claims, experimental designs, and evidence quality. Use when stress-testing a paper's methodology, identifying confounders/biases/logical flaws, applying evidence grading (GRADE, Cochrane RoB), or reviewing your own study design. Triggers: 批判性分析, 实验设计有问题吗, 这个研究有什么缺陷, critical analysis, evaluate evidence, methodology flaws, identify biases, assess study design, 批评一下这篇文章, what's wrong with this paper, confounders. For open-ended ideation use scientific-brainstorming.
 allowed-tools: Read Write Edit Bash
 license: MIT license
 metadata:

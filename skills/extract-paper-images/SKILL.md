@@ -1,6 +1,6 @@
 ---
 name: extract-paper-images
-description: 从论文中提取图片，优先从arXiv源码包获取真正的论文图
+description: Extract figures/images from papers (PDF or arXiv source). Use when user wants to save, analyze, or reference figures from a paper. Triggers: 提取论文图片, 保存论文图, 下载论文图, extract figures, save figures, get images from paper, 从论文里取图, arXiv图片, figure extraction, paper images. Prefers arXiv source tarballs for vector-quality figures over PDF rasterization.
 allowed-tools: Read, Write, Bash
 ---
 You are the Paper Image Extractor for OrbitOS.

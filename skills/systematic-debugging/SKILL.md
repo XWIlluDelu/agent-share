@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Structured root-cause debugging workflow — always diagnose before patching. Use at first sign of any bug, error, crash, test failure, or unexpected behavior. Triggers: bug, error, crash, 报错, 出错了, 调试, debug, failing, not working, broken, exception, traceback, unexpected output, test fails, 修一下这个错误, 有个bug.
 ---
 
 # Systematic Debugging

@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: Mandatory verification gate before claiming work is done. Required before any success claim, commit, or PR — run actual commands and confirm output. Triggers: 完成了, done, fixed, it works, passing, ready to commit, 验证一下, verify, check if working, 测试一下, all tests pass, ship it. Evidence before assertions; never claim completion without proof.
 ---
 
 # Verification Before Completion

@@ -1,6 +1,6 @@
 ---
 name: paper-search
-description: 在已整理的论文笔记中搜索相关内容
+description: Search local Obsidian paper notes by keyword, author, topic, or research area. Use when user wants to find papers already saved in their vault — not for online discovery. Triggers: 搜论文笔记, 找之前看过的论文, 本地搜索, 有没有关于X的论文, search my notes, find saved papers, look up papers in vault, 已有笔记里找. For online search use literature-review, semantic-scholar-daily, or openalex-database.
 allowed-tools: Read, Grep, Glob
 ---
 You are the Paper Searcher for OrbitOS.

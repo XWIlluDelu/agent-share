@@ -1,6 +1,6 @@
 ---
 name: doc-coauthoring
-description: Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.
+description: Structured co-authoring workflow for non-paper documents — technical docs, proposals, decision records, grant sections, specs. Iterative human-in-the-loop drafting with context transfer and reader testing. Triggers: 写文档, 写提案, 写方案, 起草, draft proposal, write spec, co-write, 帮我写一份, technical documentation, decision doc. For scientific manuscripts use research-paper-writing; for Obsidian notes use obsidian-markdown.
 ---
 
 # Doc Co-Authoring Workflow

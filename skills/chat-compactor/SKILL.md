@@ -1,6 +1,6 @@
 ---
 name: chat-compactor
-description: Generate structured session summaries optimized for future AI agent consumption. Use when (1) ending a coding/debugging session, (2) user says "compact", "summarize session", "save context", or "wrap up", (3) context window is getting long and continuity matters, (4) before switching tasks or taking a break. Produces machine-readable handoff documents that let the next session start fluently without re-explaining.
+description: Generate structured session handoff summaries for AI agent continuity across sessions. Use when ending a session, context is getting long, or switching tasks. Triggers: compact, summarize session, save context, wrap up, 总结一下, 记录进度, 保存上下文, 会话摘要, 结束了帮我存档, handoff, end session, 快结束了, 换个会话继续. Produces machine-readable documents that let the next Claude session start without re-explaining.
 ---
 
 # Chat Compactor

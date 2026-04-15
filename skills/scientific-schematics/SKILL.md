@@ -1,6 +1,6 @@
 ---
 name: scientific-schematics
-description: Create publication-quality scientific diagrams using Nano Banana 2 AI with smart iterative refinement. Uses Gemini 3.1 Pro Preview for quality review. Only regenerates if quality is below threshold for your document type. Specialized in neural network architectures, system diagrams, flowcharts, biological pathways, and complex scientific visualizations.
+description: Create publication-quality scientific diagrams with AI-assisted iterative quality refinement. Specialized in neural network architectures, system diagrams, flowcharts, biological pathways, and complex scientific visualizations. Triggers: 画图, 画示意图, 画流程图, 论文配图, 需要一张图, scientific diagram, schematic, figure, draw neural network, system diagram, biological pathway, publication figure, create diagram, illustrate architecture.
 allowed-tools: Read Write Edit Bash
 license: MIT license
 metadata:
