@@ -1,6 +1,6 @@
 ---
 name: doc-coauthoring
-description: Structured co-authoring workflow for non-paper documents — technical docs, proposals, decision records, grant sections, specs. Iterative human-in-the-loop drafting with context transfer and reader testing. Triggers: 写文档, 写提案, 写方案, 起草, draft proposal, write spec, co-write, 帮我写一份, technical documentation, decision doc. For scientific manuscripts use research-paper-writing; for Obsidian notes use obsidian-markdown.
+description: 'Structured co-authoring workflow for non-paper documents — technical docs, proposals, decision records, grant sections, specs. Iterative human-in-the-loop drafting with context transfer and reader testing. Triggers: 写文档, 写提案, 写方案, 起草, draft proposal, write spec, co-write, 帮我写一份, technical documentation, decision doc. For scientific manuscripts use research-paper-writing; for Obsidian notes use obsidian-markdown.'
 ---
 
 # Doc Co-Authoring Workflow

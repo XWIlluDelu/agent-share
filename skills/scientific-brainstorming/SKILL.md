@@ -1,6 +1,6 @@
 ---
 name: scientific-brainstorming
-description: Creative open-ended research ideation for early-stage exploration. Use when brainstorming research directions, identifying gaps, exploring cross-disciplinary angles, or challenging assumptions before data exists. Triggers: 头脑风暴, 研究方向, 有什么可以做的, 想法碰撞, brainstorm, research ideas, what could we study, explore directions, identify gaps, 给我一些研究想法, ideation. When you have specific observations or data, use hypothesis-generation instead.
+description: 'Creative open-ended research ideation for early-stage exploration. Use when brainstorming research directions, identifying gaps, exploring cross-disciplinary angles, or challenging assumptions before data exists. Triggers: 头脑风暴, 研究方向, 有什么可以做的, 想法碰撞, brainstorm, research ideas, what could we study, explore directions, identify gaps, 给我一些研究想法, ideation. When you have specific observations or data, use hypothesis-generation instead.'
 license: MIT license
 metadata:
     skill-author: K-Dense Inc.

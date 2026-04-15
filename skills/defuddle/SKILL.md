@@ -1,6 +1,6 @@
 ---
 name: defuddle
-description: Extract clean markdown from web pages using Defuddle CLI (strips nav/ads/clutter, saves tokens). Use when user provides a URL to read, summarize, or analyze. Triggers: 读这个网页, 打开这个链接, 分析这篇文章, 总结一下这个页面, 抓取网页, read URL, fetch article, extract page content, summarize webpage, 看一下这个网址. Do NOT use for .md URLs — fetch those directly. Prefer over built-in URL fetch for standard HTML pages.
+description: 'Extract clean markdown from web pages using Defuddle CLI (strips nav/ads/clutter, saves tokens). Use when user provides a URL to read, summarize, or analyze. Triggers: 读这个网页, 打开这个链接, 分析这篇文章, 总结一下这个页面, 抓取网页, read URL, fetch article, extract page content, summarize webpage, 看一下这个网址. Do NOT use for .md URLs — fetch those directly. Prefer over built-in URL fetch for standard HTML pages.'
 ---
 
 # Defuddle

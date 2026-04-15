@@ -1,6 +1,6 @@
 ---
 name: scientific-schematics
-description: Create publication-quality scientific diagrams with AI-assisted iterative quality refinement. Specialized in neural network architectures, system diagrams, flowcharts, biological pathways, and complex scientific visualizations. Triggers: 画图, 画示意图, 画流程图, 论文配图, 需要一张图, scientific diagram, schematic, figure, draw neural network, system diagram, biological pathway, publication figure, create diagram, illustrate architecture.
+description: 'Create publication-quality scientific diagrams with AI-assisted iterative quality refinement. Specialized in neural network architectures, system diagrams, flowcharts, biological pathways, and complex scientific visualizations. Triggers: 画图, 画示意图, 画流程图, 论文配图, 需要一张图, scientific diagram, schematic, figure, draw neural network, system diagram, biological pathway, publication figure, create diagram, illustrate architecture.'
 allowed-tools: Read Write Edit Bash
 license: MIT license
 metadata:
