@@ -146,7 +146,9 @@ skills:
 
   scientific-brainstorming:
     source: "{k_dense}/scientific-brainstorming"
-    modified: false
+    modified: true
+    modifications:
+      - "description optimized: added Chinese trigger words (头脑风暴/研究方向/想法碰撞) and tightened English scope to early-stage open-ended ideation"
 
   scientific-critical-thinking:
     source: "{k_dense}/scientific-critical-thinking"
