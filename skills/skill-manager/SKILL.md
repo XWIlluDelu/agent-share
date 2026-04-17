@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: 'Manage a local skill library and its upstream/source registry. Use when you want to check skill updates, compare local skills with upstream copies, audit hardcoded model/provider names, replace or migrate a model across skills, inspect API key / service status, clone upstream source repos, inspect source/modification status, or register/remove skills in a shared registry. Triggers on: "check skill updates", "update skill", "audit models", "replace model", "migrate model", "swap provider", "check API keys", "check services", "clone sources", "skill status", "skill来源", "更新skill", "换模型", "检查API key", "更新上游源".'
+description: 'Manage a local skill library and its upstream/source registry (sources.yaml): check drift vs. upstream, sync updates, audit/replace hardcoded models, swap providers, inspect API-key/service status, clone upstream repos, register/remove skills. Use for library-wide maintenance, not per-skill tweaks. Triggers: check skill updates, update skill, audit models, replace/migrate model, swap provider, check API keys, clone sources, skill status, skill 来源, 更新 skill, 换模型, 检查 API key, 更新上游源.'
 allowed-tools: Bash(*), Read, Write, Edit, Grep, Glob, WebSearch
 ---
 

@@ -1,29 +1,15 @@
 ---
 name: paper-derivation-markdown
-description: Extract and reconstruct key derivation steps from model-oriented papers into an Obsidian-compatible Markdown note with correct LaTeX math. This skill must use the `obsidian-markdown` skill as the final formatting specification for the generated `.md` file. Use this whenever the user wants to understand a paper's derivation step by step, asks to fill in missing intermediate equations, wants notation/subscripts explained clearly, or wants the result saved as Markdown or an Obsidian note instead of HTML. Also use proactively when the user mentions 论文推导, derivation, 公式推导, math derivation, 整理成 markdown, 整理成 md, 整理成 Obsidian 笔记, or asks to turn a paper's mathematical logic into a readable note.
+description: 'Reconstruct key derivations from a model-oriented paper into an Obsidian-compatible Markdown note with correct LaTeX math, filling in skipped steps, unifying notation (especially subscripts), and keeping the formula logic chain. Defers final formatting to the `obsidian-markdown` skill. Use when the user wants a derivation note saved as `.md` / Obsidian note (not HTML), wants intermediate equations filled in, or wants notation explained clearly. Triggers: 论文推导, 公式推导, derivation, math derivation, 整理成 markdown, 整理成 md, 整理成 Obsidian 笔记, derive step by step. For HTML output use paper-derivation-html; for full paper analysis use paper-analyze.'
 ---
 
 # Paper Derivation Markdown
 
 将论文中的**关键数学推导**重建为一篇 **Obsidian 兼容 Markdown 笔记**，重点是补全跳步、统一符号、保留公式逻辑链，而不是逐字翻译原文。
 
-## 强制输出规范
+## 与 obsidian-markdown 的协作
 
-生成最终 `.md` 文件时，**必须使用 `obsidian-markdown` skill 作为输出规范**。
-
-这意味着：
-
-- 本 skill 负责提取、重建、组织论文推导逻辑
-- `obsidian-markdown` skill 负责约束最终 Markdown 的写法与 Obsidian 语法
-- 若二者发生冲突，**最终文件格式规范以 `obsidian-markdown` skill 为准**
-
-生成内容时，遵循 `obsidian-markdown` skill 的写作规范：
-
-- 输出必须是 `.md`，不是 HTML
-- 使用 Obsidian 友好的 frontmatter、标题层级、callout、wikilink、LaTeX 数学块
-- 不用原始 HTML 包装推导内容，除非用户明确要求
-
-如果运行环境支持多 skill 协作，则在写最终笔记前应显式加载或参照 `obsidian-markdown` skill。
+最终 `.md` 的格式规范交给 `obsidian-markdown` skill：本 skill 负责提取与组织推导逻辑，`obsidian-markdown` 负责 frontmatter / 标题层级 / callout / wikilink / 数学块等 Obsidian 语法。两者冲突时以 `obsidian-markdown` 为准。输出必须是 `.md`，不要用原始 HTML 包装。
 
 ## 何时使用
 

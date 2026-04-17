@@ -1,7 +1,7 @@
 ---
 name: semantic-scholar-daily
-description: 使用 Semantic Scholar API 做最新论文搜索、按研究兴趣生成每日论文推荐，并可将结果写入 Obsidian 笔记。用户提到 Semantic Scholar、最新论文、每日推荐、按我的方向找新论文、recent papers、daily paper digest、paper recommendation 时都应优先使用这个 skill。
-allowed-tools: Read Write Bash Glob Grep
+description: 'Search and rank recent papers via the Semantic Scholar API, generate daily paper recommendations against a saved research-interest config, and optionally write an Obsidian daily-recommendation note with existing-note links. Use when the user wants the latest papers in their field, a daily digest, topic-specific recent search, or author/venue lookups. Triggers: daily paper digest, paper recommendation, recent papers, latest in my field, Semantic Scholar, 每日论文推荐, 最新论文, 按我的方向找新论文, 文献推荐, 今天看什么论文. For local-vault note search use paper-search; for deep analysis of one paper use paper-analyze.'
+allowed-tools: Read, Write, Bash, Glob, Grep
 ---
 
 You are the Semantic Scholar paper scout for this vault.
@@ -31,7 +31,7 @@ If `OBSIDIAN_VAULT_PATH` is missing, pass `--vault` explicitly.
 Use this when the user gives a concrete topic, method, author, lab, or venue.
 
 ```bash
-python scripts/semantic_scholar_daily.py search \
+python3 scripts/semantic_scholar_daily.py search \
   --query "{user query}" \
   --days 180 \
   --limit 10 \
@@ -51,7 +51,7 @@ After running, read the JSON and present a concise ranked list with title, date,
 Use this when the user asks for latest papers in their field, a daily digest, or paper recommendations.
 
 ```bash
-python scripts/semantic_scholar_daily.py recommend \
+python3 scripts/semantic_scholar_daily.py recommend \
   --config "$OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml" \
   --vault "$OBSIDIAN_VAULT_PATH" \
   --days 45 \
@@ -78,7 +78,7 @@ If the user gives a target date, add `--target-date YYYY-MM-DD`.
 Use this after `recommend` whenever the user asks to save or refresh the daily paper note.
 
 ```bash
-python scripts/semantic_scholar_daily.py write-note \
+python3 scripts/semantic_scholar_daily.py write-note \
   --input-json semantic_scholar_daily.json \
   --output-md "$OBSIDIAN_VAULT_PATH/10_Daily/YYYY-MM-DD论文推荐.md" \
   --vault "$OBSIDIAN_VAULT_PATH" \
@@ -145,6 +145,17 @@ tags: ["llm-generated", "daily-paper-recommend"]
 **关键结果**：...
 ```
 
+# Error handling
+
+Expected failure modes and how to respond:
+
+- **`SEMANTIC_SCHOLAR_API_KEY` missing** → Fail fast with a clear message. Do not silently fall back to unauthenticated requests (rate limit is too tight to be useful).
+- **HTTP 429 rate limit** → The script already backs off. If it still fails after retries, wait a minute and re-run the same command. Do not loop aggressively.
+- **HTTP 5xx / timeout** → Retry once; if still failing, report the API is down and stop. Do not substitute with hand-rolled search.
+- **`research_interests.yaml` missing** → Tell the user the expected path, offer to run direct `search` mode with their ad-hoc query as a fallback.
+- **Empty candidate pool** (no papers returned) → Report the query + filter combo returned nothing. Common causes: `--days` too tight, `--venue` too narrow, `--author` misspelled. Suggest widening before re-running.
+- **Duplicate daily note exists** → Do not overwrite unless user explicitly asks to refresh. Offer to write to a dated variant instead.
+
 # Important rules
 
 - Always use `scripts/semantic_scholar_daily.py`; do not hand-roll ad hoc Semantic Scholar logic.
@@ -159,7 +170,7 @@ tags: ["llm-generated", "daily-paper-recommend"]
 ## Latest papers for a topic
 
 ```bash
-python scripts/semantic_scholar_daily.py search \
+python3 scripts/semantic_scholar_daily.py search \
   --query "low-rank RNN neural dynamics" \
   --days 90 \
   --limit 12 \
@@ -169,7 +180,7 @@ python scripts/semantic_scholar_daily.py search \
 ## Daily digest plus note writing
 
 ```bash
-python scripts/semantic_scholar_daily.py recommend \
+python3 scripts/semantic_scholar_daily.py recommend \
   --config "$OBSIDIAN_VAULT_PATH/99_System/Config/research_interests.yaml" \
   --vault "$OBSIDIAN_VAULT_PATH" \
   --days 45 \
@@ -181,7 +192,7 @@ python scripts/semantic_scholar_daily.py recommend \
   --target-date 2026-03-21 \
   --output-json semantic_scholar_daily.json
 
-python scripts/semantic_scholar_daily.py write-note \
+python3 scripts/semantic_scholar_daily.py write-note \
   --input-json semantic_scholar_daily.json \
   --output-md "$OBSIDIAN_VAULT_PATH/10_Daily/2026-03-21论文推荐.md" \
   --vault "$OBSIDIAN_VAULT_PATH" \

@@ -35,6 +35,9 @@ source_repos:
   anthropic:
     url: https://github.com/anthropics/skills.git
     path: /home/wangzixiong/.claude/skill-sources/anthropic
+  openai:
+    url: https://github.com/openai/skills.git
+    path: /home/wangzixiong/.claude/skill-sources/openai
   k_dense:
     url: https://github.com/K-Dense-AI/claude-scientific-skills.git
     path: /home/wangzixiong/.claude/skill-sources/community/claude-scientific-skills
@@ -79,6 +82,8 @@ skills:
       - "description updated to distinguish from OpenAI version"
       - "bundled automation generalized to support claude/codex/gemini CLI runtimes"
       - "added cross-runtime evaluation and improvement helper scripts"
+      - "added agents/openai.yaml for Codex metadata"
+      - "SKILL.md rewritten from 497→113 lines: kept high-level process + communication guidance + capture intent; moved Skill Writing Guide to references/skill_writing_guide.md, 5-step eval workflow to references/eval_workflow.md, description optimization to references/description_optimization.md"
 
   pdf:
     source: "{anthropic}/pdf"
@@ -112,6 +117,7 @@ skills:
     modifications:
       - "Claude.ai / Claude Code naming replaced with agent-agnostic wording"
       - "reader-test stage rewritten to talk about fresh agent instances generically"
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   webapp-testing:
     source: "{anthropic}/webapp-testing"
@@ -135,6 +141,7 @@ skills:
     modifications:
       - "python → python3 throughout (Linux env compatibility)"
       - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to citation workflow)"
+      - "SKILL.md rewritten from 1113→89 lines: removed inline duplication of references/ content, removed Visual Enhancement boilerplate, removed Dependencies/Summary sections"
 
   hypothesis-generation:
     source: "{k_dense}/hypothesis-generation"
@@ -152,17 +159,26 @@ skills:
 
   scientific-critical-thinking:
     source: "{k_dense}/scientific-critical-thinking"
-    modified: false
+    modified: true
+    modifications:
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
+      - "SKILL.md rewritten from 570→92 lines: removed Visual Enhancement boilerplate, condensed each capability to summary + references/ pointer"
     notes: "Upstream has bundled generate_schematic*.py; omitted intentionally — see K-Dense bundling note."
 
   scientific-writing:
     source: "{k_dense}/scientific-writing"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 717→109 lines: removed Visual Enhancement/generate_schematic/generate_image boilerplate, condensed each capability to summary + references/ pointer"
+      - "extracted field-specific terminology (90 lines) to references/field_terminology.md"
     notes: "Upstream has bundled generate_schematic*.py and generate_image.py; omitted intentionally. Contains recommendation to use scientific-schematics when figures are needed."
 
   markitdown:
     source: "{k_dense}/markitdown"
-    modified: false
+    modified: true
+    modifications:
+      - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to markitdown workflow)"
+      - "SKILL.md rewritten from 488→147 lines: removed Visual Enhancement boilerplate, moved 9 usage code examples to references/usage_examples.md"
     notes: "Upstream has bundled generate_schematic*.py; omitted intentionally — see K-Dense bundling note."
 
   literature-review:
@@ -172,6 +188,7 @@ skills:
       - "Claude-specific tool naming replaced with agent-agnostic wording"
       - "added agents/openai.yaml for Codex metadata"
       - "omitted K-Dense-bundled generate_schematic*.py (irrelevant to literature review workflow)"
+      - "SKILL.md rewritten from 618→138 lines: condensed 7-phase workflow, removed duplicate best-practices, removed references to non-existent skills (gget, bioservices, scanpy, etc.), removed Dependencies/Summary sections"
 
   scientific-schematics:
     source: "{k_dense}/scientific-schematics"
@@ -192,11 +209,18 @@ skills:
   # --- scicraft ---
   openalex-database:
     source: "{scicraft_sci}/openalex-database"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 495→123 lines: replaced all 6 Core API query types + 2 workflows + 3 recipes with summary table + pointer to references/api_queries.md"
+      - "extracted API queries, workflows, and recipes to references/api_queries.md (352 lines)"
 
   pubmed-database:
     source: "{scicraft_bio}/pubmed-database"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 512→165 lines: kept E-utilities table + History Server pattern + ATM + MeSH subheadings; moved all API code to references/"
+      - "extracted E-utilities code examples to references/api_reference.md (193 lines)"
+      - "extracted systematic review + monitoring pipeline workflows to references/workflows.md (137 lines)"
 
   statistical-analysis:
     source: "{scicraft_sta}/statistical-analysis"
@@ -204,7 +228,11 @@ skills:
 
   sympy-symbolic-math:
     source: "{scicraft_cmp}/sympy-symbolic-math"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 465→113 lines: kept solver guide table + simplification table + best practices; moved all code examples to references/"
+      - "extracted SymPy API reference (symbols, calculus, equations, matrices, code gen) to references/api_reference.md (186 lines)"
+      - "extracted 6 workflow recipes (symbolic-to-numeric, ODE, LaTeX, matrix decomp) to references/workflows_recipes.md (161 lines)"
 
   # --- obsidian-skills (kepano) ---
   obsidian-markdown:
@@ -217,13 +245,17 @@ skills:
 
   obsidian-bases:
     source: "{obsidian}/obsidian-bases"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 497→244 lines: kept workflow + schema + filter operators + key functions + view types + summary formulas; moved complete YAML examples to references/examples.md (179 lines)"
+      - "B2 follow-up: schema now leads with single-string filters as the common case, and key functions explicitly include number() for robust frontmatter arithmetic"
 
   defuddle:
     source: "{obsidian}/defuddle"
     modified: true
     modifications:
       - "tool references rewritten to describe generic URL-reading capability instead of Claude WebFetch"
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   json-canvas:
     source: "{obsidian}/json-canvas"
@@ -232,9 +264,11 @@ skills:
   # --- evil-read-arxiv (juliye2025) ---
   extract-paper-images:
     source: "{evil_read}/extract-paper-images"
-    modified: false
+    modified: true
     runtime_deps:
       - python3-pymupdf (installed)
+    modifications:
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   paper-analyze:
     source: "{evil_read}/paper-analyze"
@@ -244,11 +278,14 @@ skills:
     modifications:
       - "Claude-specific tool naming replaced with agent-agnostic wording"
       - "bundled helper scripts copied into the shared canonical version"
+      - "SKILL.md rewritten from 1113→243 lines: deduplicated steps 4/5/workflow (each appeared twice), extracted note template to references/note_template.md, scoring rubric to references/scoring_rubric.md, bilingual headers to references/bilingual_headers.md"
     notes: "Shared copy keeps the original bilingual workflow"
 
   paper-search:
     source: "{evil_read}/paper-search"
-    modified: false
+    modified: true
+    modifications:
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   # --- other community ---
   research-paper-writing:
@@ -259,7 +296,9 @@ skills:
 
   youtube-transcript:
     source: "{tapestry}/youtube-transcript"
-    modified: false
+    modified: true
+    modifications:
+      - "SKILL.md rewritten from 415→70 lines: kept priority order + 4 key rules + quick commands; moved detailed step-by-step commands to references/commands.md (166 lines) and complete end-to-end workflow script to references/complete_workflow.md (134 lines)"
 
   planning-with-files:
     source: "{planning}/planning-with-files"
@@ -357,6 +396,11 @@ skills:
         provider: CLI-auth runtime (codex preferred, claude/gemini supported)
         auth: local coding-CLI login
 
+  meeting-executive-summary:
+    source: null
+    modified: false
+    notes: "Generated by anthropic-skill-creator B test (2026-04-17) as a skill-creator eval artifact. Kept as a useful standalone skill."
+
   skill-manager:
     source: null
     modified: true
@@ -371,11 +415,15 @@ skills:
   # --- obra/superpowers ---
   systematic-debugging:
     source: "{superpowers}/systematic-debugging"
-    modified: false
+    modified: true
+    modifications:
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   verification-before-completion:
     source: "{superpowers}/verification-before-completion"
-    modified: false
+    modified: true
+    modifications:
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"
 
   # --- ZhanlinCui-Agent-Skills-Hunter ---
   chat-compactor:
@@ -383,3 +431,4 @@ skills:
     modified: true
     modifications:
       - "default save locations generalized from Claude-specific paths to ~/.agent-sessions/"
+      - "description rewritten with bilingual triggers and Use-when clause for better routing"

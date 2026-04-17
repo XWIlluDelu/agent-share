@@ -91,7 +91,7 @@ If these answers are not crisp, tighten the final proposal first.
 You can codify this step with:
 
 ```bash
-python scripts/run_pipeline.py --workspace refine-logs
+python3 scripts/run_pipeline.py --workspace refine-logs
 ```
 
 This writes `PIPELINE_GATE.md` so the next step is explicit instead of implicit.

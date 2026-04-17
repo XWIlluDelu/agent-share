@@ -85,6 +85,8 @@ Always produce Obsidian-compatible Markdown.
 
 ## Required note structure
 
+Full reusable template lives at `references/NOTE_TEMPLATE.md` — copy from there when starting a new note. The condensed form below is for quick reference only.
+
 Unless the user requests a different format, use this structure:
 
 ```markdown

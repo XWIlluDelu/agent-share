@@ -1,6 +1,6 @@
 ---
 name: paper-derivation-html
-description: Extracts and reconstructs key derivation steps from model-oriented papers into a step-by-step HTML document with correct LaTeX math. Use when the user wants to understand a paper's derivation flow, fill in logical gaps, define all notation (especially subscripts), and omit lengthy proofs while keeping formula logic. Triggers on requests for "推导", "derivation", "公式推导", "math derivation", or learning model derivations from a paper.
+description: 'Reconstruct key derivations from a model-oriented paper into a self-contained HTML document with LaTeX math rendered via KaTeX/MathJax, filling in skipped steps, unifying notation, and keeping the formula logic chain. Use when the user wants a derivation rendered as standalone HTML (not Markdown), wants intermediate equations filled in, or wants notation explained clearly. Triggers: 论文推导 html, 公式推导 html, derivation html, math derivation, 推导网页, 推导单页, render derivation as html. For Markdown/Obsidian output use paper-derivation-markdown; for full paper analysis use paper-analyze.'
 ---
 
 # Paper Derivation HTML

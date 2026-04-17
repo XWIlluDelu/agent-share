@@ -1,6 +1,6 @@
 ---
 name: author-homepage
-description: Build an Obsidian author profile note from a researcher name. Use whenever the user gives a person name and wants their papers, representative works, research areas, academic lineage, collaborators, institute, lab, or a research-homepage style summary. Also use when the user asks for “某个作者主页”, “某位学者的代表作”, “按领域整理某人的论文”, “按时间线整理学术轨迹”, or wants an author note saved under 20_Research/People/.
+description: 'Build an Obsidian author profile note from a researcher name — basic info, education, research directions, representative works, topic buckets, career timeline, and academic relationships with wikilinks. Use when the user gives a person name and wants a research-homepage style note saved under 20_Research/People/. Triggers: author homepage, research homepage, 作者主页, 学者主页, 学术人物页, 代表作整理, 按领域整理某人的论文, 按时间线整理学术轨迹, 导师关系, 合作网络, who is X researcher. For local author-note lookup use paper-search; for deep single-paper notes use paper-analyze.'
 ---
 
 # Author Homepage Skill
@@ -292,6 +292,15 @@ status: evergreen
 - 是否建立了人物关系和机构关系
 - 是否使用了 Obsidian wikilinks
 - 是否保存到 `20_Research/People/`
+
+## 边界情况处理
+
+- **同名学者** → 在「识别作者」阶段先枚举候选（方向 + 机构 + 代表作），让用户确认；未确认前不要写入笔记。
+- **个人主页缺失** → 回退到 Google Scholar / DBLP / Semantic Scholar / OpenAlex 交叉核对；在笔记中标注「无主页，按公开学术索引整理」。
+- **Scholar 访问受限 / 429** → 切到 DBLP / OpenAlex / Semantic Scholar 补全；不要循环重试同一来源。
+- **教育经历查不到某段** → 写「暂未查到」，不要用常见路径猜测替代（例如默认博士→博后→助理教授）。
+- **同名同机构的人物关系不确定** → 标注「需核实」，不要把合作者伪造成导师或学生。
+- **已有笔记** → 不要覆盖；打开后在末尾追加新信息或与用户确认是否刷新。
 
 ## 适合的默认动作
 
