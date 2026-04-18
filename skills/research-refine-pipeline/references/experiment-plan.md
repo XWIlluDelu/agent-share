@@ -24,7 +24,7 @@ Write:
 1. One paper, one dominant claim. Keep every run tied to that claim or to one necessary supporting claim.
 2. Prefer decisive experiments over exhaustive coverage.
 3. Put the highest-risk assumption early in the run order.
-4. If the method is intentionally simple, defend that simplicity with deletion checks instead of adding extra components.
+4. If the dominant mechanism is already sharp, prefer decisive baselines and deletion checks over broader expansion.
 5. If a frontier primitive is central, add one necessity test. If it is not central, do not force one.
 
 ## Workflow

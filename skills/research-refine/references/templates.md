@@ -2,7 +2,7 @@
 
 All Markdown templates used by `SKILL.md`. Copy from here when writing files under `refine-logs/`.
 
-## Initial proposal (`refine-logs/round-0-initial-proposal.md`)
+## Initial proposal (`refine-logs/round-0-initial-proposal.md` or working draft)
 
 ```markdown
 # Research Proposal: [Title]
@@ -59,6 +59,12 @@ All Markdown templates used by `SKILL.md`. Copy from here when writing files und
 ### Training Plan
 [Stagewise or joint training, losses, data construction, pseudo-labels, schedules]
 
+### Mechanism Contract
+- Claim-bearing components and interfaces:
+- Observation / data assumptions:
+- Training objectives tied to each component:
+- Inference sequence:
+
 ### Failure Modes and Diagnostics
 - [Failure mode]:
 - [How to detect]:
@@ -86,6 +92,12 @@ All Markdown templates used by `SKILL.md`. Copy from here when writing files und
 - Critical datasets / metrics:
 - Highest-risk assumptions:
 
+## Validation Contract
+- Main claim to prove:
+- Decisive baseline or ablation:
+- Metric:
+- Expected evidence:
+
 ## Compute & Timeline Estimate
 - Estimated GPU-hours:
 - Data / annotation cost:
@@ -94,15 +106,19 @@ All Markdown templates used by `SKILL.md`. Copy from here when writing files und
 
 ## Score evolution (`refine-logs/score-history.md`)
 
+Create only when multiple scored review rounds were actually used.
+
 ```markdown
 # Score Evolution
 
-| Round | Problem Fidelity | Method Specificity | Contribution Quality | Frontier Leverage | Feasibility | Validation Focus | Venue Readiness | Overall | Verdict |
-|-------|------------------|--------------------|----------------------|-------------------|-------------|------------------|-----------------|---------|---------|
-| 1     | X                | X                  | X                    | X                 | X           | X                | X               | X       | REVISE  |
+| Round | Problem Fidelity | Method Specificity | Contribution Quality | Frontier Leverage | Feasibility | Validation Focus | Venue Readiness | Overall | Verdict | Main Blocking Issue |
+|-------|------------------|--------------------|----------------------|-------------------|-------------|------------------|-----------------|---------|---------|---------------------|
+| 1     | X                | X                  | X                    | X                 | X           | X                | X               | X       | REVISE  | [short phrase]      |
 ```
 
 ## Round refinement (`refine-logs/round-N-refinement.md`)
+
+Use only when a round caused substantive method changes worth preserving. Keep it lean.
 
 ```markdown
 # Round N Refinement
@@ -121,25 +137,29 @@ All Markdown templates used by `SKILL.md`. Copy from here when writing files und
 - Reviewer suggestions rejected as unnecessary complexity:
 - Why the remaining mechanism is still the smallest adequate route:
 
-## Changes Made
-
-### 1. [Method section changed]
+## Blocking Issues Addressed
+### 1. [Blocking issue]
 - Reviewer said:
 - Action:
 - Reasoning:
 - Impact on core method:
 
-### 2. [Novelty / modernity / feasibility / validation change]
+### 2. [Optional second issue]
 - Reviewer said:
 - Action:
 - Reasoning:
 - Impact on core method:
+
+## Non-blocking Suggestions Deferred or Accepted
+- [Suggestion] → [accepted / deferred / rejected] — [why]
 
 ## Revised Proposal
-[Full updated proposal from Problem Anchor through Claim-Driven Validation Sketch]
+[Full updated proposal only if needed; otherwise summarize the changed sections and point to FINAL_PROPOSAL.md]
 ```
 
 ## Review summary (`refine-logs/REVIEW_SUMMARY.md`)
+
+Create when reviewer feedback materially improved the proposal.
 
 ```markdown
 # Review Summary
@@ -147,38 +167,32 @@ All Markdown templates used by `SKILL.md`. Copy from here when writing files und
 **Problem**: [user's problem]
 **Initial Approach**: [user's vague approach]
 **Date**: [today]
-**Rounds**: N / MAX_ROUNDS
-**Final Score**: X / 10
+**Rounds Used**: N
 **Final Verdict**: [READY / REVISE / RETHINK]
+**Final Overall Score**: [X / 10 if scored]
 
 ## Problem Anchor
-[Verbatim anchor used across all rounds]
+[Verbatim anchor used across rounds]
 
-## Round-by-Round Resolution Log
+## Resolution Log
 
-| Round | Main Reviewer Concerns | What This Round Simplified / Modernized | Solved? | Remaining Risk |
-|-------|-------------------------|------------------------------------------|---------|----------------|
-| 1     | [top issues from review] | [main method changes]                    | [yes / partial / no] | [if any] |
-| 2     | ...                     | ...                                      | ...     | ...            |
+| Round | Blocking Issues | What Changed | Anchor Preserved? | Remaining Risk |
+|-------|-----------------|--------------|-------------------|----------------|
+| 1     | [top blockers]  | [main fixes] | [yes / partial / no] | [if any] |
+| 2     | ...             | ...          | ...               | ...            |
 
-## Overall Evolution
-- [How the method became more concrete]
-- [How the dominant contribution became more focused]
-- [How unnecessary complexity was removed]
-- [How modern technical leverage improved or stayed intentionally minimal]
-- [How drift was avoided or corrected]
+## Key Proposal Upgrades
+- [Most important focusing or simplification move]
+- [Most important mechanism concretization]
+- [Most important modernization or justification for staying simple]
 
-## Final Status
-- Anchor status: [preserved / corrected / unresolved]
-- Focus status: [tight / slightly broad / still diffuse]
-- Modernity status: [appropriately frontier-aware / intentionally conservative / still old-school]
-- Strongest parts of final method:
-- Remaining weaknesses:
+## Remaining Weaknesses
+- [Honest unresolved issues]
 ```
 
 ## Final proposal (`refine-logs/FINAL_PROPOSAL.md`)
 
-Clean final version. Only the final proposal itself — no review chatter, no round history, no raw reviewer output. If the final verdict is not READY, still write the best current final version here.
+This is the main deliverable.
 
 ```markdown
 # Research Proposal: [Title]
@@ -188,6 +202,8 @@ Clean final version. Only the final proposal itself — no review chatter, no ro
 
 ## Refinement report (`refine-logs/REFINEMENT_REPORT.md`)
 
+Optional audit-heavy artifact. Do not create by default.
+
 ```markdown
 # Refinement Report
 
@@ -195,37 +211,23 @@ Clean final version. Only the final proposal itself — no review chatter, no ro
 **Initial Approach**: [user's vague approach]
 **Date**: [today]
 **Rounds**: N / MAX_ROUNDS
-**Final Score**: X / 10
 **Final Verdict**: [READY / REVISE / RETHINK]
+**Final Score**: [X / 10 if scored]
 
 ## Problem Anchor
 [Verbatim anchor used across all rounds]
 
-## Output Files
-- Review summary: `refine-logs/REVIEW_SUMMARY.md`
-- Final proposal: `refine-logs/FINAL_PROPOSAL.md`
-
 ## Score Evolution
-
-| Round | Problem Fidelity | Method Specificity | Contribution Quality | Frontier Leverage | Feasibility | Validation Focus | Venue Readiness | Overall | Verdict |
-|-------|------------------|--------------------|----------------------|-------------------|-------------|------------------|-----------------|---------|---------|
-| 1     | ...              | ...                | ...                  | ...               | ...         | ...              | ...             | ...     | ...     |
+[Paste the score-history table if it exists]
 
 ## Round-by-Round Review Record
-
-| Round | Main Reviewer Concerns | What Was Changed | Result |
-|-------|-------------------------|------------------|--------|
-| 1     | [top issues]            | [main fixes]     | [resolved / partial / unresolved] |
-| 2     | ...                     | ...              | ...    |
+| Round | Blocking Issues | Non-blocking Suggestions | What Changed | Result |
+|-------|-----------------|--------------------------|--------------|--------|
+| 1     | [top issues]    | [optional]               | [main fixes] | [resolved / partial / unresolved] |
 
 ## Final Proposal Snapshot
 - Canonical clean version lives in `refine-logs/FINAL_PROPOSAL.md`
 - Summarize the final thesis in 3-5 bullets here
-
-## Method Evolution Highlights
-1. [Most important simplification or focusing move]
-2. [Most important mechanism upgrade]
-3. [Most important modernization or justification for staying simple]
 
 ## Pushback / Drift Log
 | Round | Reviewer Said | Author Response | Outcome |
@@ -243,40 +245,39 @@ Clean final version. Only the final proposal itself — no review chatter, no ro
 [Full verbatim response from reviewer model]
 
 </details>
-
-...
-
-## Next Steps
-- If READY: proceed to `/research-refine-pipeline` if you want the same proposal expanded into a full experiment roadmap, then `/run-experiment`
-- If REVISE: manually address the remaining mechanism weaknesses, then re-run `/research-refine`
-- If RETHINK: revisit the core mechanism, possibly with `/idea-creator`
 ```
 
 ## Final user-facing summary
 
-```
-Refinement complete after N rounds.
+Present this summary directly in the reply, not mainly as file pointers.
 
-Final score: X/10 (Verdict: READY / REVISE / RETHINK)
+```markdown
+Refinement complete after N round(s).
 
-Anchor status:
-- [preserved / drift corrected / unresolved concern]
+Final verdict: READY / REVISE / RETHINK
+Final score: X/10 [include only if a scored review was used]
 
-Focus status:
-- [tight / slightly broad / still diffuse]
+## Refined thesis
+- [one-sentence method thesis]
 
-Modernity status:
-- [appropriately frontier-aware / intentionally conservative / still old-school]
+## Key upgrades over the starting idea
+- [upgrade 1]
+- [upgrade 2]
+- [upgrade 3]
 
-Key method upgrades:
-- [method change 1]
-- [method change 2]
+## Minimal validation blocks
+1. [claim-driven block]
+2. [claim-driven block]
+3. [optional claim-driven block]
 
-Remaining concerns:
-- [if any]
+## Main remaining risks
+- [risk 1]
+- [risk 2]
 
-Review summary: refine-logs/REVIEW_SUMMARY.md
-Full report: refine-logs/REFINEMENT_REPORT.md
-Final proposal: refine-logs/FINAL_PROPOSAL.md
-Suggested next step: /research-refine-pipeline
+## Supporting files
+- Final proposal: `refine-logs/FINAL_PROPOSAL.md`
+- Review summary: `refine-logs/REVIEW_SUMMARY.md` [if created]
+- Full report: `refine-logs/REFINEMENT_REPORT.md` [only if created]
+
+Suggested next step: `/research-refine-pipeline`
 ```

@@ -279,6 +279,8 @@ skills:
       - "Claude-specific tool naming replaced with agent-agnostic wording"
       - "bundled helper scripts copied into the shared canonical version"
       - "SKILL.md rewritten from 1113→243 lines: deduplicated steps 4/5/workflow (each appeared twice), extracted note template to references/note_template.md, scoring rubric to references/scoring_rubric.md, bilingual headers to references/bilingual_headers.md"
+      - "follow-up rewrite: replaced shell-heavy linear flow with a lean decision tree (existing note -> local PDF -> arXiv -> partial-input fallback), removed references to non-existent run_full_analysis.sh and run_paper_analysis.py, and made image extraction / graph update explicitly optional"
+      - "round-2 analysis rewrite: added paper-type routing (theory / methods / neuroscience / hybrid), claim-to-evidence mapping, author/evidence/judgment separation, severity-ranked concerns, a stronger scoring rubric, route-specific critique checklists, and bundled references/critique_checklists.md without making helper scripts part of the critical path"
     notes: "Shared copy keeps the original bilingual workflow"
 
   paper-search:
@@ -293,6 +295,8 @@ skills:
     modified: true
     modifications:
       - "description: ML/CV/NLP-style → Neuroscience/ML-style"
+      - "default output contract rewritten: manuscript-ready prose by default; visible outline/paragraph-role labels/checklist/claim map moved to opt-in audit mode"
+      - "internalized reverse-outline / adversarial review / claim-support audit scaffolding; tightened claim-strength calibration to supported vs suggestive vs deferred/unsupported"
 
   youtube-transcript:
     source: "{tapestry}/youtube-transcript"
@@ -371,10 +375,12 @@ skills:
     source: null
     modified: true
     modifications:
-      - "removed direct dependency on mcp__codex__codex and mcp__codex__codex-reply"
-      - "added CLI-first reviewer backend for codex/claude/gemini runtimes"
-      - "added runtime_cli.py and reviewer_call.py to preserve threaded reviewer history locally"
-      - "API backends retained only as fallback, not as the primary path"
+      - "default output contract rewritten: proposal-first deliverable with clean refined proposal as the main artifact"
+      - "review artifacts downgraded to lightweight audit trail by default; heavy per-round logs are now optional"
+      - "reviewer schema now includes a Method Pin-Down Check covering interfaces, data model, loss, inference path, and claim-driven validation"
+      - "stop condition tightened so READY requires the dominant mechanism to be implementation-pinned, not just cleanly phrased"
+      - "proposal templates now carry compact mechanism and validation contracts to raise specificity without restoring heavy logs"
+      - "restored exact round-2 as the default backbone: proposal quality still hinges on implementation-pinned dominant mechanisms with explicit interfaces, data model, loss, inference path, and claim-driven validation"
     notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
     models:
       - name: gpt-5.4
@@ -389,6 +395,7 @@ skills:
       - "pipeline rewritten to rely on the shared CLI-first research-refine reviewer path"
       - "added run_pipeline.py orchestrator for PIPELINE_GATE.md and PIPELINE_SUMMARY.md"
       - "internalized experiment-planning guidance as a bundled reference so the top-level shared library stays one-to-one with the original .claude skill set"
+      - "pipeline wording aligned with the restored exact round-2 backbone"
     notes: "Originated from a coworker-local skill set; no standalone upstream checkout is currently present"
     models:
       - name: gpt-5.4

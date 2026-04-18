@@ -59,7 +59,7 @@ Do not plan a large experiment suite on top of an unstable method. First stabili
 
 ### Phase 1: Method Refinement Stage
 
-Run the `research-refine` workflow and keep its V3 philosophy intact:
+Run the `research-refine` workflow and keep its exact round-2 backbone intact:
 
 - preserve the Problem Anchor
 - prefer the smallest adequate mechanism
@@ -111,6 +111,8 @@ Ensure the experiment plan covers:
 - a simplicity or deletion check
 - a frontier necessity check if applicable
 - run order, budget, and decision gates
+
+If the refined proposal already has a sharp dominant mechanism, test that sharpness through decisive baselines, deletion tests, and necessity checks where appropriate; do not let concise prose excuse missing mechanism pin-down for the dominant claim.
 
 ### Phase 4: Integration Summary
 
@@ -177,7 +179,7 @@ Best next step:
 - Do not widen the paper story after method refinement unless a missing validation block is truly necessary.
 - Reuse the same claims across `FINAL_PROPOSAL.md`, `EXPERIMENT_PLAN.md`, and `PIPELINE_SUMMARY.md`.
 - Keep the main paper story compact.
-- If the method is intentionally simple, defend that simplicity in the experiment plan rather than adding new components.
+- If the dominant mechanism is already sharp, prefer decisive tests over adding new wrappers or auxiliary components around reused context.
 - If the method uses a modern LLM / VLM / Diffusion / RL primitive, make its necessity test explicit.
 - If the method does not need a frontier primitive, say that clearly and avoid forcing one.
 - Prefer the staged skills when the user only needs one stage; use this skill for the integrated flow.

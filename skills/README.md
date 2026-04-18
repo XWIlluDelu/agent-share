@@ -14,7 +14,7 @@
 - 对必须保留的平台差异，只做薄适配
 - 让顶层 skill 名称与原 `~/.claude/skills/` 保持一一对应
 
-当前顶层 skill 目录数量与原 `~/.claude/skills/` 一致：**45 个**。
+当前正式纳入项目管理的顶层 skill 数量为 **46 个**（本轮显式不计 `patchouli`）。
 
 共享库围绕以下主要工作流组织：
 
@@ -72,21 +72,21 @@
 |---|---|---|
 | `citation-management` | DOI / PMID / BibTeX 元数据规范化 | `python` → `python3` |
 | `hypothesis-generation` | 把观察/问题转成可检验假设 | 去掉 Claude-specific tool naming；补 `agents/openai.yaml` |
-| `scientific-brainstorming` | 研究发散、跨领域启发 | 无 |
-| `scientific-critical-thinking` | 结构化批判与漏洞检查 | 无 |
-| `scientific-writing` | 科研稿件写作 | 无 |
-| `markitdown` | 多格式文档 → Markdown | 无 |
+| `scientific-brainstorming` | 研究发散、跨领域启发 | description 加入双语 trigger，并把英文范围收紧到 early-stage ideation |
+| `scientific-critical-thinking` | 结构化批判与漏洞检查 | description 改成 bilingual trigger + Use-when；`SKILL.md` 精简并把细节下沉到 references |
+| `scientific-writing` | 科研稿件写作 | `SKILL.md` 精简，移除图像/visual boilerplate，并抽出 field terminology reference |
+| `markitdown` | 多格式文档 → Markdown | 省略 K-Dense bundled schematic 脚本；`SKILL.md` 精简并把使用示例移到 references |
 | `literature-review` | 正式综述 workflow（PRISMA / screening / synthesis） | 去掉 Claude-specific tool naming；保留脚本与模板；补 `agents/openai.yaml` |
-| `scientific-schematics` | AI 生成科学示意图 | 无 |
+| `scientific-schematics` | AI 生成科学示意图 | `.env` 向上查找更稳健；API key 改走环境变量，避免出现在进程列表 |
 
 ### 2.4 社区来源：scicraft
 
 | Skill | 说明 | 共享库本地修改 |
 |---|---|---|
-| `openalex-database` | 跨领域学术检索、引用网络探索 | 无 |
-| `pubmed-database` | 生物医学文献检索 | 无 |
+| `openalex-database` | 跨领域学术检索、引用网络探索 | `SKILL.md` 改成 summary table，并把 API queries/workflows/recipes 移到 references |
+| `pubmed-database` | 生物医学文献检索 | `SKILL.md` 精简为核心检索结构，并把 API 示例与 workflow 移到 references |
 | `statistical-analysis` | 统计设计、检验选择、效应量建议 | 无 |
-| `sympy-symbolic-math` | 符号数学、ODE 推导 | 无 |
+| `sympy-symbolic-math` | 符号数学、ODE 推导 | `SKILL.md` 精简，保留 solver/simplification guide，并把 API 与 workflows 移到 references |
 
 ### 2.5 社区来源：kepano / obsidian-skills
 
@@ -94,7 +94,7 @@
 |---|---|---|
 | `obsidian-markdown` | 生成和维护 Obsidian 兼容 Markdown | 无 |
 | `obsidian-cli` | 直接操作 Obsidian vault | 无 |
-| `obsidian-bases` | 构建 Obsidian `.base` 数据视图 | 无 |
+| `obsidian-bases` | 构建 Obsidian `.base` 数据视图 | `SKILL.md` 精简并抽出完整 YAML 示例；补充 single-string filters 与 `number()` 用法 |
 | `defuddle` | 提取网页清洁正文 | 改成 agent-agnostic 获取网页正文表述 |
 | `json-canvas` | 创建和编辑 `.canvas` 文件 | 无 |
 
@@ -102,25 +102,26 @@
 
 | Skill | 说明 | 共享库本地修改 |
 |---|---|---|
-| `extract-paper-images` | 从论文 PDF / arXiv 源码包提取图片 | 无 |
-| `paper-analyze` | 深度分析单篇论文，图文笔记 | 去掉 Claude-specific tool naming；补脚本资源；保留双语工作流 |
-| `paper-search` | 在本地 vault 笔记中搜索论文 | 无 |
+| `extract-paper-images` | 从论文 PDF / arXiv 源码包提取图片 | description 改成 bilingual trigger + Use-when |
+| `paper-analyze` | 深度分析单篇论文，图文笔记 | 改成 agent-agnostic；补 helper 脚本；`SKILL.md` 重写为更精简的 decision-tree workflow，并增强 critique/rubric |
+| `paper-search` | 在本地 vault 笔记中搜索论文 | description 改成 bilingual trigger + Use-when |
 
 ### 2.7 社区来源：其他公开 repo
 
 | Skill | 来源 | 说明 | 共享库本地修改 |
 |---|---|---|---|
-| `research-paper-writing` | ceasonen / research-skills | 完整论文写作 workflow | description 中 `ML/CV/NLP` → `Neuroscience/ML` |
-| `youtube-transcript` | michalparkola / tapestry-skills | 下载 YouTube 字幕 | 无 |
+| `research-paper-writing` | ceasonen / research-skills | 完整论文写作 workflow | description 中 `ML/CV/NLP` → `Neuroscience/ML`；默认改成 manuscript-ready prose，隐藏 outline / role labels / checklist / claim map；claim calibration 更保守 |
+| `youtube-transcript` | michalparkola / tapestry-skills | 下载 YouTube 字幕 | `SKILL.md` 精简，并把详细命令与完整 workflow 移到 references |
 | `planning-with-files` | OthmanAdi / planning-with-files | 文件驱动任务规划 | 去掉 Claude-only hooks 假设；补模板 / scripts / refs；补 Codex hook adapter；Gemini 作为 manual-first |
-| `skill-metric` | skill-metric repo | 静态评分 skill 质量 | 无 |
+| `pptx-generator` | MiniMax / skills | PowerPoint 生成与编辑 | 无 |
+| `skill-metric` | 无公开 upstream（作者：Juntao Deng） | 静态评分 skill 质量 | 无 |
 
 ### 2.8 社区来源：obra / superpowers
 
 | Skill | 说明 | 共享库本地修改 |
 |---|---|---|
-| `systematic-debugging` | 结构化排错方法论 | 无 |
-| `verification-before-completion` | 完成前强制验证 | 无 |
+| `systematic-debugging` | 结构化排错方法论 | description 改成 bilingual trigger + Use-when |
+| `verification-before-completion` | 完成前强制验证 | description 改成 bilingual trigger + Use-when |
 
 ### 2.9 社区来源：ZhanlinCui / Agent-Skills-Hunter
 
@@ -138,8 +139,9 @@
 | `ml-concept-study` | 概念深度学习卡片 | scope 扩展到 ML + 计算神经科学 + 数学工具；路径与 taxonomy 调整 |
 | `author-homepage` | 研究者主页档案生成 | vault 路径适配到当前 Obsidian 结构 |
 | `semantic-scholar-daily` | 每日论文推荐 | 去掉 Claude-specific task 表述；补通用脚本；仍需 `SEMANTIC_SCHOLAR_API_KEY` |
-| `research-refine` | 迭代细化研究方案 | 外部 reviewer 从 Claude 调 Codex MCP 改成 CLI-first reviewer（`codex` / `claude` / `gemini`），API 只作 fallback |
-| `research-refine-pipeline` | 串联方案细化与实验规划 | 改成顶层仍保持一一对应；将 experiment-planning workflow 内收到 skill 内部参考文档；补 `run_pipeline.py` 编排脚本 |
+| `research-refine` | 迭代细化研究方案 | 保留 proposal-first 默认交付与 exact round-2 implementation-pinned backbone |
+| `research-refine-pipeline` | 串联方案细化与实验规划 | 改成顶层仍保持一一对应；将 experiment-planning workflow 内收到 skill 内部参考文档；补 `run_pipeline.py` 编排脚本；实验规划继承 exact round-2 backbone |
+| `meeting-executive-summary` | 会议转 executive-summary 风格 Markdown 报告 | 由 anthropic-skill-creator 的 B 测试产物沉淀为独立 skill |
 | `skill-manager` | 管理共享 skill 库及 source registry | 从本地 `.claude` 专用版泛化到共享库；支持显式管理 `~/.agent-share/skills/` |
 
 ---
