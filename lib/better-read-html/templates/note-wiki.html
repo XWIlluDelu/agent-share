@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="{{ language | default: 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+  {{ inline_css }}
+  </style>
+</head>
+<body>
+  <a class="brh-skip" href="#main" data-canonical="false">Skip to note</a>
+  <div class="brh-shell" data-mode="preserve" data-fidelity-tier="source-primary">
+    <main class="brh-main" id="main" data-mode-subtype="notes-wiki">
+      <header data-canonical="false">
+        <p class="brh-kicker">Note page</p>
+        <h1>{{ title }}</h1>
+        <p class="brh-meta">{{ note_path_or_source_label }}</p>
+      </header>
+
+      <section class="brh-generated" data-canonical="false" data-generated="true" data-target="source-frontmatter" id="properties">
+        <h2>Properties</h2>
+        {{ frontmatter_panel_html }}
+      </section>
+
+      <!-- Preserve note order, wikilinks, callouts, and local assets unless cleanup is explicitly requested. -->
+      {{ canonical_note_html }}
+
+      <footer class="brh-colophon" data-canonical="false" aria-label="Note validation">
+        <p>{{ wikilink_and_asset_validation_summary }}</p>
+      </footer>
+    </main>
+
+    <aside class="brh-rail" data-canonical="false" aria-label="Note navigation">
+      <section>
+        <h2>Links</h2>
+        {{ wikilink_summary_html }}
+      </section>
+      <section>
+        <h2>Assets</h2>
+        {{ asset_summary_html }}
+      </section>
+    </aside>
+  </div>
+</body>
+</html>

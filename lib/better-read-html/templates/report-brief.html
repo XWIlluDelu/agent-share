@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="{{ language | default: 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+  {{ inline_css }}
+  </style>
+</head>
+<body>
+  <a class="brh-skip" href="#main" data-canonical="false">Skip to report</a>
+  <div class="brh-shell" data-mode="annotate-synthesize" data-fidelity-tier="synthesized">
+    <main class="brh-main" id="main" data-mode-subtype="synthesis-report">
+      <header data-canonical="false">
+        <p class="brh-kicker">Synthesis report · not source-preserving conversion</p>
+        <h1>{{ title }}</h1>
+        <p class="brh-meta">{{ source_manifest_summary }}</p>
+      </header>
+
+      <section class="brh-generated" data-canonical="false" data-generated="true" data-evidence="{{ summary_evidence_ids }}" id="summary">
+        <h2>Summary</h2>
+        {{ generated_summary_html }}
+      </section>
+
+      <section id="source-record">
+        <h2>Source record</h2>
+        {{ source_excerpt_or_manifest_html }}
+      </section>
+
+      <section class="brh-generated" data-canonical="false" data-generated="true" data-evidence="{{ claim_evidence_ids }}" id="claims">
+        <h2>Claims and evidence</h2>
+        {{ claim_evidence_cards_html }}
+      </section>
+
+      <footer class="brh-colophon" data-canonical="false" aria-label="Report provenance">
+        <p>{{ validation_summary }}</p>
+      </footer>
+    </main>
+
+    <aside class="brh-rail" data-canonical="false" aria-label="Report navigation">
+      <section>
+        <h2>Contents</h2>
+        {{ table_of_contents_html }}
+      </section>
+      <section>
+        <h2>Sources</h2>
+        {{ source_list_html }}
+      </section>
+    </aside>
+  </div>
+</body>
+</html>

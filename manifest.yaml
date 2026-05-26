@@ -1,0 +1,274 @@
+source_repos:
+  anthropic:
+    url: "https://github.com/anthropics/skills.git"
+  openai:
+    url: "https://github.com/openai/skills.git"
+  k_dense:
+    url: "https://github.com/K-Dense-AI/claude-scientific-skills.git"
+  scicraft:
+    url: "https://github.com/jaechang-hits/scicraft.git"
+  obsidian:
+    url: "https://github.com/kepano/obsidian-skills.git"
+  research_skills:
+    url: "https://github.com/ceasonen/research-skills.git"
+  tapestry:
+    url: "https://github.com/michalparkola/tapestry-skills.git"
+  planning_with_files:
+    url: "https://github.com/OthmanAdi/planning-with-files.git"
+  agent_skills_hunter:
+    url: "https://github.com/ZhanlinCui/Agent-Skills-Hunter.git"
+  mattpocock_skills:
+    url: "https://github.com/mattpocock/skills.git"
+  khazix_skills:
+    url: "https://github.com/KKKKhazix/khazix-skills.git"
+  semantic_scholar_skills:
+    url: "https://github.com/zongmin-yu/semantic-scholar-skills.git"
+  humanizer:
+    url: "https://github.com/blader/humanizer.git"
+  custom:
+    type: custom
+    path: "."
+
+skills:
+  # Anthropic official
+  - name: anthropic-skill-creator
+    pack: agent-dev
+    source_repo: anthropic
+    source_path: "skills/skill-creator"
+    notes: "Locally normalized skill identity to anthropic-skill-creator to avoid collisions with OpenAI's skill-creator; otherwise keep upstream/original as a Claude/Anthropic reviewer reference for portable skill creation."
+  - name: pdf
+    pack: documents
+    source_repo: anthropic
+    source_path: "skills/pdf"
+  - name: docx
+    pack: documents
+    source_repo: anthropic
+    source_path: "skills/docx"
+    notes: "Claude author wording in tracked changes is accepted; ignore for portability audit."
+  - name: pptx
+    pack: documents
+    source_repo: anthropic
+    source_path: "skills/pptx"
+    notes: "Claude author default in Office scripts is accepted; ignore for portability audit."
+  - name: xlsx
+    pack: documents
+    source_repo: anthropic
+    source_path: "skills/xlsx"
+    notes: "Claude author default in Office scripts is accepted; ignore for portability audit."
+  - name: frontend-design
+    pack: frontend
+    source_repo: anthropic
+    source_path: "skills/frontend-design"
+    notes: "Light normalization target: replace Anthropic/Claude self-reference with agent-neutral wording."
+  - name: theme-factory
+    pack: frontend
+    source_repo: anthropic
+    source_path: "skills/theme-factory"
+  - name: webapp-testing
+    pack: web-testing
+    source_repo: anthropic
+    source_path: "skills/webapp-testing"
+  - name: canvas-design
+    pack: visual-artifacts
+    source_repo: anthropic
+    source_path: "skills/canvas-design"
+    notes: "Light normalization target: replace 'next Claude' wording with 'next agent'."
+
+  # OpenAI official / curated
+  - name: openai-skill-creator
+    pack: agent-dev
+    source_repo: openai
+    source_path: "skills/.system/skill-creator"
+    notes: "Locally normalized skill identity to openai-skill-creator to avoid collisions with Anthropic's skill-creator; otherwise keep upstream/original as a Codex/OpenAI reviewer reference for portable skill creation."
+  - name: cli-creator
+    pack: agent-dev
+    source_repo: openai
+    source_path: "skills/.curated/cli-creator"
+    notes: "Normalize Codex-centric wording to agent-neutral wording; prefer project-local companion skills unless a shared install is explicitly desired."
+  - name: jupyter-notebook
+    pack: scientific-tools
+    source_repo: openai
+    source_path: "skills/.curated/jupyter-notebook"
+    notes: "Normalize CODEX_HOME skill path to project-local skill installation when imported."
+  - name: playwright
+    pack: web-testing
+    source_repo: openai
+    source_path: "skills/.curated/playwright"
+    notes: "Normalize CODEX_HOME/PWCLI skill path to project-local skill installation when imported."
+
+  # K-Dense / claude-scientific-skills
+  - name: scientific-brainstorming
+    pack: scientific-thinking
+    source_repo: k_dense
+    source_path: "scientific-skills/scientific-brainstorming"
+  - name: hypothesis-generation
+    pack: scientific-thinking
+    source_repo: k_dense
+    source_path: "scientific-skills/hypothesis-generation"
+  - name: scientific-critical-thinking
+    pack: scientific-thinking
+    source_repo: k_dense
+    source_path: "scientific-skills/scientific-critical-thinking"
+  - name: literature-review
+    pack: paper-discovery
+    source_repo: k_dense
+    source_path: "scientific-skills/literature-review"
+  - name: citation-management
+    pack: paper-writing
+    source_repo: k_dense
+    source_path: "scientific-skills/citation-management"
+  - name: peer-review
+    pack: paper-writing
+    source_repo: k_dense
+    source_path: "scientific-skills/peer-review"
+  - name: exploratory-data-analysis
+    pack: scientific-tools
+    source_repo: k_dense
+    source_path: "scientific-skills/exploratory-data-analysis"
+  - name: statistical-analysis
+    pack: scientific-tools
+    source_repo: k_dense
+    source_path: "scientific-skills/statistical-analysis"
+  - name: scientific-visualization
+    pack: scientific-tools
+    source_repo: k_dense
+    source_path: "scientific-skills/scientific-visualization"
+  - name: scientific-schematics
+    pack: scientific-tools
+    source_repo: k_dense
+    source_path: "scientific-skills/scientific-schematics"
+
+  # scicraft
+  - name: openalex-database
+    pack: paper-discovery
+    source_repo: scicraft
+    source_path: "skills/scientific-writing/openalex-database"
+  - name: sympy-symbolic-math
+    pack: scientific-tools
+    source_repo: scicraft
+    source_path: "skills/scientific-computing/sympy-symbolic-math"
+
+  # kepano / obsidian-skills
+  - name: obsidian-markdown
+    pack: obsidian
+    source_repo: obsidian
+    source_path: "skills/obsidian-markdown"
+  - name: obsidian-cli
+    pack: obsidian
+    source_repo: obsidian
+    source_path: "skills/obsidian-cli"
+  - name: obsidian-bases
+    pack: obsidian
+    source_repo: obsidian
+    source_path: "skills/obsidian-bases"
+  - name: json-canvas
+    pack: obsidian
+    source_repo: obsidian
+    source_path: "skills/json-canvas"
+  - name: defuddle
+    pack: documents
+    source_repo: obsidian
+    source_path: "skills/defuddle"
+
+  # Other public sources
+  - name: research-paper-writing
+    pack: paper-writing
+    source_repo: research_skills
+    source_path: "skills/research-paper-writing"
+  - name: youtube-transcript
+    pack: media-ingest
+    source_repo: tapestry
+    source_path: "youtube-transcript"
+  - name: planning-with-files
+    pack: always-on
+    source_repo: planning_with_files
+    source_path: "skills/planning-with-files"
+    notes: "Isolated .planning mode was introduced in v2.36.0; canonical skill scripts include it from v2.36.2; SKILL.md documents it from v2.36.3. Prefer .planning mode by default; avoid root-level task_plan.md/findings.md/progress.md unless explicitly requested."
+  - name: grill-me
+    pack: always-on
+    source_repo: mattpocock_skills
+    source_path: "skills/productivity/grill-me"
+  - name: chat-compactor
+    pack: always-on
+    source_repo: agent_skills_hunter
+    source_path: "planning/chat-compactor"
+    notes: "Light normalization target: remove root/global output fallback. Default session summaries should go under .handoff/session-[topic]-[date].md."
+  - name: neat-freak
+    pack: local-maintenance
+    source_repo: khazix_skills
+    source_path: "neat-freak"
+    notes: "Cross-platform cleanup and handoff maintenance skill. Keep in local-maintenance rather than always-on; it should only update memory/config files that exist or are supported by the active agent, and skip missing platform-specific files."
+
+
+  # Matt Pocock engineering skills
+  - name: diagnose
+    pack: software-dev
+    source_repo: mattpocock_skills
+    source_path: "skills/engineering/diagnose"
+    notes: "Software-development skill for disciplined bug/performance diagnosis. Locally normalized to remove command/tool-specific routing. Keep in software-dev pack; not a scientific-research workflow."
+  - name: tdd
+    pack: software-dev
+    source_repo: mattpocock_skills
+    source_path: "skills/engineering/tdd"
+    notes: "Software-development skill for red-green-refactor through public behavior tests. Keep in software-dev pack; not a scientific-research workflow."
+  - name: prototype
+    pack: software-dev
+    source_repo: mattpocock_skills
+    source_path: "skills/engineering/prototype"
+    notes: "Software-development skill for throwaway logic/UI prototypes before implementation. Keep in software-dev pack; not a scientific-research workflow."
+  - name: improve-codebase-architecture
+    pack: software-dev
+    source_repo: mattpocock_skills
+    source_path: "skills/engineering/improve-codebase-architecture"
+    notes: "Software-development skill for deepening modules, improving seams, testability, and AI navigability. Locally normalized to use agent-neutral exploration/design wording and project-local CONTEXT.md/ADR formats. Keep in software-dev pack."
+
+  # Custom/local skills
+  - name: skill-manager
+    pack: local-maintenance
+    source_repo: custom
+    source_path: "lib/skill-manager"
+    notes: "Customized skill for maintaining the skill library."
+  - name: better-read-html
+    pack: documents
+    source_repo: custom
+    source_path: "lib/better-read-html"
+    notes: "Custom portable skill for generic source-first, static, auditable HTML document artifacts; scholarly/paper rigor lives in a dedicated reference. The historical copy source was /home/wangzixiong/better-read-html/.agents/skills/better-read-html on 2026-05-19; the canonical maintained copy is now lib/better-read-html. Keep in documents pack rather than always-on unless repeated use justifies activation."
+
+  - name: docdoki
+    pack: always-on
+    source_repo: custom
+    source_path: "lib/docdoki"
+    notes: "Custom skill for managing living project documentation: northstar, active todo, chores, specs, challenge reports, staging, and adoption/check/challenge workflows. Registered from /home/wangzixiong/docdoki/skills/docdoki on 2026-05-24. Runtime package is maintained in lib/docdoki; project design-history artifacts are intentionally excluded."
+
+  - name: project-setup
+    pack: always-on
+    source_repo: custom
+    source_path: "lib/project-setup"
+    notes: "Customized skill for setting up or updating project-level shared skills and generated AGENTS.md files from agents-fragments."
+
+  - name: humanizer
+    pack: documents
+    source_repo: humanizer
+    source_path: "."
+    notes: "External humanizer skill installed from blader/humanizer; document-oriented text naturalization and AI-writing cleanup. Kept outside always-on to avoid broad style interference."
+
+  - name: chaos
+    pack: always-on
+    source_repo: custom
+    source_path: "lib/chaos"
+    notes: "Disciplined claim-led multi-agent deliberation skill for high-value ambiguous or risky judgment. Developed in /home/wangzixiong/chaos; keep lightweight and generic."
+
+
+  # Semantic Scholar discovery layer
+  - name: paper-triage
+    pack: paper-discovery
+    source_repo: semantic_scholar_skills
+    source_path: "skills/paper-triage"
+  - name: expand-references
+    pack: paper-discovery
+    source_repo: semantic_scholar_skills
+    source_path: "skills/expand-references"
+  - name: trace-citations
+    pack: paper-discovery
+    source_repo: semantic_scholar_skills
+    source_path: "skills/trace-citations"

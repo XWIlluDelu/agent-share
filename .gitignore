@@ -1,6 +1,24 @@
+# Upstream source repos (cloned by manifest, not owned content)
+sources/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# OS
 .DS_Store
-.env
-.env.local
-*.env
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
