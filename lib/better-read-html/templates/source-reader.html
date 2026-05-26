@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="{{ language | default: 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+  {{ inline_css }}
+  </style>
+</head>
+<body>
+  <a class="brh-skip" href="#main" data-canonical="false">Skip to source</a>
+  <!-- Placeholders are agent-replaced. There is no Liquid runtime; treat {{ … }} as substitution sites. -->
+  <div class="brh-shell {{ shell_class }}" data-mode="{{ mode | default: 'preserve' }}" data-fidelity-tier="{{ fidelity_tier }}">
+    <!-- Renderer must emit `data-mode-subtype` on <main> whenever subtype-gated styling is in play (e.g. close-read / synthesis-report). See references/mode-contracts.md. -->
+    <main class="brh-main" id="main" data-mode-subtype="{{ mode_subtype | default: 'conversion-preserve' }}">
+      <!-- Optional noncanonical header. In preserve mode, omit this block when the source already has visible title/frontmatter as the opening; use the canonical source title (`<h1 class="brh-doc-title">`) as the reader title instead. -->
+      {{ optional_reader_header_html }}
+
+      <!-- Canonical source blocks go here. Render from source IR; do not paste raw converter wrapper DOM unless visual facsimile was requested. -->
+      {{ canonical_source_html }}
+
+      {{ optional_provenance_html }}
+    </main>
+
+    <!-- Render rail/tool elements only when substantive. Use `data-rail-priority` so narrow layouts concatenate them as one ordered apparatus. -->
+    {{ rail_apparatus_html }}
+  </div>
+</body>
+</html>

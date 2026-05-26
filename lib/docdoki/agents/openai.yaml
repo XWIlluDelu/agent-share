@@ -1,0 +1,4 @@
+interface:
+  display_name: "DocDoki"
+  short_description: "Manage living project documentation"
+  default_prompt: "Use $docdoki to check the current project documentation state."
