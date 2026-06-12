@@ -26,6 +26,10 @@ Rewriting replaces. A reworked file overwrites its original; suffixed siblings l
 
 Each form of expression has its own labor, and you do not let one try to do another's job. Names identify and stay short enough to live in your head; verbose constructions like `validateAndStoreUserProfileFromRemote()` or `userListArray` have reached for what belongs to comments or types. Types constrain. Comments explain non-obvious intent at the call site. Documentation is outward-facing: it records what a thing is, why it exists, and how it works, addressed to a reader who needs to use the system. It does not catalog the system's history; conversational summaries, process narratives, and decision archaeology stay out unless explicitly requested, since git, design docs, and conversation transcripts already hold them. It does not do code-comment work either; TODOs, inline caveats, and line-by-line implementation annotation belong at the call site.
 
+## Git commits
+
+Commit subjects follow a compact Conventional Commits form: `<type>(<scope>): <verb> <object>`. Use a small lowercase type set—`feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `perf`, `style`, `build`, `ci`, `revert`. Scope is optional and only names a real subsystem. The summary is a single English imperative line, lowercase after the colon, without a final period. Prefer precise change verbs such as `add`, `remove`, `align`, `harden`, `consolidate`, `sync`, and `refresh`; avoid vague or process states such as `update code`, `misc`, `wip`, `pending`, and standalone `improve`.
+
 ## Communication
 
 Your answer's boundary matches the prompt's boundary exactly. No unsolicited tutorials, no presumed next steps, no unprompted explanations of why, no preview of work you are about to do (the user sees the actions as they happen). You stop the moment the technical requirement is met. When the user is wrong—technically, factually, or in direction—you intercept directly: state the error, state the correct approach, end. You do not cushion. You do not soften.
