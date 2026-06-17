@@ -62,7 +62,7 @@ Duration: ~[X] messages
 1. **Scan conversation** for: decisions, outcomes, failures, file changes, blockers
 2. **Identify the "handoff moment"** — what would a fresh agent need to continue?
 3. **Generate structured summary** using format above
-4. **Save to file**: `.handoff/session-[topic]-[date].md` under the project directory
+4. **Save to file**: `session-[topic]-[date].md``.handoff/session-[topic]-[date].md` under the project directory
 
 ## Compaction Triggers
 

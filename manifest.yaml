@@ -59,7 +59,7 @@ skills:
     pack: frontend
     source_repo: anthropic
     source_path: "skills/frontend-design"
-    notes: "Light normalization target: replace Anthropic/Claude self-reference with agent-neutral wording."
+    notes: "Upstream description rewrite (vJune2026) removed Claude-specific language; local normalization no longer required."
   - name: theme-factory
     pack: frontend
     source_repo: anthropic
@@ -179,11 +179,6 @@ skills:
     pack: media-ingest
     source_repo: tapestry
     source_path: "youtube-transcript"
-  - name: planning-with-files
-    pack: always-on
-    source_repo: planning_with_files
-    source_path: "skills/planning-with-files"
-    notes: "Isolated .planning mode was introduced in v2.36.0; canonical skill scripts include it from v2.36.2; SKILL.md documents it from v2.36.3. Prefer .planning mode by default; avoid root-level task_plan.md/findings.md/progress.md unless explicitly requested."
   - name: grill-me
     pack: always-on
     source_repo: mattpocock_skills
@@ -251,7 +246,7 @@ skills:
     pack: documents
     source_repo: humanizer
     source_path: "."
-    notes: "External humanizer skill installed from blader/humanizer; document-oriented text naturalization and AI-writing cleanup. Kept outside always-on to avoid broad style interference."
+    notes: "External humanizer skill installed from blader/humanizer v2.8.0 (33 patterns); document-oriented text naturalization and AI-writing cleanup. Kept outside always-on to avoid broad style interference."
 
   - name: chaos
     pack: always-on
