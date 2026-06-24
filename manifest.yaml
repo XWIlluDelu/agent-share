@@ -25,6 +25,8 @@ source_repos:
     url: "https://github.com/zongmin-yu/semantic-scholar-skills.git"
   humanizer:
     url: "https://github.com/blader/humanizer.git"
+  paper_lifecycle:
+    url: "https://github.com/M1n-n9/paper-lifecycle.git"
   custom:
     type: custom
     path: "."
@@ -175,6 +177,16 @@ skills:
     pack: paper-writing
     source_repo: research_skills
     source_path: "skills/research-paper-writing"
+  - name: review-revision
+    pack: paper-writing
+    source_repo: paper_lifecycle
+    source_path: "review-revision"
+    notes: "Local normalization narrows the skill to manuscript review/revision and routes formal rebuttal drafting to rebuttal-response."
+  - name: rebuttal-response
+    pack: paper-writing
+    source_repo: paper_lifecycle
+    source_path: "rebuttal-response"
+    notes: "Local normalization clarifies that actual reviews, AC comments, and rebuttal rules should use this skill rather than review-revision."
   - name: youtube-transcript
     pack: media-ingest
     source_repo: tapestry
@@ -223,6 +235,11 @@ skills:
     source_repo: custom
     source_path: "lib/skill-manager"
     notes: "Customized skill for maintaining the skill library."
+  - name: skill-creator
+    pack: always-on
+    source_repo: custom
+    source_path: "lib/skill-creator"
+    notes: "Portable orchestration wrapper binding anthropic-skill-creator and openai-skill-creator into one always-on skill lifecycle (author -> validate -> evaluate -> iterate -> optimize triggering -> package) and stripping vendor (Claude/Codex/Anthropic/OpenAI/model) specificity. Reuses the two creators via in-folder relative symlinks (anthropic-skill-creator, openai-skill-creator -> ../<name>) so upstream syncs propagate without duplication."
   - name: better-read-html
     pack: documents
     source_repo: custom

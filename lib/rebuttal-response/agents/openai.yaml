@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rebuttal Response"
+  short_description: "Plan and write evidence-based rebuttals"
+  default_prompt: "Use $rebuttal-response to triage these reviews, plan new evidence, and draft a concise rebuttal."
