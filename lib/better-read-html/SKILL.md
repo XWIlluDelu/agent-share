@@ -1,6 +1,6 @@
 ---
 name: better-read-html
-description: Create or audit source-first static HTML artifacts from formal documents (papers, technical reports, notes, plans, specifications). Use only when the user asks for a browser-readable/local/offline/single-file/printable HTML page, document or note conversion into HTML, source-preserving HTML relayout, evidence-linked HTML report/close-reading page, or validation of an existing/generated HTML artifact. Do not use for general summarization, paper reading, Markdown editing, math explanation, design exploration, or report writing unless the deliverable is HTML. Choose preserve, annotate-synthesize, or audit; keep canonical source text unchanged; keep generated material noncanonical and source-linked; validate links, assets, remote dependencies, and fidelity claims. Load scholarly-rigor only for formal paper/citation/figure/equation/derivation work. Artifacts use IBM Carbon design language (flat surfaces, hairlines, restrained blue accent).
+description: Create or audit source-first static HTML artifacts from formal documents (papers, technical reports, notes, plans, specifications). Use only when the user asks for a browser-readable/local/offline/single-file/printable HTML page, document or note conversion into HTML, source-preserving HTML relayout, evidence-linked HTML report/close-reading page, or validation of an existing/generated HTML artifact. Do not use for general summarization, paper reading, Markdown editing, math explanation, design exploration, or report writing unless the deliverable is HTML.
 ---
 
 # Better Read HTML
@@ -47,7 +47,7 @@ Source type changes risk, not the basic mode. DOCX, PDF/OCR, Markdown, Obsidian,
 
 ## Design rule
 
-Artifacts use IBM Carbon design language: flat white surfaces on `#f4f4f4` ground, charcoal text, restrained blue accent (`#0f62fe`), IBM Plex Sans typography, square geometry with hairlines. Inline `templates/ibm-carbon.css` into `<style>`. Give the document title `<h1 class="brh-doc-title">…</h1>`. When using subtype-specific styles, emit `data-mode-subtype="…"` on the article root for CSS scoping.
+Artifacts use the IBM Carbon design language; inline `templates/ibm-carbon.css` into `<style>` — that file is the palette, type, and geometry source for rendering. `references/ibm-design-md.md` documents and governs those tokens; load it only to change or audit the design language, not to render. Give the document title `<h1 class="brh-doc-title">…</h1>`. When using subtype-specific styles, emit `data-mode-subtype="…"` on the article root for CSS scoping.
 
 Design is content-shaped: short notes use single-column article; long figure-heavy manuscripts may justify responsive semantic rails; table-heavy sources may need horizontal table wrappers. Rails, indexes, cards, annotations, glossaries, and copy controls are acceptable only when they reduce reader work and are marked noncanonical or as layout duplicates. For figure-heavy sources, place each figure once at relevant first mention with full source legend when user permits relayout; otherwise keep canonical figure in source order and use first-mention previews as noncanonical duplicates. On narrow screens, multiple rails/tools become one priority-ordered apparatus below the article, not unrelated repeated sidebars.
 

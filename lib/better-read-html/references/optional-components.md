@@ -95,14 +95,4 @@ Citation preservation, affiliation, and DOI/venue enrichment rules are owned by 
 
 ## Not included
 
-This skill does not bundle heavy engines for:
-
-- PDF/OCR extraction;
-- figure cropping, panel segmentation, or computer vision matching;
-- CSL/BibTeX/Pandoc citation parsing and DOI enrichment;
-- Obsidian vault graph, Dataview, or backlink resolution;
-- browser visual-regression infrastructure;
-- mandatory bilingual worksheet generation;
-- mandatory MathJax/KaTeX packaging or model-specific rendering apps.
-
-Use external adapters for those tasks and feed their audited outputs back into the content contract.
+These optional layers are lightweight patterns, never bundled engines. The canonical list of excluded engines — PDF/OCR extraction, figure CV, CSL/BibTeX/DOI enrichment, Obsidian vault graph, browser visual-regression, forced MathJax/KaTeX packaging, mandatory worksheet/hover translation — is owned by [`scholarly-rigor.md`](scholarly-rigor.md), "Boundary: accepted hooks, not bundled engines". Use external adapters and feed their audited outputs back into the content contract.
