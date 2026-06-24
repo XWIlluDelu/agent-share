@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Revision"
+  short_description: "Review manuscripts and plan revisions"
+  default_prompt: "Use $review-revision to audit this manuscript, plan revisions, and produce a final checklist."

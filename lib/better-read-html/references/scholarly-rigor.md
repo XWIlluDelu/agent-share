@@ -46,9 +46,7 @@ In addition to the generic inventory, record:
 
 ## Paper and PDF preservation
 
-PDFs are not automatically source-preserving. Before claiming `verified-preserve`, parity must be checked against original source text or a separately audited ground-truth extraction. Matching HTML to an unaudited intermediate extraction is only `extracted-preserve`.
-
-For scanned/OCR PDFs, use `extracted-preserve` or `source-primary`, not `verified-preserve`, unless a separate human or deterministic audit validates the text. Surface reading-order uncertainty at page, section, or block level with `reading_order_status`.
+PDFs are not automatically source-preserving. The preservation policy and the fidelity-tier definitions are owned by [`mode-contracts.md`](mode-contracts.md) (§PDF and OCR policy, §Fidelity tiers); papers apply them at full stringency — claim `verified-preserve` only against original source text or a separately audited ground-truth extraction, never an unaudited intermediate. Surface reading-order uncertainty at page, section, or block level with `reading_order_status`.
 
 ## Figures, tables, and captions
 
@@ -127,5 +125,7 @@ Do not bundle or imply built-in support for heavy engines:
 - automatic figure cropping, panel segmentation, or computer-vision matching;
 - CSL/BibTeX/Pandoc citation parsing or DOI enrichment;
 - full Obsidian vault graph, Dataview, or backlink resolution;
-- mandatory sentence-level hover translation;
+- browser visual-regression infrastructure;
+- mandatory MathJax/KaTeX packaging or model-specific rendering apps;
+- mandatory sentence-level hover translation or bilingual worksheet generation;
 - fixed classroom Wonksheet layouts.

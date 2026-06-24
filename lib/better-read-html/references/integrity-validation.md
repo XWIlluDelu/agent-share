@@ -7,7 +7,6 @@
 - [Required report fields](#required-report-fields)
 - [Readability and design checks](#readability-and-design-checks)
 - [Audit helper](#audit-helper)
-- [Lightweight sync checklist](#lightweight-sync-checklist)
 
 ## Acceptance gates by mode
 
@@ -91,16 +90,3 @@ For scholarly/formal sources, additionally check declared figure/table/equation/
 ## Audit helper
 
 Use `scripts/audit_html.py` for already-rendered HTML. It is a partial structural/source audit, not a full accessibility or visual test. It checks duplicate ids, missing `<main>` in strict mode, empty canonical text in strict mode, broken internal links, selected reference/evidence attributes, local asset references, remote render dependencies, executable links, external source links, minimal accessibility warnings, optional canonical text parity, selected readability/design warnings, and emits JSON. `--strict` is a structural/source-boundary gate; it can still report accessibility, readability, design, or scholarly warnings without failing unless those warnings also violate a strict structural rule. Record the exact command/profile used beside substantial audit outputs.
-
-## Lightweight sync checklist
-
-When updating both a project-local skill and the shared `.agent-share` copy, keep the process small and deterministic:
-
-1. Validate frontmatter: only `name` and `description`, description under 1024 characters, no angle brackets.
-2. Compile helper scripts: `python3 -m py_compile <skill-dir>/scripts/audit_html.py`.
-3. Run one representative strict audit when a sample artifact is available.
-4. Remove `__pycache__` and `.pyc` files before syncing.
-5. Sync the skill directory to the shared copy and confirm required files exist.
-6. Ask a skill-creator reviewer for substantial changes; do not run a full eval loop unless behavior changed enough to justify it.
-
-This checklist is not a package manager and should not grow into one.
