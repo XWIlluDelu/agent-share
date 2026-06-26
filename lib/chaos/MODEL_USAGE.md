@@ -13,13 +13,6 @@ A route is suitable only if it adds an operational axis (model family, modality,
 
 # MODEL FAMILIES
 
-## GPT-family route
-
-- **Local call:** `xwilludelu/gpt-5.5:xhigh`
-- **Community/benchmark prior:** often treated as the all-rounder baseline: strong instruction following, tool use, synthesis, coding breadth, and cross-domain arbitration.
-- **Personality/use:** steady generalist; good parent/final synthesis candidate after claims are grounded; good at integrating conflicting advisers into a compact decision.
-- **Risks:** can sound more certain than the evidence permits; may smooth away dissent. Require citations, tests, source inspection, or cross-model critique for factual/high-stakes claims.
-
 ## Claude-family route
 
 - **Local call:** `xwilludelu/claude-opus:xhigh`
@@ -31,7 +24,7 @@ A route is suitable only if it adds an operational axis (model family, modality,
 
 - **Local call:** `xwilludelu/gemini-flash:xhigh`
 - **Community/benchmark prior:** often strong on long-context reading, multimodal input, broad scanning, and speed; Flash-style routes trade top-end depth for throughput.
-- **Personality/use:** fast broad reader; good for source/document passes, screenshots/UI, multimodal review, and non-GPT/non-PRC counterpoint.
+- **Personality/use:** fast broad reader; good for source/document passes, screenshots/UI, multimodal review, and non-PRC counterpoint.
 - **Risks:** long-context capacity does not guarantee faithful retrieval. For unknown facts or volatile claims, require source quotes, tests, or another model-family check.
 
 ## DeepSeek-family route
@@ -60,10 +53,10 @@ A route is suitable only if it adds an operational axis (model family, modality,
 | Task | Default route set |
 |---|---|
 | Broad judgment | All suitable available families. Do not use vote count as truth. |
-| Code | All suitable families plus direct tests. Include GPT, Claude, Gemini, DeepSeek, Kimi, and GLM where live config and modality fit. |
-| Large text corpus | Prefer live long-context routes; include at least one GPT/Claude/Gemini-family reader and one non-Western family reader when possible. |
+| Code | All suitable families plus direct tests. Include Claude, Gemini, DeepSeek, Kimi, and GLM where live config and modality fit. |
+| Large text corpus | Prefer live long-context routes; include at least one Claude/Gemini-family reader and one non-Western family reader when possible. |
 | Image/UI | Use image-capable live routes; verify actual image support before launch. |
-| PRC-sensitive topic | Require GPT/Gemini/Claude-family or primary-source cross-check; do not rely only on PRC-family routes. |
+| PRC-sensitive topic | Require Gemini/Claude-family or primary-source cross-check; do not rely only on PRC-family routes. |
 | Fact/current-events claim | Use search or primary sources; models provide hypotheses, not freshness. |
 | Final synthesis | Parent writes. A model-family route may advise, but cannot decide by seniority, confidence, or popularity. |
 
