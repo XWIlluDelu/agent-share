@@ -1,6 +1,9 @@
 # Upstream source repos (cloned by manifest, not owned content)
 sources/
 
+# Unlicensed upstream skill bodies kept locally only, not redistributed
+lib/simplify/
+
 # Python
 __pycache__/
 *.pyc

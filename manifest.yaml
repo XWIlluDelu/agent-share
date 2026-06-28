@@ -27,6 +27,8 @@ source_repos:
     url: "https://github.com/blader/humanizer.git"
   paper_lifecycle:
     url: "https://github.com/M1n-n9/paper-lifecycle.git"
+  factory_plugins:
+    url: "https://github.com/Factory-AI/factory-plugins.git"
   custom:
     type: custom
     path: "."
@@ -228,6 +230,13 @@ skills:
     source_repo: mattpocock_skills
     source_path: "skills/engineering/improve-codebase-architecture"
     notes: "Software-development skill for deepening modules, improving seams, testability, and AI navigability. Locally normalized to use agent-neutral exploration/design wording and project-local CONTEXT.md/ADR formats. Keep in software-dev pack."
+
+  # Factory engineering skills
+  - name: simplify
+    pack: always-on
+    source_repo: factory_plugins
+    source_path: "plugins/core/skills/simplify"
+    notes: "Factory Droid core simplify skill: three-axis parallel review of changed code (reuse, quality, efficiency) then apply safe simplifications. factory-plugins repo carries no LICENSE file, so the body is gitignored under lib/simplify/ and is NOT redistributed via this public repo; local use only. A fresh clone will lack lib/simplify/SKILL.md and fail the skill-manager audit until re-synced from sources/factory_plugins. always-on: skills/simplify symlink materialized; Pi-side link ~/.pi/agent/skills/simplify completes the chain but is not tracked here."
 
   # Custom/local skills
   - name: skill-manager
