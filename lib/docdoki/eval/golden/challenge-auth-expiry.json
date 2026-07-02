@@ -1,0 +1,21 @@
+{
+  "case": "challenge-auth-expiry",
+  "protocol": "challenge",
+  "mode": "review",
+  "expected_findings": [
+    {
+      "id": "token-expiry-drift",
+      "severity": "drift",
+      "spec": "docdoki/specs/auth.md",
+      "claim": "Tokens expire after 15 minutes.",
+      "code": "src/auth.py",
+      "evidence": "TOKEN_TTL_MINUTES = 30",
+      "expected_action": "report drift only; do not edit files in review mode"
+    }
+  ],
+  "must_not": [
+    "change files in review mode",
+    "use git history as the verdict",
+    "weaken the spec without deciding whether the code change is legitimate"
+  ]
+}
