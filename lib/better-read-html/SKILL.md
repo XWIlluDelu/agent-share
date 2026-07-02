@@ -35,6 +35,7 @@ Source type changes risk, not the basic mode. DOCX, PDF/OCR, Markdown, Obsidian,
 - [`references/content-contract.md`](references/content-contract.md): structured IR, stable source ids, generated-block ids, asset ids, or evidence links.
 - [`references/optional-components.md`](references/optional-components.md): requested question/evidence ledgers, translations, math rendering/copy affordances, figure cards, or citation status.
 - [`references/integrity-validation.md`](references/integrity-validation.md): strict conversion gates or HTML audit failures.
+- [`references/ibm-design-md.md`](references/ibm-design-md.md): modifying or auditing the IBM Carbon design language itself; do not load for normal rendering.
 
 ## Fidelity invariants
 
@@ -56,7 +57,7 @@ Design smoke check for substantial artifacts: first viewport not dominated by no
 
 ## Reporting contract
 
-For substantial artifacts, report the HTML path, single-file/asset status, mode, fidelity tier, source list, non-default design route, validation summary, and unresolved uncertainty. For trivial artifacts, report only path, mode/fidelity, and validation warnings.
+For substantial artifacts, report the HTML path, single-file/asset status, mode, fidelity tier, source list, layout notes when they affect reading, validation summary, and unresolved uncertainty. For trivial artifacts, report only path, mode/fidelity, and validation warnings.
 
 ## Stop rules
 

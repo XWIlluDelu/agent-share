@@ -100,43 +100,43 @@ skills:
   - name: scientific-brainstorming
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-brainstorming"
+    source_path: "skills/scientific-brainstorming"
   - name: hypothesis-generation
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/hypothesis-generation"
+    source_path: "skills/hypothesis-generation"
   - name: scientific-critical-thinking
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-critical-thinking"
+    source_path: "skills/scientific-critical-thinking"
   - name: literature-review
     pack: paper-discovery
     source_repo: k_dense
-    source_path: "scientific-skills/literature-review"
+    source_path: "skills/literature-review"
   - name: citation-management
     pack: paper-writing
     source_repo: k_dense
-    source_path: "scientific-skills/citation-management"
+    source_path: "skills/citation-management"
   - name: peer-review
     pack: paper-writing
     source_repo: k_dense
-    source_path: "scientific-skills/peer-review"
+    source_path: "skills/peer-review"
   - name: exploratory-data-analysis
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/exploratory-data-analysis"
+    source_path: "skills/exploratory-data-analysis"
   - name: statistical-analysis
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/statistical-analysis"
+    source_path: "skills/statistical-analysis"
   - name: scientific-visualization
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-visualization"
+    source_path: "skills/scientific-visualization"
   - name: scientific-schematics
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-schematics"
+    source_path: "skills/scientific-schematics"
 
   # scicraft
   - name: openalex-database
@@ -239,6 +239,7 @@ skills:
     source_repo: custom
     source_path: "lib/docdoki"
     notes: "Custom skill for managing living project documentation: northstar, active todo, chores, specs, challenge reports, staging, and adoption/check/challenge workflows. Registered from /home/wangzixiong/docdoki/skills/docdoki on 2026-05-24. Runtime package is maintained in lib/docdoki; project design-history artifacts are intentionally excluded."
+
 
   - name: project-setup
     pack: always-on

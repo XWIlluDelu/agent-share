@@ -30,7 +30,7 @@ Each section contains operational trigger, preconditions, steps, and outputs. `n
 
 **Steps**:
 1. Create `docs/`, `docs/todo/`, `docs/todo/archive/`, `docs/spec/`, `docs/challenge/`.
-2. Create empty placeholder files: `docs/northstar.md`, `docs/chores.md`. Each contains a single H1 heading and a one-line hint comment ("# Northstar\n\n<!-- Add main goals here. See docdoki/references/lifecycle.md § northstar -->").
+2. Create empty placeholder files: `docs/northstar.md`, `docs/glossary.md`, `docs/runbook.md`, `docs/chores.md`. Each contains a single H1 heading and a one-line hint comment matching its type (e.g., "# Northstar\n\n<!-- Add main goals here. -->", "# Glossary\n\n<!-- Add canonical term definitions here. -->", "# Runbook\n\n<!-- Add operational commands here. -->", "# Chores\n\n<!-- Add mini-change entries here. -->").
 3. Do NOT create `docs/todo/active_*.md` (the user names their first task book).
 4. Append the following to `.gitignore` (creating it if absent):
    ```
@@ -179,7 +179,7 @@ Active todo writes are **direct** (not staged) — they're high-frequency, low-s
 **Mode 2: Smart (`challenge` with no args, optionally `--include active,chores,northstar`)**
 1. Compute current diff scope: uncommitted changes + last commit diff if uncommitted is empty.
 2. **Default inclusion**: every `docs/spec/*.md` whose `covers.paths` intersects the diff.
-3. **Opt-in inclusion** (via `--include`): `active` adds the active todo; `chores` adds chores.md; `northstar` adds northstar.md. Each only enters if there's any code diff at all.
+3. **Opt-in inclusion** (via `--include`): `active` adds the active todo; `chores` adds chores.md; `northstar` adds northstar.md; `glossary` adds glossary.md; `runbook` adds runbook.md. Each only enters if there's any code diff at all.
 4. If the resulting target set is empty, report `no_change` and write no challenge report.
 5. Run Mode 1 procedure on the resulting target set.
 

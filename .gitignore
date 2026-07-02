@@ -13,6 +13,9 @@ build/
 .venv/
 venv/
 
+# Runtime session artifacts
+.chaos/
+
 # OS
 .DS_Store
 Thumbs.db

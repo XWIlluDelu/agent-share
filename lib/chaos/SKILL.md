@@ -26,7 +26,7 @@ For full recipes and stop rules, read [references/protocols.md](references/proto
 
 ## Core workflow
 
-1. **Frame.** Define question, scope, non-goals, evidence standard, success criterion, selected mode, allowed tools/models, stop rule, decision owner, run status, planned perspectives, and failed perspectives. Cost is not a constraint: when CHAOS fits, launch every suitable flagship model in `MODEL_USAGE.md` in parallel unless the user narrows the run, a model/route is unavailable, off-modality, unsafe, not independent, or direct verification is stronger.
+1. **Frame.** Define question, scope, non-goals, evidence standard, success criterion, selected mode, allowed tools/models, stop rule, decision owner, run status, planned perspectives, and failed perspectives. Cost is not a constraint: when CHAOS fits, launch every suitable model-family route in `MODEL_USAGE.md` in parallel unless the user narrows the run, a route is unavailable, off-modality, unsafe, not independent, or direct verification is stronger.
 2. **Separate.** Collect independent first positions before agents see peer answers. In Council and Deep runs, every first-position adviser answers the same full frame. Perspectives are lenses or evidence emphases, not exclusive topic assignments; topic-sharded research is scouting only.
 3. **Externalize.** Convert positions into claims, assumptions, evidence, confidence basis, uncertainty, and risks.
 4. **Cross-examine.** Critique specific claims using `claim → evidence → consequence → requested change`.

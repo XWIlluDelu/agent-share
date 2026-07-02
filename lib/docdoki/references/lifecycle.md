@@ -23,6 +23,42 @@ The archive file is retained for historical reference but no longer participates
 
 ---
 
+## glossary.md
+
+**Type**: state, cold.
+
+**Ownership**: human-led. The Agent may add terms derived from existing specs, but must not invent definitions or alter existing terms without human confirmation.
+
+**Update cadence**: terms added whenever new concepts enter the project through specs or code. Typically days to weeks.
+
+**Purpose**: a single-file canon of project-specific terminology. Defines what each term means, its relationship to other terms, and where it is used. Exists to give a human reviewer one place to understand the project's vocabulary without cross-referencing multiple spec files.
+
+**Structure**: one H2 heading per term group (e.g., "Shape classification", "Experimental design"), with definition paragraphs for each term. No frontmatter required.
+
+**Write policy**: polish → staged. Human edits directly. Challenge eligible under `--include glossary`.
+
+**Anti-content**: glossary is not a spec. It does not define constraints, covers, or behavioral rules. It defines words. Constraints stay in specs.
+
+---
+
+## runbook.md
+
+**Type**: state, warm.
+
+**Ownership**: shared. The Agent updates runbook when generation commands, validation checklists, or deployment steps change. Human adds session-specific notes.
+
+**Update cadence**: whenever operational commands change —  asset regeneration, validation checklists, deployment procedures. Typically weekly.
+
+**Purpose**: a single-file record of the operational commands and checklists needed to run the project. Exists to give a human operator (reviewer, new team member, deployment person) one place to find "what do I actually type" without reverse-engineering it from spec constraints.
+
+**Structure**: one H2 heading per operation group (e.g., "Asset generation", "Validation", "Deployment"), with shell commands, expected outputs, and brief explanations. No frontmatter required.
+
+**Write policy**: go → direct (update command steps inline). Polish → staged. Challenge eligible under `--include runbook`.
+
+**Anti-content**: runbook is not a spec. It does not explain why a command exists or what constraint it satisfies. It states what to run and what to expect. Rationale stays in specs. Runbook commands that drift from spec constraints are contradictions, not alternative truths.
+
+---
+
 ## active_*.md
 
 **Type**: state, hot.
@@ -123,12 +159,14 @@ The Agent may do this automatically when the user signals stage completion ("we'
 | Doc type | State / History | Cadence | Owner | Write policy |
 | :-- | :-- | :-- | :-- | :-- |
 | `northstar.md` | state | days-weeks | human-led | polish → staged; otherwise human edits directly |
+| `glossary.md` | state | days-weeks | human-led | polish → staged; otherwise human edits directly |
+| `runbook.md` | state | weekly | shared | go → direct; polish → staged |
 | `active_*.md` | state | hourly | shared | go → direct; polish → staged |
 | `chores.md` | state | per-session | shared | go/garden → direct line edits; polish → staged |
 | `spec/*.md` | state | days | shared | always staged (polish / challenge / garden) |
 | `challenge/*.md` | history | per-audit | Agent | direct append (single new file per run) |
 | `todo/archive/*.md` | history | per-stage | n/a (frozen) | direct rename only; never edited |
 
-**Why this split**: high-frequency low-stakes docs (active todo, chores) tolerate direct edits because the cost of mistakes is small and the friction of staging would dominate. Structural decisions (spec) always go through staging because silent corruption of a contract is far more expensive than one extra `approve` call. Polish is always staged regardless of the target — polish authorities L3/L4 can rewrite structure and intent, so even a low-stakes target deserves the review step.
+**Why this split**: high-frequency low-stakes docs (active todo, chores, runbook) tolerate direct edits because the cost of mistakes is small and the friction of staging would dominate. Structural decisions (spec, glossary) go through staging because silent corruption of a contract is far more expensive than one extra `approve` call. Northstar is human-only because its contents define the project's reason to exist and must not be rewritten by an Agent. Polish is always staged regardless of the target — polish authorities L3/L4 can rewrite structure and intent, so even a low-stakes target deserves the review step.
 
 For the authoritative per-operation × per-doc-type matrix, see `../SKILL.md` § authoritative write matrix.
