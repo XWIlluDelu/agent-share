@@ -8,7 +8,7 @@
   --brh-ink: #161616;
   --brh-body: #161616;
   --brh-muted: #525252;
-  --brh-muted-soft: #8d8d8d;
+  --brh-muted-soft: #8c8c8c;
   --brh-hairline: #e0e0e0;
   --brh-hairline-strong: #161616;
   --brh-accent: #0f62fe;
@@ -30,8 +30,8 @@
 html { color-scheme: light; scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--brh-ground); color: var(--brh-body);
-  font-family: var(--brh-sans); font-size: 16px; line-height: 1.56;
-  letter-spacing: 0.01em;
+  font-family: var(--brh-sans); font-size: 16px; line-height: 1.5;
+  letter-spacing: 0.16px;
   font-feature-settings: "kern", "liga";
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
@@ -41,10 +41,10 @@ a { color: var(--brh-accent); text-decoration: underline; text-underline-offset:
 a:hover { color: var(--brh-accent-active); }
 :is(a, button, [tabindex]):focus-visible { outline: 2px solid var(--brh-accent); outline-offset: 2px; }
 :target { scroll-margin-top: 1.5rem; }
-.brh-main :target { box-shadow: -4px 0 0 var(--brh-accent); background: var(--brh-accent-soft); }
+.brh-main :target { outline: 2px solid var(--brh-accent); outline-offset: 2px; background: var(--brh-accent-soft); }
 .brh-asset-card:target, .brh-table-figure:target, .brh-equation:target,
 .brh-citation:target, .brh-reference:target {
-  box-shadow: -4px 0 0 var(--brh-accent); background: var(--brh-accent-soft);
+  outline: 2px solid var(--brh-accent); outline-offset: 2px; background: var(--brh-accent-soft);
 }
 
 sup, sub { line-height: 0; font-feature-settings: "sups"; font-size: 0.72em; }
@@ -151,9 +151,9 @@ figcaption, .brh-caption { color: var(--brh-muted); font-size: 0.875rem; line-he
 .brh-figure-peek { margin: 0 0 1rem; padding: var(--sp-sm) 0; border-top: 1px solid var(--brh-hairline); border-bottom: 1px solid var(--brh-hairline); }
 
 .brh-equation[data-math-copy], .brh-math-copy { cursor: copy; }
-.brh-equation [data-math-source], .brh-math-copy { border-radius: 0; box-shadow: none; }
+.brh-equation [data-math-source], .brh-math-copy { border-radius: 0; }
 .brh-generated, [data-generated="true"] { border-left: 2px solid var(--brh-accent); padding-left: 1rem; }
-.brh-warning { border-left-color: var(--brh-warning); color: #8a6d00; }
+.brh-warning { border-left-color: var(--brh-warning); color: var(--brh-ink); }
 .brh-colophon { margin-top: var(--sp-2xl); padding-top: var(--sp-md); border-top: 1px solid var(--brh-hairline); color: var(--brh-muted); font-size: 0.75rem; }
 
 /* Subtype-gated: drop cap + body indent.

@@ -10,7 +10,7 @@ scope: ""
 non_goals: []
 evidence_standard: ""
 success_criterion: ""
-expansion_policy: skip/direct | all-suitable-flagship-parallel | exhaustive-flagship-review
+expansion_policy: skip/direct | all-suitable-model-family-parallel | exhaustive-model-family-review
 allowed_tools: []
 allowed_models: []
 stop_rule: ""

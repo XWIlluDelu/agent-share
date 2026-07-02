@@ -33,3 +33,11 @@ Staging drafts are pending proposals, not canonical docs. Surface them in `statu
 ## Do not improvise helper paths or random IDs
 
 Resolve helpers from the installed skill root, not the project root. Use `new_chore_id.py`, `staging_path.py`, and `allocate_challenge_report.py`; do not invent IDs, staging paths, or report filenames by hand.
+
+## Do not write operational commands into specs
+
+Commands, validation checklists, and generation flows belong in `docs/runbook.md`. Specs define constraints and boundaries; runbooks define what to type and what to expect. Putting shell commands inside a spec forces the human operator to search multiple files for the command they need and risks the command drifting independently of the constraint it serves.
+
+## Do not define terms inline in specs when a glossary exists
+
+When `docs/glossary.md` contains the canonical definition of a term, specs should use that term without re-defining it. A term defined differently in two specs creates ambiguity for human reviewers and Agents alike. If a spec needs to narrow a glossary definition for a specific context, it must explicitly acknowledge the glossary baseline and state the narrowing.

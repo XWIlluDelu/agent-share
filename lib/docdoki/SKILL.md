@@ -6,7 +6,7 @@ description: |
 
 # DocDoki
 
-DocDoki manages a project's living documentation as the shared source of truth between human engineers and coding Agents. It centers on five document types under `docs/`, ten skill operations, and an explicit staging mechanism for any non-trivial edit.
+DocDoki manages a project's living documentation as the shared source of truth between human engineers and coding Agents. It centers on seven document types under `docs/`, ten skill operations, and an explicit staging mechanism for any non-trivial edit.
 
 ## Mental model
 
@@ -15,13 +15,15 @@ DocDoki exists because two failure modes break Agent-assisted development:
 1. **Document rot**. Heavy doc trees rot under frequent small edits; humans stop reading them, Agents miss them.
 2. **Context loss**. Pure-chat workflows have no ground-truth deposit; when sessions reset, decisions evaporate.
 
-DocDoki's fix: a minimal `docs/` tree (five canonical types), an explicit write matrix, and LLM challenge audits instead of git hooks. Non-trivial cold-document edits go through staging; hot low-stakes docs and append-only history use direct writes where the matrix allows them. Cache state is gitignored and rebuildable. Markdown is canonical; machine state is disposable.
+DocDoki's fix: a minimal `docs/` tree (seven canonical types), an explicit write matrix, and LLM challenge audits instead of git hooks. Non-trivial cold-document edits go through staging; hot low-stakes docs and append-only history use direct writes where the matrix allows them. Cache state is gitignored and rebuildable. Markdown is canonical; machine state is disposable.
 
 ## File layout (created by `init` or `adopt`)
 
 ```text
 docs/
   northstar.md                       # Goals — append-only, cold state
+  glossary.md                        # Terminology — cold state, human-led
+  runbook.md                         # Operational commands — warm state, shared
   todo/
     active_<description>.md          # Current stage plan — at most one per repo
     archive/
@@ -37,7 +39,7 @@ docs/
 ```
 
 Two axes:
-- **State** (challengeable): northstar, active todo, chores, spec
+- **State** (challengeable): northstar, glossary, runbook, active todo, chores, spec
 - **History** (never challengeable): todo/archive, challenge reports
 
 ## The ten operations
@@ -68,7 +70,7 @@ When a write feels ambiguous, first read `references/anti-patterns.md`. A succes
 All operations that accept a `<doc-id>` parameter accept natural language ("the auth spec", "current todo", "current goals"). Resolve as follows:
 
 1. Match against frontmatter `id` fields under `docs/`.
-2. Match against canonical filenames (`northstar.md`, `chores.md`, `active_*.md`, `spec/<slug>.md`).
+2. Match against canonical filenames (`northstar.md`, `glossary.md`, `runbook.md`, `chores.md`, `active_*.md`, `spec/<slug>.md`).
 3. If exactly one candidate matches, proceed.
 4. **If multiple candidates match, stop and ask.** List the candidates in stdout, request the user disambiguate. Never silently default-pick — wrong choices on cold documents (northstar, archive) are hard to detect and reverse.
 
@@ -76,18 +78,18 @@ All operations that accept a `<doc-id>` parameter accept natural language ("the 
 
 The matrix is the canonical source of truth for what each operation writes and whether it writes directly or through staging.
 
-| Operation | northstar | active_*.md | chores.md | spec/*.md | challenge/*.md | staging |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| `init` | direct (placeholder) | — | direct (placeholder) | — | — | — |
-| `adopt` | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | — |
-| `status` | — | — | — | — | — | — |
-| `check` | — | — | — | — | — | — |
-| `polish` | **staged** | **staged** | **staged** | **staged** | — | produces `.polish.md` |
-| `go` | — | direct | direct (placeholder replace) | — | — | — |
-| `challenge` | — | — | direct (append chore on `code_change`) | **staged** (on `doc_change`) | direct (new report) | produces `.challenge.md` |
-| `garden` | — | — | **staged** (delta) | **staged** (promotion) | — | produces `.garden.md` |
-| `approve` | direct (lands staging) | — | direct (lands staging) | direct (lands staging) | — | consumes staging |
-| `discard` | — | — | — | — | — | removes staging |
+| Operation | northstar | glossary | runbook | active_*.md | chores.md | spec/*.md | challenge/*.md | staging |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| `init` | direct (placeholder) | direct (placeholder) | direct (placeholder) | — | direct (placeholder) | — | — | — |
+| `adopt` | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | — |
+| `status` | — | — | — | — | — | — | — | — |
+| `check` | — | — | — | — | — | — | — | — |
+| `polish` | **staged** | **staged** | **staged** | **staged** | **staged** | **staged** | — | produces `.polish.md` |
+| `go` | — | — | direct | direct | direct (placeholder replace) | — | — | — |
+| `challenge` | — | — | — | — | direct (append chore on `code_change`) | **staged** (on `doc_change`) | direct (new report) | produces `.challenge.md` |
+| `garden` | — | — | — | — | **staged** (delta) | **staged** (promotion) | — | produces `.garden.md` |
+| `approve` | direct (lands staging) | direct (lands staging) | direct (lands staging) | — | direct (lands staging) | direct (lands staging) | — | consumes staging |
+| `discard` | — | — | — | — | — | — | — | removes staging |
 
 Notes:
 - "direct" means writing the target file in place. Acceptable when (a) the file is high-frequency / low-stakes (`active_*.md`, `chores.md`), (b) the operation runs in an isolated git environment (`adopt`), or (c) the file is append-only history (`challenge` reports).
@@ -149,5 +151,5 @@ LLMs generate poor random strings (pattern-locking inflates collision rate far a
 - `references/commands.md` — per-operation preconditions, steps, outputs, examples. **Read this when about to execute any operation.**
 - `references/schemas.md` — machine formats: staging paths, staging frontmatter, chore line format, challenge report schema, cache.json shape, spec frontmatter.
 - `references/adopt-pipeline.md` — the full S0-S10 pipeline with LLM prompt templates and stage-boundary contracts.
-- `references/lifecycle.md` — deep dive on each of the five document types: ownership, update cadence, archival rules, refactor handling.
+- `references/lifecycle.md` — deep dive on each of the seven document types: ownership, update cadence, archival rules, refactor handling.
 - `references/anti-patterns.md` — DocDoki-specific wrong moves to check before ambiguous writes.

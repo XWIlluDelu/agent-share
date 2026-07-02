@@ -209,6 +209,29 @@ def has_reference_attr(tag_text: str) -> bool:
     return bool(re.search(r'''\b(?:data-target|data-evidence)\s*=''', tag_text, re.I))
 
 
+def css_remote_dependencies(html_text: str) -> list[str]:
+    css_parts = re.findall(r"<style\b[^>]*>(.*?)</style>", html_text, re.I | re.S)
+    css_parts.extend(match.group(2) for match in re.finditer(r'''\bstyle\s*=\s*(["'])(.*?)\1''', html_text, re.I | re.S))
+    remote: list[str] = []
+    for css in css_parts:
+        css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+        for match in re.finditer(r'''@import\s+(?:url\(\s*)?(["']?)([^"')\s;]+)\1''', css, re.I):
+            url = match.group(2).strip()
+            parsed = urlparse(url)
+            if parsed.scheme in REMOTE_ASSET_SCHEMES or url.startswith("//"):
+                remote.append(url)
+            elif parsed.scheme == "data":
+                remote.append(url[:48] + "...")
+        for match in re.finditer(r'''url\(\s*(["']?)(.*?)\1\s*\)''', css, re.I | re.S):
+            url = match.group(2).strip()
+            parsed = urlparse(url)
+            if parsed.scheme in REMOTE_ASSET_SCHEMES or url.startswith("//"):
+                remote.append(url)
+            elif parsed.scheme == "data":
+                remote.append(url[:48] + "...")
+    return remote
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("html", type=Path, help="HTML file to audit")
@@ -226,6 +249,7 @@ def main() -> int:
     html_text = html_path.read_text(encoding="utf-8")
     parser = AuditParser(source_order=True)
     parser.feed(html_text)
+    parser.remote_dependencies.extend(css_remote_dependencies(html_text))
 
     ids = set(parser.ids)
     broken_internal_links = sorted({href for href in parser.hrefs if href not in ids})
@@ -310,11 +334,6 @@ def main() -> int:
     if re.search(r"<(center|o:p|sdfield)\b", html_text, re.I):
         converter_residue_warnings.append("legacy converter/page-field tags present")
 
-    for match in re.finditer(r"<aside\b([^>]*)>", html_text, re.I):
-        attrs = match.group(1)
-        if 'data-canonical="false"' not in attrs and 'data-layout-duplicate="true"' not in attrs:
-            source_boundary_errors.append("aside without data-canonical=false or data-layout-duplicate=true")
-            break
     has_generated = (
         'data-generated="true"' in html_without_css
         or "data-generated='true'" in html_without_css
