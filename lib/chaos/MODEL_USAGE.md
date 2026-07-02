@@ -1,76 +1,71 @@
-# GENERAL INFO
+# CHAOS model routing
 
-CHAOS is claim-led multi-agent deliberation: the parent stays judge/final writer; independent flagship advisers expose claims, evidence routes, objections, and dissent; evidence beats consensus.
+## Doctrine
 
-- Use every suitable flagship below in parallel unless modality does not fit, direct verification is stronger, or the user narrows the run.
-- Call shape is usually `model-id:xhigh`; `xhigh` maps to each endpoint’s reasoning tier shown below.
-- Cost is not a routing constraint; capability, modality, independence, evidence route, and safety constraints matter.
-- Project-local `MODEL_USAGE.md` overrides this file; live Pi config overrides stale IDs/limits.
-- This file records flagship routing only, not every possible endpoint.
+- A route is suitable only if it adds an operational axis (model family,
+  modality, evidence route, regional bias, or capacity) and clears the
+  capability floor: it must reason validly about this task. Weak routes are not
+  free coverage — conforming or noisy advisers degrade cross-examination. Prefer
+  the strongest available route per family over more routes; skip routes that
+  add only a fluent paraphrase.
+- Community reputation, public benchmarks, and model "personality" are priors
+  for role assignment. They never override direct tests, inspected sources,
+  citations, logs, or code evidence.
+- Do not quote static context/max-token numbers. If capacity matters, inspect
+  the live environment configuration or make the prompt smaller.
 
-# MODELS
+## Model-family priors
 
-## `xwilludelu/gpt-5.5`
+| Family | Prior strengths | Default duties | Cautions |
+|---|---|---|---|
+| Claude | careful prose, nuanced tradeoff analysis, code review, long-form critique, high-stakes reasoning | patient critic, minority-report writer, deep second-pass synthesis | slower, verbose, more cautious than needed |
+| OpenAI/Codex | tool-driven code work, structured analysis, test-oriented review, concise synthesis | implementation critic, direct-verification planner, code/evidence integrator | same-family coding agents share blind spots; require fresh context and direct tests rather than counting instances as diversity |
+| Gemini | long-context reading, multimodal input, broad scanning, speed | fast broad reader: source/document passes, screenshots/UI, non-PRC counterpoint | long-context capacity ≠ faithful retrieval; require quotes, tests, or a cross-family check |
+| DeepSeek | reasoning, math, code exploration, efficient first-pass problem solving | builder/proposer: architecture sketches, repair plans, code/math exploration | proposal generator, not final arbiter; require tests or cross-model critique |
+| Kimi | long context, Chinese-English, code/tool orientation, long-form output | decomposer and explainer: long-document planning, bilingual analysis | verify factual claims; provider aliases may expose different parameters |
+| GLM | Chinese technical and structured reasoning, code-focused critique | fast technical critic: alternate design review, Chinese-language analysis, text-only pressure testing | verify release- or route-specific claims |
 
-- **Call:** `xwilludelu/gpt-5.5:xhigh`; text+image; 272k context; 128k max output; reasoning yes; tier `xhigh`.
-- **Traits:** default generalist; broad synthesis, agentic planning, tool use, coding, multimodal review, and cross-source adjudication.
-- **Use:** parent/final synthesis; high-stakes arbitration after claims are grounded; complex multi-step work where broad competence matters most.
-- **Constraint:** not a fact oracle; require citations, tests, source inspection, or cross-model critique for factual/high-stakes claims.
+## Routing notes
 
-## `xwilludelu/gemini-3.5-flash`
+| Task | Default route set |
+|---|---|
+| Broad judgment | Smallest approved set spanning the decision-relevant axes; expand under the protocol rule. Vote count is never truth. |
+| Code | Selected critics plus direct tests; prefer tests when they settle the claim. |
+| Large text corpus | A suitable long-context reader plus an independent retrieval/source check; add another family only for an unresolved axis or explicit exhaustive review. |
+| Image/UI | Selected image-capable routes; verify actual image support before launch. |
+| PRC-sensitive topic | Require Gemini/Claude-family or primary-source cross-check; never PRC-family routes alone. |
+| Fact/current-events claim | Search or primary sources; models provide hypotheses, not freshness. |
+| Final synthesis | Parent writes. Routes advise; none decides by seniority, confidence, or popularity. |
 
-- **Call:** `xwilludelu/gemini-3.5-flash:xhigh`; text+image; 1,048,576 context; 65,535 max output; reasoning yes; tier `high`.
-- **Traits:** fast Gemini-family multimodal adviser; long-context source/screenshot/UI reading, coding and agentic planning, grounding-aware reasoning, and broad non-GPT/non-PRC counterpoint.
-- **Use:** same-frame independent adviser; multimodal/source inspection; long-context second reading; fast broad scans; coding/agentic workflow critique; safety/risk checks.
-- **Constraint:** Flash endpoint, not Pro-line top-end; require source/test/cross-model checks for unknown facts or volatile claims.
+Apply the expansion rule in `references/protocols.md` before routing. In a
+non-exhaustive run, a broad generalist, careful critic, and task specialist are
+a common sufficient set; add a regional or model-family counterpoint only when
+it covers a decision-relevant axis. If a selected route fails, replace it only
+when needed to preserve that coverage.
 
-## `xwilludelu/claude-opus-4-6-thinking`
+## Environment adaptation
 
-- **Call:** `xwilludelu/claude-opus-4-6-thinking`; text+image; 200k context; 64k max output; reasoning yes; thinking built into endpoint.
-- **Traits:** CLAUDE-OPUS-4.6 route; nuanced judgment, prose quality, careful review, complex coding/debugging, and high-stakes reasoning.
-- **Use:** difficult critique, minority-report generation, writing-sensitive review, complex codebase reasoning, deep second-pass synthesis, and high-stakes Claude-family perspective.
-- **Constraint:** use when the added depth and model-family diversity justify the slower/heavier route.
+Route discovery depends on the running agent. Validate each route against the
+live environment before launch; on failure, record a degraded perspective and
+retry once with the current same-family route. Treat provider approval and data
+handling as suitability constraints: minimize shared context, remove secrets,
+and do not send private or proprietary material to another provider without the
+user's authorization when it cannot be safely redacted.
 
-## `xwilludelu/qwen`
-
-- **Call:** `xwilludelu/qwen:xhigh`; text only; 1M context; 65,536 max output; reasoning yes; tier `max`.
-- **Traits:** Qwen-family alias; coding, tool-oriented workflows, multilingual technical work, structured output, and long-context text review.
-- **Use:** coding review/generation, repository-scale text scans, structured technical tasks, and independent non-Western counterpoint.
-- **Constraint:** avoid specific-release benchmark claims unless the backing model is verified.
-
-## `xwilludelu/deepseek`
-
-- **Call:** `xwilludelu/deepseek:xhigh`; text only; 1M context; 128k max output; reasoning yes; tier `max`.
-- **Traits:** DeepSeek-family alias; cost-efficient reasoning, math/code exploration, backend logic, and long-context text work.
-- **Use:** large-context proposer, architect, repair planner, batch critique, whole-corpus text pass, and code/math exploration before verifier review.
-- **Constraint:** prefer builder/proposer role; require tests, source checks, or cross-model critique before final adoption.
-
-## `xwilludelu/grok`
-
-- **Call:** `xwilludelu/grok:xhigh`; text only; 1M context; 65,536 max output; reasoning yes; tier `xhigh`.
-- **Traits:** Grok-family alias; alternate/contrarian framing, long-context reasoning, adversarial checking, and freshness-oriented work when search tools are active.
-- **Use:** adversarial pass, alternate hypothesis generation, hallucination-risk sanity check, and non-GPT/non-PRC diversity.
-- **Constraint:** do not treat outputs as current without active search tools and citations; verify factual claims.
-
-## `xwilludelu/kimi`
-
-- **Call:** `xwilludelu/kimi:xhigh`; text+image; 262k context; 98,304 max output; reasoning yes; tier `max`.
-- **Traits:** Kimi-family alias; long-form output, code/tool orientation, Chinese-English analysis, agentic decomposition, and multimodal input.
-- **Use:** independent proposer, implementation planner, code reviewer, long-form explainer, bilingual analyst, and multimodal non-Western counterpoint.
-- **Constraint:** not sole fact arbiter; require citations/tests for factual claims.
-
-## `xwilludelu/glm`
-
-- **Call:** `xwilludelu/glm:xhigh`; text only; 200k context; 131,072 max output; reasoning yes; tier `max`.
-- **Traits:** GLM-family alias; technical/code critique, bilingual text analysis, structured reasoning, and open-weight-style independent review.
-- **Use:** fast technical critic, code-focused critique, alternative design review, Chinese-language document analysis, and text-only pressure testing.
-- **Constraint:** verify claims that depend on a specific GLM release.
-
-# ROUTING NOTES
-
-- **Broad judgment:** use all suitable flagships.
-- **Code:** use all suitable flagships plus tests; include GPT, Claude Opus, Gemini, Qwen, DeepSeek, Grok, Kimi, and GLM where modality fits.
-- **Large text corpus:** include long-context text routes such as Qwen, DeepSeek, Grok, and Gemini Flash.
-- **Image/UI:** use image-capable routes: GPT-5.5, Kimi, Gemini Flash, and Claude Opus.
-- **PRC-sensitive topics:** require GPT/Gemini/Claude-family or primary-source cross-check, not only PRC-family models.
-- **Stop:** continue rounds only for new evidence, material contradiction, useful narrowing, or resolvable decisive risk.
+- **Multi-model runtimes:** inspect the live model and execution discovery
+  surfaces before every run; they override this file for available routes,
+  context capacity, modality, reasoning controls, tool support, and exact
+  parameters. Select the OpenAI adviser only from that live result; when
+  `openai-codex/gpt-5.6-terra` is present, prefer it. This is a routing
+  preference, not a cached availability claim. Never preserve provider-specific
+  endpoint aliases in this reference as if they were current configuration.
+  Use higher thinking levels only when the live route accepts them; do not
+  invent temperature/top-p tables. Launch each route through a qualifying
+  native subagent or a fresh agent session as defined in orchestration.
+- **Single-family runtimes:** cross-family routes are unavailable. Run
+  independent native subagents or fresh sessions with differentiated duties,
+  using different model sizes or reasoning levels where available. Independence
+  holds; family diversity collapses — record `reduced: single model family`
+  (orchestration: independence).
+- **No independent execution backend:** run a degraded single-agent claim audit
+  (orchestration: execution backends and independence).

@@ -1,6 +1,8 @@
 # Content Contract
 
-Use this as the preferred intermediate representation when authoring a readable HTML artifact. It is intentionally compatible with structured Markdown, but the same fields can be represented as JSON.
+Use this as the preferred intermediate representation when authoring a readable
+HTML artifact. It is intentionally compatible with structured Markdown, but the
+same fields can be represented as JSON.
 
 ## Table of contents
 
@@ -36,11 +38,17 @@ question_ledger_status: none | requested | generated | blocked
 citation_status: not-applicable | copied | linked | unresolved | unavailable
 ```
 
-The frontmatter exposes only the public mode. The internal `mode_subtype` (close-read / synthesis-report / conversion-preserve / notes-wiki / derivation-math / debug-audit) is determined by the router in `mode-contracts.md` and rendered as `data-mode-subtype` on the article root for CSS scoping; it is not a frontmatter field. For citation, figure, and caption rules, see [`scholarly-rigor.md`](scholarly-rigor.md).
+The frontmatter exposes only the public mode. The internal `mode_subtype`
+(close-read / synthesis-report / conversion-preserve / notes-wiki /
+derivation-math / debug-audit) is determined by the router in
+`mode-contracts.md` and rendered as `data-mode-subtype` on the article root for
+CSS scoping; it is not a frontmatter field. For citation, figure, and caption
+rules, see [`scholarly-rigor.md`](scholarly-rigor.md).
 
 ## Canonical source blocks
 
-Canonical blocks are the source record. Do not place generated analysis inside them.
+Canonical blocks are the source record. Do not place generated analysis inside
+them.
 
 ```markdown
 ## Section title
@@ -76,13 +84,16 @@ Evidence:
 :::
 ```
 
-For derivation blocks, use `scholarly-rigor.md` before authoring generated steps.
+For derivation blocks, use `scholarly-rigor.md` before authoring generated
+steps.
 
-For question/evidence ledgers, translation layers, math renderers, figure cards, and citation status, use `optional-components.md`.
+For question/evidence ledgers, translation layers, math renderers, figure cards,
+and citation status, use `optional-components.md`.
 
 ## Noncanonical layout duplicates
 
-HTML generated from preview, rail, index, or annotation duplicates must use one of:
+HTML generated from preview, rail, index, or annotation duplicates must use one
+of:
 
 ```html
 <aside data-layout-duplicate="true" data-duplicate-of="asset1">...</aside>
@@ -93,7 +104,8 @@ The validator should exclude these nodes from source-order parity.
 
 ## Source manifest
 
-For multi-source reports, include a source manifest in frontmatter or an audit block:
+For multi-source reports, include a source manifest in frontmatter or an audit
+block:
 
 ```yaml
 sources:
@@ -111,26 +123,36 @@ sources:
 
 Use explicit status fields rather than vague prose:
 
-- `caption_status: copied | unavailable | uncertain` (generated alt-text or interpretation lives in a separate noncanonical block with `data-generated="true"` and `data-target="<figure-id>"`; see [`scholarly-rigor.md`](scholarly-rigor.md))
+- `caption_status: copied | unavailable | uncertain` (generated alt-text or
+  interpretation lives in a separate noncanonical block with
+  `data-generated="true"` and `data-target="<figure-id>"`; see
+  [`scholarly-rigor.md`](scholarly-rigor.md))
 - `reading_order: verified | extracted | uncertain | manual`
-- `reading_order_status` on each section/block when PDF extraction order is not verified
+- `reading_order_status` on each section/block when PDF extraction order is not
+  verified
 - `ocr_status: not-needed | used | uncertain | failed`
 - `asset_status: copied | referenced | missing | placeholder`
 - `scholarly_status: not-applicable | required | applied | blocked`
 
 ## Optional component fields
 
-Use these fields only when the corresponding optional component is relevant. Read `optional-components.md` before adding generated layers.
+Use these fields only when the corresponding optional component is relevant.
+Read `optional-components.md` before adding generated layers.
 
-- `math_renderer: none | preserve-latex | native-mathml | local-katex | local-mathjax | approved-cdn`
-- `translation_status: none | source-bilingual | selected-span-generated | paragraph-generated | side-by-side-generated | blocked`
+- `math_renderer: none | preserve-latex | native-mathml | local-katex |
+  local-mathjax | approved-cdn`
+- `translation_status: none | source-bilingual | selected-span-generated |
+  paragraph-generated | side-by-side-generated | blocked`
 - `translation_scope: none | selected | paragraph | section | full-document`
 - `question_ledger_status: none | requested | generated | blocked`
 - `citation_status: not-applicable | copied | linked | unresolved | unavailable`
 
 ## Semantic HTML mapping
 
-Prefer semantic, namespaced reader HTML over converter wrapper DOM. This is a rendering contract, not a bundled extraction engine. Preserve source order in canonical regions unless the selected mode explicitly permits separate generated organization.
+Prefer semantic, namespaced reader HTML over converter wrapper DOM. This is a
+rendering contract, not a bundled extraction engine. Preserve source order in
+canonical regions unless the selected mode explicitly permits separate generated
+organization.
 
 | IR item | Preferred HTML | Required provenance | Notes |
 |---|---|---|---|
@@ -149,10 +171,27 @@ Prefer semantic, namespaced reader HTML over converter wrapper DOM. This is a re
 - Unknown source facts stay unknown.
 - IDs are stable, human-readable, and unique.
 - Referenced ids must be declared ids, not only note targets.
-- In `preserve` / `conversion-preserve`, generated block types are not allowed unless the user explicitly asks for a separate noncanonical annotation layer.
+- In `preserve` / `conversion-preserve`, generated block types are not allowed
+  unless the user explicitly asks for a separate noncanonical annotation layer.
 - Translation is opt-in and noncanonical unless the source itself is bilingual.
-- Converter HTML is an extraction aid, not a design source. Drop tool-specific wrapper markup, inline styling, empty spans/divs, and page-layout artifacts unless they carry meaningful source structure or the user requested visual facsimile.
-- When a source begins with title/authors/affiliations/summary, use that canonical frontmatter as the visible document opening. Do not add a separate generated hero that repeats the same content; keep fidelity/provenance labels compact in a footer, rail, or collapsed details block.
-- Keep substantial generated apparatus within a budget: one compact provenance surface by default; dual rails/tools only for dense sources; comments collapsed by default; first-mention peeks short and optional; no empty or decorative rails.
-- On narrow screens, merge multiple rails/tools into one ordered apparatus after the main article early enough to avoid squeezed sidebars. Use explicit priority metadata such as `data-rail-priority="10"` where needed: core navigation first, then source-linked reader aids, then reference/asset indexes, then provenance.
-- Visible reader HTML is not a log. Avoid assistant commentary, process notes, “generated by” explanations, persistent helper text, or debug labels unless needed to prevent a fidelity misunderstanding; keep provenance compact and noncanonical when present.
+- Converter HTML is an extraction aid, not a design source. Drop tool-specific
+  wrapper markup, inline styling, empty spans/divs, and page-layout artifacts
+  unless they carry meaningful source structure or the user requested visual
+  facsimile.
+- When a source begins with title/authors/affiliations/summary, use that
+  canonical frontmatter as the visible document opening. Do not add a separate
+  generated hero that repeats the same content; keep fidelity/provenance labels
+  compact in a footer, rail, or collapsed details block.
+- Keep substantial generated apparatus within a budget: one compact provenance
+  surface by default; dual rails/tools only for dense sources; comments
+  collapsed by default; first-mention peeks short and optional; no empty or
+  decorative rails.
+- On narrow screens, merge multiple rails/tools into one ordered apparatus after
+  the main article early enough to avoid squeezed sidebars. Use explicit
+  priority metadata such as `data-rail-priority="10"` where needed: core
+  navigation first, then source-linked reader aids, then reference/asset
+  indexes, then provenance.
+- Visible reader HTML is not a log. Avoid assistant commentary, process notes,
+  “generated by” explanations, persistent helper text, or debug labels unless
+  needed to prevent a fidelity misunderstanding; keep provenance compact and
+  noncanonical when present.

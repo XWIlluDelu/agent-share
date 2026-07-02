@@ -14,4 +14,4 @@ When editing `.ipynb` files programmatically:
 - For code cells, set `outputs` to an empty list when scaffolding.
 - For markdown cells, keep `cell_type="markdown"` and `metadata={}`.
 
-Prefer scaffolding from the bundled templates or `new_notebook.py` (for example, `$JUPYTER_NOTEBOOK_SKILL_DIR/scripts/new_notebook.py`) instead of hand-authoring raw notebook JSON.
+Prefer scaffolding from the bundled templates or `new_notebook.py` (`$JUPYTER_NOTEBOOK_CLI`, set up in SKILL.md) instead of hand-authoring raw notebook JSON.

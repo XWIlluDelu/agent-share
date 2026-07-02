@@ -13,18 +13,20 @@ source_repos:
     url: "https://github.com/ceasonen/research-skills.git"
   tapestry:
     url: "https://github.com/michalparkola/tapestry-skills.git"
-  planning_with_files:
-    url: "https://github.com/OthmanAdi/planning-with-files.git"
-  agent_skills_hunter:
-    url: "https://github.com/ZhanlinCui/Agent-Skills-Hunter.git"
   mattpocock_skills:
     url: "https://github.com/mattpocock/skills.git"
-  khazix_skills:
-    url: "https://github.com/KKKKhazix/khazix-skills.git"
   semantic_scholar_skills:
     url: "https://github.com/zongmin-yu/semantic-scholar-skills.git"
   humanizer:
     url: "https://github.com/blader/humanizer.git"
+  paper_lifecycle:
+    url: "https://github.com/M1n-n9/paper-lifecycle.git"
+  factory_plugins:
+    url: "https://github.com/Factory-AI/factory-plugins.git"
+  academic_forge:
+    url: "https://github.com/HughYau/AcademicForge.git"
+  ui_ux_pro_max:
+    url: "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git"
   custom:
     type: custom
     path: "."
@@ -35,7 +37,7 @@ skills:
     pack: agent-dev
     source_repo: anthropic
     source_path: "skills/skill-creator"
-    notes: "Locally normalized skill identity to anthropic-skill-creator to avoid collisions with OpenAI's skill-creator; otherwise keep upstream/original as a Claude/Anthropic reviewer reference for portable skill creation."
+    notes: "Local normalization: skill name changed to anthropic-skill-creator to avoid collision; validator uses stdlib frontmatter parsing instead of pyyaml; upstream vendor-specific wording retained as reference material."
   - name: pdf
     pack: documents
     source_repo: anthropic
@@ -59,84 +61,100 @@ skills:
     pack: frontend
     source_repo: anthropic
     source_path: "skills/frontend-design"
-    notes: "Light normalization target: replace Anthropic/Claude self-reference with agent-neutral wording."
-  - name: theme-factory
+  - name: ui-ux-pro-max
     pack: frontend
-    source_repo: anthropic
-    source_path: "skills/theme-factory"
+    source_repo: ui_ux_pro_max
+    source_path: ".claude/skills/ui-ux-pro-max"
+    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, and normalize imported text line endings and trailing whitespace. Only ui-ux-pro-max is selected from this repository."
   - name: webapp-testing
     pack: web-testing
     source_repo: anthropic
     source_path: "skills/webapp-testing"
-  - name: canvas-design
-    pack: visual-artifacts
-    source_repo: anthropic
-    source_path: "skills/canvas-design"
-    notes: "Light normalization target: replace 'next Claude' wording with 'next agent'."
-
   # OpenAI official / curated
   - name: openai-skill-creator
     pack: agent-dev
     source_repo: openai
     source_path: "skills/.system/skill-creator"
-    notes: "Locally normalized skill identity to openai-skill-creator to avoid collisions with Anthropic's skill-creator; otherwise keep upstream/original as a Codex/OpenAI reviewer reference for portable skill creation."
+    notes: "Local normalization: skill name changed to openai-skill-creator to avoid collision; scripts use stdlib frontmatter parsing instead of pyyaml; agents/openai.yaml is generated only when explicitly requested; upstream vendor-specific wording retained as reference material."
   - name: cli-creator
     pack: agent-dev
     source_repo: openai
     source_path: "skills/.curated/cli-creator"
-    notes: "Normalize Codex-centric wording to agent-neutral wording; prefer project-local companion skills unless a shared install is explicitly desired."
+    notes: "Local normalization: agent-neutral wording; shared install discouraged unless explicitly needed."
   - name: jupyter-notebook
     pack: scientific-tools
     source_repo: openai
     source_path: "skills/.curated/jupyter-notebook"
-    notes: "Normalize CODEX_HOME skill path to project-local skill installation when imported."
+    notes: "Local normalization: replace CODEX_HOME-specific skill path with project-local skill installation guidance."
   - name: playwright
     pack: web-testing
     source_repo: openai
     source_path: "skills/.curated/playwright"
-    notes: "Normalize CODEX_HOME/PWCLI skill path to project-local skill installation when imported."
+    notes: "Local normalization: replace CODEX_HOME/PWCLI-specific skill paths with project-local skill installation guidance."
 
   # K-Dense / claude-scientific-skills
   - name: scientific-brainstorming
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-brainstorming"
+    source_path: "skills/scientific-brainstorming"
+    notes: "Local normalization: remove upstream author metadata."
   - name: hypothesis-generation
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/hypothesis-generation"
+    source_path: "skills/hypothesis-generation"
+    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts."
   - name: scientific-critical-thinking
     pack: scientific-thinking
     source_repo: k_dense
-    source_path: "scientific-skills/scientific-critical-thinking"
-  - name: literature-review
-    pack: paper-discovery
-    source_repo: k_dense
-    source_path: "scientific-skills/literature-review"
+    source_path: "skills/scientific-critical-thinking"
+    notes: "Local normalization: remove upstream author metadata and provider-specific schematic generation guidance."
   - name: citation-management
     pack: paper-writing
     source_repo: k_dense
-    source_path: "scientific-skills/citation-management"
+    source_path: "skills/citation-management"
+    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts; keep only NCBI environment hints."
   - name: peer-review
     pack: paper-writing
     source_repo: k_dense
-    source_path: "scientific-skills/peer-review"
+    source_path: "skills/peer-review"
+    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts."
   - name: exploratory-data-analysis
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/exploratory-data-analysis"
+    source_path: "skills/exploratory-data-analysis"
+    notes: "Local normalization: remove upstream author metadata."
   - name: statistical-analysis
     pack: scientific-tools
     source_repo: k_dense
-    source_path: "scientific-skills/statistical-analysis"
-  - name: scientific-visualization
+    source_path: "skills/statistical-analysis"
+    notes: "Local normalization: remove upstream author metadata."
+
+  # AcademicForge / Claude Science
+  - name: literature-review
+    pack: paper-discovery
+    source_repo: academic_forge
+    source_path: "skills/claude-science/literature-review"
+    notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
+  - name: pdf-explore
+    pack: documents
+    source_repo: academic_forge
+    source_path: "skills/claude-science/pdf-explore"
+    notes: "Scope: PDF reading, navigation, and extraction. Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
+  - name: figure-style
     pack: scientific-tools
-    source_repo: k_dense
-    source_path: "scientific-skills/scientific-visualization"
-  - name: scientific-schematics
+    source_repo: academic_forge
+    source_path: "skills/claude-science/figure-style"
+    notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
+  - name: figure-composer
     pack: scientific-tools
-    source_repo: k_dense
-    source_path: "scientific-skills/scientific-schematics"
+    source_repo: academic_forge
+    source_path: "skills/claude-science/figure-composer"
+    notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
+  - name: paper-narrative
+    pack: paper-writing
+    source_repo: academic_forge
+    source_path: "skills/claude-science/paper-narrative"
+    notes: "Scope: figure-deck story and paper arc. Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
 
   # scicraft
   - name: openalex-database
@@ -148,23 +166,7 @@ skills:
     source_repo: scicraft
     source_path: "skills/scientific-computing/sympy-symbolic-math"
 
-  # kepano / obsidian-skills
-  - name: obsidian-markdown
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-markdown"
-  - name: obsidian-cli
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-cli"
-  - name: obsidian-bases
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-bases"
-  - name: json-canvas
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/json-canvas"
+  # kepano / obsidian-skills (defuddle only)
   - name: defuddle
     pack: documents
     source_repo: obsidian
@@ -175,88 +177,82 @@ skills:
     pack: paper-writing
     source_repo: research_skills
     source_path: "skills/research-paper-writing"
+  - name: review-revision
+    pack: paper-writing
+    source_repo: paper_lifecycle
+    source_path: "review-revision"
+    notes: "Local normalization narrows the skill to manuscript review/revision and routes formal rebuttal drafting to rebuttal-response."
+  - name: rebuttal-response
+    pack: paper-writing
+    source_repo: paper_lifecycle
+    source_path: "rebuttal-response"
+    notes: "Local normalization clarifies that actual reviews, AC comments, and rebuttal rules should use this skill rather than review-revision."
   - name: youtube-transcript
     pack: media-ingest
     source_repo: tapestry
     source_path: "youtube-transcript"
-  - name: planning-with-files
-    pack: always-on
-    source_repo: planning_with_files
-    source_path: "skills/planning-with-files"
-    notes: "Isolated .planning mode was introduced in v2.36.0; canonical skill scripts include it from v2.36.2; SKILL.md documents it from v2.36.3. Prefer .planning mode by default; avoid root-level task_plan.md/findings.md/progress.md unless explicitly requested."
-  - name: grill-me
-    pack: always-on
+  - name: grilling
+    pack: productivity
     source_repo: mattpocock_skills
-    source_path: "skills/productivity/grill-me"
-  - name: chat-compactor
-    pack: always-on
-    source_repo: agent_skills_hunter
-    source_path: "planning/chat-compactor"
-    notes: "Light normalization target: remove root/global output fallback. Default session summaries should go under .handoff/session-[topic]-[date].md."
-  - name: neat-freak
-    pack: local-maintenance
-    source_repo: khazix_skills
-    source_path: "neat-freak"
-    notes: "Cross-platform cleanup and handoff maintenance skill. Keep in local-maintenance rather than always-on; it should only update memory/config files that exist or are supported by the active agent, and skip missing platform-specific files."
-
-
-  # Matt Pocock engineering skills
-  - name: diagnose
+    source_path: "skills/productivity/grilling"
+  # Factory engineering skills
+  - name: simplify
     pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/diagnose"
-    notes: "Software-development skill for disciplined bug/performance diagnosis. Locally normalized to remove command/tool-specific routing. Keep in software-dev pack; not a scientific-research workflow."
-  - name: tdd
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/tdd"
-    notes: "Software-development skill for red-green-refactor through public behavior tests. Keep in software-dev pack; not a scientific-research workflow."
-  - name: prototype
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/prototype"
-    notes: "Software-development skill for throwaway logic/UI prototypes before implementation. Keep in software-dev pack; not a scientific-research workflow."
-  - name: improve-codebase-architecture
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/improve-codebase-architecture"
-    notes: "Software-development skill for deepening modules, improving seams, testability, and AI navigability. Locally normalized to use agent-neutral exploration/design wording and project-local CONTEXT.md/ADR formats. Keep in software-dev pack."
+    source_repo: factory_plugins
+    source_path: "plugins/core/skills/simplify"
+    notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
 
   # Custom/local skills
+  - name: code-review
+    pack: software-dev
+    source_repo: custom
+    source_path: "lib/code-review"
+    notes: "Custom explicit-use whole-repository or scoped review skill. Independently synthesized from shadcn/improve reconnaissance and evidence vetting, specialone0007/repo-organization-audit structural checks, addyosmani/code-review-and-quality review lenses, and mattpocock/codebase-design module-depth principles; no upstream text is mirrored."
   - name: skill-manager
     pack: local-maintenance
     source_repo: custom
     source_path: "lib/skill-manager"
-    notes: "Customized skill for maintaining the skill library."
+    notes: "Custom registry/audit skill for maintaining .agent-share."
+  - name: skill-creator
+    pack: agent-dev
+    source_repo: custom
+    source_path: "lib/skill-creator"
+    notes: "Custom orchestrator over anthropic-skill-creator and openai-skill-creator; vendor-neutral wrapper with in-folder relative symlinks to the source creator skills."
   - name: better-read-html
     pack: documents
     source_repo: custom
     source_path: "lib/better-read-html"
-    notes: "Custom portable skill for generic source-first, static, auditable HTML document artifacts; scholarly/paper rigor lives in a dedicated reference. The historical copy source was /home/wangzixiong/better-read-html/.agents/skills/better-read-html on 2026-05-19; the canonical maintained copy is now lib/better-read-html. Keep in documents pack rather than always-on unless repeated use justifies activation."
+    notes: "Custom portable skill for source-first, static, auditable HTML document artifacts; scholarly/paper rigor lives in its reference material. Pack: documents, not always-on."
 
   - name: docdoki
     pack: always-on
     source_repo: custom
     source_path: "lib/docdoki"
-    notes: "Custom skill for managing living project documentation: northstar, active todo, chores, specs, challenge reports, staging, and adoption/check/challenge workflows. Registered from /home/wangzixiong/docdoki/skills/docdoki on 2026-05-24. Runtime package is maintained in lib/docdoki; project design-history artifacts are intentionally excluded."
+    notes: "Custom living-documentation skill for docdoki/ libraries. The agent executes semantic protocols with Read/Edit/Bash; a bundled deterministic checker enforces the gitignored private-document boundary, and the optional panel presents both visibility scopes."
 
   - name: project-setup
     pack: always-on
     source_repo: custom
     source_path: "lib/project-setup"
-    notes: "Customized skill for setting up or updating project-level shared skills and generated AGENTS.md files from agents-fragments."
+    notes: "Custom project setup skill for shared skill links and generated AGENTS.md files from agents-fragments."
 
   - name: humanizer
     pack: documents
     source_repo: humanizer
     source_path: "."
-    notes: "External humanizer skill installed from blader/humanizer; document-oriented text naturalization and AI-writing cleanup. Kept outside always-on to avoid broad style interference."
+    notes: "Pack: documents, not always-on. Local normalization: move the upstream top-level version field into standard metadata. The skill is otherwise harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
 
   - name: chaos
-    pack: always-on
+    pack: deliberation
     source_repo: custom
     source_path: "lib/chaos"
-    notes: "Disciplined claim-led multi-agent deliberation skill for high-value ambiguous or risky judgment. Developed in /home/wangzixiong/chaos; keep lightweight and generic."
+    notes: "Custom deliberation skill; keep lightweight and generic."
+
+  - name: remote-compute
+    pack: compute
+    source_repo: custom
+    source_path: "lib/remote-compute"
+    notes: "Custom vendor-neutral SSH compute skill; scheduler/GPU/service/sudo are conditional patterns."
 
 
   # Semantic Scholar discovery layer
