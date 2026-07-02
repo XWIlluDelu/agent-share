@@ -7,11 +7,10 @@ Usage:
 """
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
-import yaml
+from frontmatter import parse_frontmatter
 
 ACRONYMS = {
     "GH",
@@ -108,22 +107,12 @@ def read_frontmatter_name(skill_dir):
     if not skill_md.exists():
         print(f"[ERROR] SKILL.md not found in {skill_dir}")
         return None
-    content = skill_md.read_text()
-    match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
-    if not match:
+    parsed = parse_frontmatter(skill_md.read_text())
+    if parsed is None:
         print("[ERROR] Invalid SKILL.md frontmatter format.")
         return None
-    frontmatter_text = match.group(1)
-    try:
-        frontmatter = yaml.safe_load(frontmatter_text)
-    except yaml.YAMLError as exc:
-        print(f"[ERROR] Invalid YAML frontmatter: {exc}")
-        return None
-    if not isinstance(frontmatter, dict):
-        print("[ERROR] Frontmatter must be a YAML dictionary.")
-        return None
-    name = frontmatter.get("name", "")
-    if not isinstance(name, str) or not name.strip():
+    _frontmatter, name, _description = parsed
+    if not name.strip():
         print("[ERROR] Frontmatter 'name' is missing or invalid.")
         return None
     return name.strip()

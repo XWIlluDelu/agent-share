@@ -8,7 +8,7 @@ export PWCLI="$PLAYWRIGHT_SKILL_DIR/scripts/playwright_cli.sh"
 "$PWCLI" --help
 ```
 
-Set `PLAYWRIGHT_SKILL_DIR` to the project-local installed skill directory.
+Set `PLAYWRIGHT_SKILL_DIR` to the installed skill directory; project-local `.agent/skills/playwright` is the default.
 
 Optional convenience alias:
 

@@ -4,7 +4,7 @@ Use this reference when designing the command surface for a new CLI an agent sho
 
 ## Mental model
 
-The CLI is the agent's command layer. It should turn a service, app, API, log source, or database into shell commands an agent can run repeatedly from any repo.
+The CLI is the agent's command layer. It should turn a service, app, API, log source, or database into shell commands agents can run repeatedly from any repo.
 
 Good CLIs for agents expose composable primitives. Avoid a single command that tries to "do the whole investigation" when smaller discover, read, resolve, download, inspect, draft, and upload commands would compose better.
 
@@ -29,7 +29,7 @@ Use product nouns, then verbs:
 tool-name --json doctor
 tool-name --json accounts list
 tool-name --json projects list
-tool-name --json channels resolve --name alerts
+tool-name --json channels resolve --name general
 tool-name --json messages search "exact phrase"
 tool-name --json messages context <message-id> --before 3 --after 3
 tool-name --json logs download <build-url> --failed --out ./logs

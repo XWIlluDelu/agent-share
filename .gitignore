@@ -1,6 +1,9 @@
 # Upstream source repos (cloned by manifest, not owned content)
 sources/
 
+# Unlicensed upstream skill bodies kept locally only, not redistributed
+lib/simplify/
+
 # Python
 __pycache__/
 *.pyc
@@ -13,6 +16,10 @@ build/
 .venv/
 venv/
 
+# Runtime session artifacts
+.chaos/
+.pi-subagents/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -22,3 +29,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Runtime browser artifacts
+.playwright-mcp/
+/lib/.playwright-mcp/
+/lib/*.png
