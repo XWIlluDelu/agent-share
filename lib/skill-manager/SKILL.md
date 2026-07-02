@@ -24,6 +24,7 @@ Maintain `.agent-share` skill assets. Execute the user's requested maintenance o
 - `lib/<skill>/`: canonical maintained skill copies. Local normalization happens here.
 - `agents-fragments/AGENT-*.md`: reusable project-instruction fragments consumed by `project-setup`; not skills and not manifest entries.
 - `skills/<skill> -> ../lib/<skill>`: materialized `always-on` pack only.
+- Runtime activation roots are outside this repo. They point installed agents at `~/.agent-share/skills/`; they never own skill content.
 - `manifest.yaml`: registry for skill name, pack, source provenance, and normalization notes.
 
 ## Rules
@@ -34,10 +35,21 @@ Maintain `.agent-share` skill assets. Execute the user's requested maintenance o
 - Keep reusable agent fragments in top-level `agents-fragments/`, not `lib/`.
 - Update `manifest.yaml` before or with changes that alter provenance, pack membership, naming, or normalization intent.
 - Use relative symlinks in `skills/`.
+- Do not copy always-on skills into runtime roots; link roots or entries to `~/.agent-share/skills`.
 - Do not create side registries, trash files, transitional docs, compatibility copies, or duplicate registries unless explicitly requested.
 - Remove stale debris within the maintenance scope; leave the library cleaner.
 
 ## Workflows
+
+### Audit runtime activation
+
+1. Read `pack: always-on` names from `manifest.yaml` and compare them with `skills/`.
+2. Inspect installed runtime roots only: `~/.pi/agent/skills`, `~/.claude/skills`, and `~/.codex/skills`. Do not create roots for absent agents.
+3. If a runtime root has no platform-owned payload, prefer one relative directory symlink to `~/.agent-share/skills`.
+4. If a runtime root has platform-owned payload, such as `~/.codex/skills/.system/`, preserve it and add per-skill relative symlinks to `~/.agent-share/skills/<name>`.
+5. OpenCode scans Claude and Codex roots; a separate OpenCode root is unnecessary unless OpenCode-only skills exist. OpenClaw does not scan those roots; link it only when installed or used.
+6. Skip and report real files or nonmatching symlinks.
+7. Run the audit checklist.
 
 ### Sync upstream
 
@@ -117,6 +129,7 @@ Run after every workflow. If an item applies, it must pass before reporting comp
 - `agents-fragments/` contains only reusable `AGENT-*.md` fragments.
 - `skills/` contains only relative symlinks for `pack: always-on` entries.
 - Each always-on symlink target is exactly `../lib/<name>`.
+- Requested runtime activation roots expose every `pack: always-on` skill through relative links or a directory link to `~/.agent-share/skills/`, while preserving platform-owned directories such as `.codex/skills/.system/`.
 - Touched upstream repos are clean after local normalization.
 - Source-backed updates used overwrite-then-reapply: new `lib/<name>` started from updated `sources/<repo>/<path>`, then only documented local normalization was reapplied.
 - Remaining upstream-to-lib diffs are documented in `manifest.yaml.notes`.
