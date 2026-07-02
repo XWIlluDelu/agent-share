@@ -1,155 +1,121 @@
 ---
 name: docdoki
-description: |
-  Manage living documentation for software projects under Agent-driven (vibe coding) development. Use when the user asks to set up project docs, bootstrap docs for an existing codebase, capture project goals or a northstar, maintain an active todo, log chores, write or audit living specs, run challenge reports for code-doc alignment, clean up document drift, promote chores into specs, or resolve staging drafts. Ten operations cover the full lifecycle: init, adopt, status, check, polish, go, challenge, garden, approve, discard. Resolves natural-language document references like "the auth spec" or "current todo". Trigger phrases: docdoki, living spec, northstar, active todo, chores ledger, challenge report, spec drift, doc alignment, agent context loss, vibe coding docs, bootstrap docs.
+description: >-
+  Maintain a project's living documentation library under docdoki/: human-readable
+  documents (northstar, spec abstract, living specs, stages, notes) kept aligned with
+  the human's design and with the implementation. Use this whenever the user sets up
+  or adopts documentation for a project, has edited the docs and wants the change
+  understood and propagated into code, wants to compact, wrap up, or hand off
+  in-flight work for the next agent or session, suspects the documents have drifted
+  from the implementation, wants the library cleaned up and consolidated, or asks
+  a project question the library can answer — even when they don't say "docdoki" or
+  name a document by type. Also load it when the project contains a docdoki/ library,
+  before non-trivial work in code the library covers. Do not use it for
+  one-off writing outside this library — a standalone README, code docstrings
+  or comments, or a project's ordinary docs/ folder — unless that content
+  lives in or feeds docdoki/.
 ---
 
 # DocDoki
 
-DocDoki manages a project's living documentation as the shared source of truth between human engineers and coding Agents. It centers on seven document types under `docs/`, ten skill operations, and an explicit staging mechanism for any non-trivial edit.
+DocDoki is a document library a human and an agent maintain together. Its work is to
+keep two alignments current when the protocols run: the human's design ↔ `docdoki/`,
+and `docdoki/` ↔ the implementation. The human reads and steers the high level; the
+agent carries the detail, keeps the library true, and does almost all the upkeep.
 
-## Mental model
+It is a library, not a program. The protocol names below (`follow`, `challenge`,
+`groom`, …) are codenames for procedures *you*, the agent, carry out with ordinary
+Read / Edit / Bash (including git). There is no CLI and nothing to invoke; `follow`
+means "the human edited a document — understand the change, polish it, and align the
+implementation to it," and `challenge` means "reconcile the documents with the code —
+find untrue records or wrong implementation and repair them." You read this skill, then
+act.
 
-DocDoki exists because two failure modes break Agent-assisted development:
+## Protocols
 
-1. **Document rot**. Heavy doc trees rot under frequent small edits; humans stop reading them, Agents miss them.
-2. **Context loss**. Pure-chat workflows have no ground-truth deposit; when sessions reset, decisions evaporate.
+| Protocol | Mode | Meaning |
+| :-- | :-- | :-- |
+| `init` | write | Scaffold the `docdoki/` skeleton; link to a parent library if one exists above. |
+| `adopt` | write | Read an existing project and draft northstar, spec abstract, specs, notes, and any in-flight stage. |
+| `ask` | read | Answer from the documents plus read-only code checks; change nothing. |
+| `follow` | review / write | Act on recent human doc edits: understand, judge, then propagate into the documents and the implementation. |
+| `challenge` | review / write | Reconcile docs with code on a scope you're given or choose (a spec, an area, or all); surface drift, then repair it. |
+| `groom` | write | Deliberately clean the library: forget low-value churn, promote accumulated detail into structure, keep documents lean. |
+| `handoff` | write | Rewrite the matching stage as current handoff state and print a kickoff prompt. |
 
-DocDoki's fix: a minimal `docs/` tree (seven canonical types), an explicit write matrix, and LLM challenge audits instead of git hooks. Non-trivial cold-document edits go through staging; hot low-stakes docs and append-only history use direct writes where the matrix allows them. Cache state is gitignored and rebuildable. Markdown is canonical; machine state is disposable.
+Natural language counts: `compact`, `wrap up`, `save context`, `summarize session`
+mean `handoff`; `tidy`, `clean up the docs`, `consolidate` mean `groom`. Review mode
+reads and reports only; write mode makes the changes.
 
-## File layout (created by `init` or `adopt`)
+**Grooming and reconciliation also ride along.** Every `follow` and `challenge` grooms
+what it touches and reconciles it against the code — `groom` and `challenge` are the
+*deliberate* passes, not the only time the library is kept true. `handoff` does neither:
+it writes its stage and prints a kickoff prompt, nothing else. Full procedures:
+`references/operations.md`.
+
+## Documents
 
 ```text
-docs/
-  northstar.md                       # Goals — append-only, cold state
-  glossary.md                        # Terminology — cold state, human-led
-  runbook.md                         # Operational commands — warm state, shared
-  todo/
-    active_<description>.md          # Current stage plan — at most one per repo
-    archive/
-      <description>_YYMMDD.md        # Past stage plans — history
-  chores.md                          # Mini-change ledger — hot, prune-on-garden
-  spec/
-    *.md                             # Living Spec — current decisions
-  challenge/
-    <YYMMDD>_<NN>_<rand>.md          # Audit reports — append-only history + alignment anchor
-.docdoki/
-  cache.json                         # Derived index — gitignored, rebuildable
-  staging/                           # Pending drafts — gitignored
+<unit>/docdoki/
+  northstar.md            # intent: mission, success criteria, hard constraints
+  spec_abstract.md        # the design map across areas + cross-spec direction
+  specs/<name>.md         # one per code/data area; covers globs index the code
+  stages/<protocol>-<topic>-<date>.md          # active work + handoff state
+  stages/archive/<protocol>-<topic>-<date>.md  # closed snapshots, not routine input
+  notes/<topic>.md        # reusable methods, gotchas, and evidence, with source pointers
 ```
 
-Two axes:
-- **State** (challengeable): northstar, glossary, runbook, active todo, chores, spec
-- **History** (never challengeable): todo/archive, challenge reports
+The layering matches who keeps each thing true most cheaply, and what the human needs
+to see:
 
-## The ten operations
+- **`northstar.md`** and **`spec_abstract.md`** are the human's surface — intent and the
+  design map. Reading just these two tells a human how the project runs and where it is.
+  `northstar.md` is the only high-threshold document; `spec_abstract.md` is the main
+  steering surface.
+- **`specs/*.md`** are agent-owned contracts, reconciled with the code when challenged.
+- **`stages/*.md`** and **`notes/*.md`** are the depth: work in flight, dead ends,
+  methods, gotchas. The agent retrieves them on demand; the human need not hold them.
 
-Each operation is a workflow the Agent performs by reading files, calling the LLM where needed, and writing outputs. They are not RPC functions; the names are just mnemonics for "the procedure described below". For full per-command preconditions / steps / outputs, read **`references/commands.md`**.
+Child units use `parent: ../../docdoki/northstar.md`; parent units list children under
+`## Units`; child northstars include `## Contribution`. Schemas and parent/child links:
+`references/schemas.md`.
 
-| Operation | One-line | Detail |
-| :-- | :-- | :-- |
-| `init` | Scaffold empty `docs/` skeleton and gitignore entries | `references/commands.md` § init |
-| `adopt` | Autonomous LLM bootstrap of a project that already has code | `references/adopt-pipeline.md` |
-| `status` | Single-screen dashboard from existing files | `references/commands.md` § status |
-| `check` | Pure static validation, strictly read-only, no LLM | `references/commands.md` § check |
-| `polish` | LLM rewrite of a document (L1-L4 authority), produces staging | `references/commands.md` § polish |
-| `go` | Plan the next iteration; preload relevant specs into Agent context | `references/commands.md` § go |
-| `challenge` | LLM audits code against documents; writes structured verdict report | `references/commands.md` § challenge |
-| `garden` | LLM aggregates chores into spec promotions; produces staging | `references/commands.md` § garden |
-| `approve` | Explicitly land a staging draft into the target document | `references/commands.md` § approve |
-| `discard` | Explicitly delete a staging draft without landing | `references/commands.md` § discard |
+## Working rules
 
-When the user invokes any of these (e.g. "docdoki adopt", "run challenge", "polish the auth spec"), follow the procedure in the referenced file. When uncertain which operation matches a request, read `references/commands.md` end-to-end first.
+- Read a document before you change it. A human
+  edit you have not yet propagated is a requirement, not noise — understand it, polish
+  it, align the code; never blind-overwrite it away.
+- **Never weaken a correct spec to ratify wrong code.** When documents and code
+  disagree, decide by cause, not convenience — the three-way split (fix the doc / fix
+  the code / the human decides) is in `references/philosophy.md` (Collaboration).
+- **Record only what you have grounds for** — read from the code, or heard from the
+  human. Reconstructing what the code does is grounds; ungrounded guessing is not.
+- **Forgetting keeps only a recovery trace.** When you drop low-value content, the
+  working tree reads as if it had always said the current thing. Only committed text
+  has that recovery trace; durable lessons are routed before deletion, not hidden in
+  commit messages. Do not create a side-channel ledger.
+- **Reconcile a spec by reading the code it covers** — when asked, or when you work in
+  that code. Never assume a claim holds; confidence is earned by the reading. Flag in
+  prose any claim you have not checked, and never present it as confirmed.
+- **git is for focus, not verdict.** `git diff` / `git log` over a spec's `covers` show
+  *what changed* and point you where to look; whether a doc is true is your judgment,
+  reading the code.
 
-## Cross-cutting rules
+## Stage selection
 
-When a write feels ambiguous, first read `references/anti-patterns.md`. A successful DocDoki operation may report `no_change` and write nothing when there is no material document change to land.
+Stage selection — explicit user mention; unique match by `scope` (the path globs it
+touches); the single active stage; otherwise ask — is in `references/stages.md`,
+including how multiple active stages and overlapping scopes are handled.
 
-### Natural-language document references
+## References
 
-All operations that accept a `<doc-id>` parameter accept natural language ("the auth spec", "current todo", "current goals"). Resolve as follows:
+Read the relevant reference before acting.
 
-1. Match against frontmatter `id` fields under `docs/`.
-2. Match against canonical filenames (`northstar.md`, `glossary.md`, `runbook.md`, `chores.md`, `active_*.md`, `spec/<slug>.md`).
-3. If exactly one candidate matches, proceed.
-4. **If multiple candidates match, stop and ask.** List the candidates in stdout, request the user disambiguate. Never silently default-pick — wrong choices on cold documents (northstar, archive) are hard to detect and reverse.
+- `references/philosophy.md` — why the library exists; the human/agent ownership split; the autonomy yardstick.
+- `references/operations.md` — the procedure behind each protocol, grooming, audit, and the upkeep that rides along.
+- `references/schemas.md` — document schemas, covers, parent/child links.
+- `references/stages.md` — stage selection, handoff, and the close lifecycle.
 
-### Authoritative write matrix
-
-The matrix is the canonical source of truth for what each operation writes and whether it writes directly or through staging.
-
-| Operation | northstar | glossary | runbook | active_*.md | chores.md | spec/*.md | challenge/*.md | staging |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| `init` | direct (placeholder) | direct (placeholder) | direct (placeholder) | — | direct (placeholder) | — | — | — |
-| `adopt` | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | direct (isolated branch) | — |
-| `status` | — | — | — | — | — | — | — | — |
-| `check` | — | — | — | — | — | — | — | — |
-| `polish` | **staged** | **staged** | **staged** | **staged** | **staged** | **staged** | — | produces `.polish.md` |
-| `go` | — | — | direct | direct | direct (placeholder replace) | — | — | — |
-| `challenge` | — | — | — | — | direct (append chore on `code_change`) | **staged** (on `doc_change`) | direct (new report) | produces `.challenge.md` |
-| `garden` | — | — | — | — | **staged** (delta) | **staged** (promotion) | — | produces `.garden.md` |
-| `approve` | direct (lands staging) | direct (lands staging) | direct (lands staging) | — | direct (lands staging) | direct (lands staging) | — | consumes staging |
-| `discard` | — | — | — | — | — | — | — | removes staging |
-
-Notes:
-- "direct" means writing the target file in place. Acceptable when (a) the file is high-frequency / low-stakes (`active_*.md`, `chores.md`), (b) the operation runs in an isolated git environment (`adopt`), or (c) the file is append-only history (`challenge` reports).
-- "staged" means writing to `.docdoki/staging/<target>.<source>.md`. The user must explicitly `approve` (validates branch / rev / content sha) or `discard`. No implicit approval.
-Staging path format and frontmatter are in `references/schemas.md` § staging.
-
-### Alignment without git hooks
-
-DocDoki never installs git hooks (those get bypassed with `--no-verify` and breed resentment). Instead, the Agent calls `check` and `challenge` at natural points — typically before committing. A challenge report with `verdict: pass`, **once committed to git**, becomes the alignment anchor for the audited spec. Stale detection is `git diff <anchor>..HEAD -- <covers.paths>` where `<anchor>` is the introducing commit of the report file (`git log -1 --format=%H -- <report>`), **not** the `git_rev` field inside the report's frontmatter. The anchor follows the report file through rebase / squash / cherry-pick. Pass reports that exist on disk but have not yet been committed do not anchor anything — they appear in `cache.json`'s `pending_pass_reports`.
-
-### Helper script invocation
-
-The bundled scripts live in the same directory as this `SKILL.md`. The actual install path varies by host (some hosts install per-user, some per-project, some in a system-wide skills directory); the scripts are **not** under the user's project repo. Resolve as follows:
-
-1. `skill_root` = directory containing the `SKILL.md` currently in use. The host exposes this path under whatever name it uses for the skill's source directory.
-2. Invoke helpers as `python3 "$skill_root/scripts/<name>.py" [--root "$repo_root"] [other args]`.
-3. Several scripts accept `--root` to point at the user's repo; pass it explicitly when CWD is not the repo.
-
-Do not invoke scripts as a bare `scripts/...` path — that resolves relative to CWD (typically the user's repo, where the scripts do not exist).
-
-## When to use which operation
-
-Read `references/commands.md` for full per-operation guidance. Common entry points:
-
-- "Set up docdoki in this new project" → `init`
-- "Set up docdoki in this existing project" → `adopt`
-- "What's the current state?" → `status`
-- "Check before commit" → `check`
-- "Plan the next sprint / task / iteration" → `go`
-- "Audit whether the auth spec still matches the code" → `challenge spec-auth`
-- "Smart audit before commit" → `challenge` (no args; covers only specs by default)
-- "Clean up chores accumulated over the sprint" → `garden`
-- "Polish my draft northstar" → `polish northstar`
-- "Land the pending changes" → `approve --all`
-- "Discard the pending polish" → `discard <doc-id> --source polish`
-
-## When NOT to use docdoki
-
-Read `references/commands.md` § not-applicable for the full list. Common skips:
-
-- Pure code questions that don't touch documentation.
-- One-off README edits unrelated to the docdoki tree.
-- Projects where the user has explicitly disabled docdoki for some reason.
-
-## Bundled scripts
-
-Several deterministic helpers live in `scripts/` and should be invoked by the Agent (not reimplemented inline):
-
-- `scripts/new_chore_id.py` — generate a cryptographically random 6-char base32 chore ID
-- `scripts/check_static.py` — run the full static lint that the `check` operation performs
-- `scripts/allocate_challenge_report.py` — atomically allocate a new `<YYMMDD>_<NN>_<rand>.md` filename under `docs/challenge/`
-- `scripts/staging_path.py` — compute the canonical staging path for a (target_doc, source) pair
-- `scripts/derive_cache.py` — rebuild `.docdoki/cache.json` from `docs/challenge/*.md`
-
-LLMs generate poor random strings (pattern-locking inflates collision rate far above the theoretical 32^6 ≈ 10⁹). Use the script, do not improvise.
-
-## Reference files
-
-- `references/commands.md` — per-operation preconditions, steps, outputs, examples. **Read this when about to execute any operation.**
-- `references/schemas.md` — machine formats: staging paths, staging frontmatter, chore line format, challenge report schema, cache.json shape, spec frontmatter.
-- `references/adopt-pipeline.md` — the full S0-S10 pipeline with LLM prompt templates and stage-boundary contracts.
-- `references/lifecycle.md` — deep dive on each of the seven document types: ownership, update cadence, archival rules, refactor handling.
-- `references/anti-patterns.md` — DocDoki-specific wrong moves to check before ambiguous writes.
+An optional panel (`python panel/panel.py`) projects the library as an editable
+dell-1996 canvas — a bonus surface whose write-backs are ordinary human document edits
+that `follow` handles, and whose copy prompt is spoken intent; it does not block use.

@@ -259,8 +259,7 @@ skills:
     pack: always-on
     source_repo: custom
     source_path: "lib/docdoki"
-    notes: "Custom skill for managing living project documentation: northstar, active todo, chores, specs, challenge reports, staging, and adoption/check/challenge workflows. Registered from /home/wangzixiong/docdoki/skills/docdoki on 2026-05-24. Runtime package is maintained in lib/docdoki; project design-history artifacts are intentionally excluded."
-
+    notes: "Custom skill for a project's living documentation library under docdoki/: northstar, spec abstract, living specs, stages, notes, and the follow/challenge/groom/handoff protocols. Protocol-based and scriptless — the agent executes procedures with Read/Edit/Bash, no CLI. Replaces the earlier v1 (active todo, chores, staging, ten scripted operations) which was deprecated and removed on 2026-07-01; git history retains it."
 
   - name: project-setup
     pack: always-on

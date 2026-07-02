@@ -1,0 +1,22 @@
+{
+  "case": "challenge-rides-along-covered-code",
+  "protocol": "challenge",
+  "mode": "write",
+  "trigger": "existence: the project contains a docdoki/ library and the task touches code a spec covers; the prompt does not mention docdoki",
+  "expected_findings": [
+    {
+      "id": "token-expiry-reconcile",
+      "severity": "drift-after-edit",
+      "spec": "docdoki/specs/auth.md",
+      "code": "src/auth.py",
+      "claim_before": "Tokens expire after 15 minutes.",
+      "code_after": "TOKEN_TTL_MINUTES = 60",
+      "expected_action": "update the spec claim to 60 minutes; the code change is legitimate, so fix the doc, not the code"
+    }
+  ],
+  "must_not": [
+    "wait for the user to mention docdoki before loading the skill",
+    "leave the spec at 15 minutes after editing the covered code",
+    "weaken or remove the spec instead of updating its value"
+  ]
+}

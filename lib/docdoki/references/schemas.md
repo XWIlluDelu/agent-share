@@ -1,198 +1,184 @@
-# Schemas
+# Document schemas
 
-All machine-readable formats consumed or produced by docdoki operations. Refer to this file whenever you need exact field names, allowed values, or path conventions. The SKILL.md body intentionally avoids these details to stay scannable.
+Exact frontmatter and body shape for every DocDoki document. Keep frontmatter to
+simple shapes: scalars, inline lists `[a, b]`, and block lists.
 
-## Table of contents
+## Contents
 
-- [Spec frontmatter](#spec-frontmatter)
-- [Northstar frontmatter](#northstar-frontmatter)
-- [Active todo frontmatter](#active-todo-frontmatter)
-- [Chore line format](#chore-line-format)
-- [Challenge report](#challenge-report)
-- [Staging path and frontmatter](#staging-path-and-frontmatter)
-- [cache.json](#cachejson)
+- northstar.md
+- spec_abstract.md
+- specs/*.md (+ covers)
+- stages/*.md
+- notes/*.md
+- Filename rules
 
----
+## northstar.md
 
-## Spec frontmatter
+The only high-threshold document. Edit it only when necessary and say why; never
+weaken its intent without the human's approval.
 
-Each `docs/spec/*.md` carries this frontmatter:
+Optional frontmatter, present only in child units:
 
 ```yaml
 ---
-id: spec-auth                       # required; kebab-case; globally unique under docs/
-type: living_spec                   # required; literal
-status: active                      # required; one of: active | deprecated
+parent: ../../docdoki/northstar.md
+---
+```
+
+Required sections: `## Mission`, `## Success criteria`, `## Hard constraints`.
+Child units add `## Contribution` (one paragraph: how the child serves the
+parent). Parent units with children add `## Units`, one link per child:
+
+```md
+## Units
+
+- [analysis](../analysis/docdoki/northstar.md) — primary statistical analysis
+```
+
+The filesystem is the source of truth for unit discovery; `parent` and `## Units`
+are human navigation links — reconcile them when they drift from the tree.
+
+## spec_abstract.md
+
+The human's spec review and steering surface. It is a real document, not a
+generated view: a human edit to it is a design instruction you must propagate
+into concrete specs and implementation, or leave as a visible mismatch. No
+frontmatter — it describes how the specs fit together, not a code area.
+
+Recommended body:
+
+```md
+# Spec abstract
+
+## Design map
+
+| Area | Spec | Current design | Attention |
+|---|---|---|---|
+
+## Cross-spec direction
+
+## Review targets
+```
+
+State cross-spec direction in prose here; concrete obligations belong in the
+linked specs. When the abstract and specs disagree, reconcile them or record an
+open mismatch — neither silently wins. Keeping the map in step with the specs is
+ordinary `follow`/`groom` work; in `Review targets` name any spec you believe has
+drifted and should be challenged.
+
+## specs/*.md
+
+Concrete contracts for code and data areas.
+
+```yaml
+---
+purpose: <one line>
 covers:
-  paths:                            # required; list of glob patterns; must be non-empty
-    - src/auth/**
-    - tests/auth/**
-  tags: [auth, jwt, session]        # optional; experimental, no mechanical validation
+  - src/auth/**
+  - tests/auth/**
+after: [preprocess]
 ---
+
+# <Spec title>
+
+## Goal
 ```
 
-**Field semantics**:
+`purpose` is required. The body starts with an `# H1` title (the spec's display
+name — free case, editable from the panel) followed by `## Goal`, then short
+checkable claim bullets — one assertion per bullet that you can audit against
+code, data, or output. Rigid WHEN/THEN syntax is deliberately absent. A claim you
+have not checked against the code, flag in prose (e.g. a trailing "— not yet
+checked"); never present an unchecked claim as confirmed (philosophy habit 1).
 
-- `id` — used as the natural-language resolution target ("the auth spec" → `spec-auth`). Must be globally unique across `docs/`. `check_static.py` enforces this.
-- `covers.paths` — dispatch hint, not a contract. Tells `challenge` which code to look at; tells `status` which paths to diff for stale detection. Glob patterns relative to repo root. `check_static.py` requires this list to be present and non-empty (an empty list breaks smart-mode dispatch).
-- `covers.tags` — soft hint, only consumed by LLM during `challenge`. Never used in mechanical validation. May be empty or absent.
+**covers** is the index into the code: which files this spec is about. It scopes a
+`challenge` — to check this spec, read the code under `covers`. Globs are relative to
+the unit root; `**` matches across directories, `*` within a segment, and braces
+like `{a,b}` expand as shells do. Granularity is the glob, not
+the symbol: a claim whose truth depends on code outside `covers` will not be found by
+reading `covers` alone — widen `covers` to the surface the claim truly depends on. A spec
+carrying claims should have non-empty `covers`. When you set or edit `covers`, verify the
+globs match actual paths, or mark the spec as needing that fix instead of letting
+`challenge` silently miss the code.
 
-## Northstar frontmatter
+**after** is optional; it lists the specs this one follows — the pipeline edges,
+kept sparse and meaningful (real dependencies, not weak links). It records a
+structural fact the design map in `spec_abstract.md` states in prose; set it in
+`adopt` or when the pipeline becomes clear. It does not change how a spec is audited.
 
-`docs/northstar.md` does not require frontmatter. If present, only `id: northstar` is recognized; other fields are ignored.
+**progress** is not a core field — no core procedure reads it. The panel (`panel/`)
+owns it as a display state: an absent value renders as `not-started`, and an explicit
+panel edit may create or change the field through write-back or `follow`. The core never
+sets `progress` from code or from a guess about completion.
 
-## Active todo frontmatter
+## stages/*.md
 
-`docs/todo/active_<description>.md` does not require frontmatter. If present, only `id: active-<description>` is recognized.
-
-## Chore line format
-
-Each line in `docs/chores.md` follows this exact pattern (single line, no HTML hidden comments):
-
-```markdown
-- [ ] [chore-abc2d7] **[area]** YYYY-MM-DD owner:agent|human impact:minor|major target:<doc-id>|none — free-text description
-```
-
-**Field semantics**:
-
-- `[ ]` or `[x]` — task checkbox; `[x]` marks resolved chores that `garden` will remove
-- `[chore-XXXXXX]` — 6-char base32 ID. Base32 lowercase alphabet is `a-z` + digits `2-7` (RFC 4648); digits `0`, `1`, `8`, `9` are **not** valid. **Generate via `scripts/new_chore_id.py`, never by LLM** — LLM-generated "random" strings pattern-lock and produce far more collisions than the theoretical 32⁶ ≈ 10⁹. Use `chore-??????` as a placeholder; the next write-state command (`go` / `garden`) replaces placeholders with real IDs by calling the helper.
-- `**[area]**` — area tag, free-text, used by `garden` for semantic aggregation
-- `YYYY-MM-DD` — creation date
-- `owner:agent|human` — who initiated
-- `impact:minor|major` — informational only
-- `target:<doc-id>|none` — proposed promotion target if known; `garden` may override
-- ` — ` separator (space + em dash + space) then free text
-
-**Uniqueness**: the chore-ID namespace is local to `chores.md`. Collisions are detected by `scripts/check_static.py`. A collision is an error condition; `check` reports it but does not auto-fix (check is strictly read-only). The user or Agent must manually rewrite the duplicate ID using `scripts/new_chore_id.py` to mint a fresh one.
-
-## Challenge report
-
-`docs/challenge/<YYMMDD>_<NN>_<rand>.md`
-
-- `YYMMDD` — date in UTC (six digits)
-- `NN` — same-day sequence, two-digit zero-padded (01, 02, ...). Single-Agent / single-user workflows do not approach the 99-per-day ceiling in practice; if you ever do, change the operation to produce date-rolling new files rather than complicating the format.
-- `rand` — 4-char base32 random; defeats same-day filename races between concurrent challenge calls. Even when two concurrent allocators pick the same `NN`, the rand suffix keeps the files distinct.
-
-Use `scripts/allocate_challenge_report.py` to allocate the filename — it scans existing reports for the day and produces an unused `(NN, rand)` pair via `O_EXCL`.
-
-**Frontmatter**:
+Active work capsules. See `references/stages.md` for the lifecycle.
 
 ```yaml
 ---
-ran_at: 2026-05-23T10:42:00Z        # ISO-8601 UTC
-git_rev: 4f91e4c                    # DIAGNOSTIC ONLY — HEAD when the run started.
-                                    # NOT the alignment anchor; the anchor is the
-                                    # commit that introduces this file in git history.
-mode: smart | explicit              # smart = no-args invocation; explicit = doc-id passed
-targets:                            # list of target doc IDs covered by this report
-  - spec-auth
-  - spec-payment
-include_flags: [active, chores]     # optional; only set if smart mode used --include
+scope:
+  - src/preprocess/**
+  - src/analysis/**
 ---
 ```
 
-**Body** — one section per target:
+`scope` is the path globs the stage touches; it drives stage selection and overlap
+detection (`references/stages.md`). The protocol that opened it, the topic, and the
+creation date live in the filename;
+the archive move and its date live in git.
 
-```markdown
-## spec-auth
+Body sections, rewritten toward current state (never appended to chronologically);
+omit any that would be empty:
 
-verdict: pass | fail | uncertain
-resolution: code_change | doc_change | human_decision   # required when verdict=fail
-violations:
-  - clause: "Spec §3.2 — Token expiry ≤ 24h"
-    code: src/auth/token.ts:42
-    nature: boundary | naming | other
-notes: |
-  Free-form rationale. Written for humans to read later when re-litigating
-  a past decision. Not consumed mechanically.
+```md
+# Primary analysis
+
+## Objective
+## Current state
+## Next actions
+## Decisions
+## Dead ends
+## Handoff
 ```
 
-**Resolution semantics** (only meaningful when verdict is `fail`):
+Section contracts:
 
-- `code_change` — the spec is correct; the code violated it. The agent / user should fix the code, not the spec. **No spec staging is produced** by `challenge`; a chore may be added to `chores.md` reminding to fix.
-- `doc_change` — the code is correct and the spec needs to evolve to permit the new behavior. `challenge` writes a spec edit to staging.
-- `human_decision` — neither side is obviously wrong. `challenge` produces no staging; the report itself surfaces the conflict for human adjudication.
+- `Objective`: what this work stream is for; a sentence or two that also orients a
+  fresh agent.
+- `Current state`: `Working`, `Broken/Blocked`, and `Modified files` bullets.
+  `Modified files` is the work delta, not the `scope` declaration.
+- `Next actions`: prioritized checklist, including what is blocked and what unblocks it.
+- `Decisions`: settled choices with their reason (and a rejected alternative when there
+  was one). Omit when empty.
+- `Dead ends`: failed approaches worth not retrying, in `❌ [Approach] — [why it failed]`
+  form. Omit when empty.
+- `Handoff`: a few sentences a fresh agent can start from.
 
-This split defeats the "ratify-bad-code" trap where every `fail` automatically weakened the spec.
+Reusable methods, gotchas, environment notes, and references are routed to `notes`,
+not kept as fixed stage sections.
 
-**Alignment anchor**: when `verdict: pass`, this report becomes the alignment anchor for that spec — but the anchor SHA is the **introducing commit** of the report file (found via `git log -1 --format=%H -- <path>`), **not** the embedded `git_rev`. Until the report is committed, it counts as a *pending* pass, not yet an anchor; `derive_cache.py` and `status` treat it accordingly. This makes the anchor robust to rebase / squash / cherry-pick (the file moves with git history) and avoids the pre-commit-challenge false-stale scenario.
+## notes/*.md
 
-## Staging path and frontmatter
-
-**Path format**:
-
-```text
-.docdoki/staging/<target-doc-relative-path>.<source>.md
-```
-
-Where:
-- `<target-doc-relative-path>` is the path under `docs/`, e.g. `spec/auth.md` or `northstar.md`
-- `<source>` ∈ {`polish`, `challenge`, `garden`}
-
-Examples:
-- `.docdoki/staging/spec/auth.md.challenge.md`
-- `.docdoki/staging/northstar.md.polish.md`
-- `.docdoki/staging/spec/logging.md.garden.md` (a newly-created spec under garden)
-- `.docdoki/staging/chores.md.garden.md` (chores deletions from garden)
-
-Use `scripts/staging_path.py` to compute this deterministically. The script rejects absolute paths, `..` traversal, and any input that would resolve outside the managed `docs/` tree. Always invoke the script rather than building paths inline.
-
-**Frontmatter**:
+Durable agent knowledge: reusable methods, gotchas, literature, commands.
 
 ```yaml
 ---
-source: polish | challenge | garden  # which operation produced this draft
-target_doc: docs/spec/auth.md        # absolute repo-relative path of final destination
-created_at_rev: 4f91e4c              # full SHA of HEAD at draft creation
-created_on_branch: master            # branch name at draft creation
-base_content_sha256: <hex>           # SHA-256 of target_doc content at draft creation;
-                                     # null if target_doc did not yet exist (new-file staging)
-chore_ids: [chore-abc2d7]            # only set if source=garden; chores that contributed
-report_ref: docs/challenge/260523_01_a8b3.md   # only set if source=challenge; report that triggered
+purpose: <one line>
 ---
-<body — the complete final content of target_doc after this change lands>
 ```
 
-The body is the **final state** of the target document, not a diff. `approve` overwrites `target_doc` with this body verbatim and deletes the staging file.
+Every non-obvious claim needs a source pointer: `file:line`, a URL, command
+output, or a commit. Notes never hold requirements or active tasks.
 
-**Approval validation** (performed by `approve`):
+## Filename rules
 
-1. `created_at_rev` must be an ancestor of current HEAD: `git merge-base --is-ancestor <created_at_rev> HEAD`. If not — typically because someone rebased — refuse with explanation.
-2. `created_on_branch` must equal current branch unless `--cross-branch` is passed.
-3. **Content drift check**: if `base_content_sha256` is set, the current target file's SHA-256 must equal it. If the target was edited (manually or by another command) since staging was created, refuse. The user can re-run the producing command (`polish` / `challenge` / `garden`) against the new base, or pass `--force` to overwrite.
-4. **Multi-source check**: if more than one staging file targets the same `target_doc` (e.g. both a `.polish.md` and a `.challenge.md` exist), refuse and require `--source` to disambiguate. Otherwise the order of application would be filesystem-dependent and the last write would silently win.
-5. If all validations pass: write body to `target_doc`, delete the staging file.
-
-## cache.json
-
-`.docdoki/cache.json` is **derivable** from `docs/challenge/*.md` + git history. It is a performance index, not the source of truth. Schema (version 2):
-
-```json
-{
-  "schema_version": 2,
-  "alignment_anchors": {
-    "spec-auth": {
-      "latest_pass_report": "docs/challenge/260523_01_a8b3.md",
-      "anchor_commit": "4f91e4c",
-      "diagnostic_run_rev": "4f91e4c"
-    },
-    "spec-payment": {
-      "latest_pass_report": "docs/challenge/260520_03_2c7f.md",
-      "anchor_commit": "1a7734f",
-      "diagnostic_run_rev": "1a7734f"
-    }
-  },
-  "pending_pass_reports": [
-    "docs/challenge/260524_02_p1ng.md"
-  ]
-}
-```
-
-- `anchor_commit` is the introducing commit of the report file (the SHA used for stale detection). Always reachable as long as the report file exists in git, so rebase / squash / cherry-pick do not invalidate anchors.
-- `diagnostic_run_rev` is what HEAD was when the challenge run started. Not used for stale detection; kept only for audit-trail purposes.
-- `pending_pass_reports` lists pass reports that exist on disk but have not yet been committed; they do not anchor a spec until committed.
-
-**Rebuild trigger**: any command that needs the index should first check that `cache.json` is fresher than the newest file under `docs/challenge/`. If stale, re-derive by running `scripts/derive_cache.py`. Deleting `cache.json` is always safe — the next operation rebuilds it.
-
-**Why not git-tracked**: cache rebuilds are local-only and frequent under multi-agent / multi-branch development. Tracking would create merge conflicts that resolve to "just delete and rebuild" anyway.
+- Stages: `[protocol]-[topic]-[date].md`, where `protocol` is the codename of the
+  protocol that opened the stage (`handoff`, `challenge`, …), `topic` is short
+  kebab-case, and `date` is the creation day `YYYY-MM-DD`. The prefix records origin —
+  a creation fact like the date — so `ls stages/` reads as origin and topic at a glance.
+  Reuse the file for the same topic/scope; a new file means a distinct work stream.
+  Active vs archived is recorded by path: active stages live in `stages/`, closed
+  ones in `stages/archive/`.
+- Specs and notes: `<name>.md` with a short kebab-case name; the name is the
+  identifier used when challenging a spec.

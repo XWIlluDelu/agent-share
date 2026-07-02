@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "purpose": "Regression cases for docdoki skill selection and core protocol behavior.",
+  "positive_cases": [
+    {
+      "id": "init-new-library",
+      "protocol": "init",
+      "mode": "write",
+      "prompt": "Set up docdoki for this new repo. The project is a small CLI that normalizes CSV files.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "creates docdoki/northstar.md, docdoki/spec_abstract.md, specs/, stages/, stages/archive/, and notes/",
+        "drafts northstar from the user's stated intent and asks for review before treating it as settled",
+        "does not create a separate ordinary docs/ replacement"
+      ]
+    },
+    {
+      "id": "adopt-existing-codebase",
+      "protocol": "adopt",
+      "mode": "write",
+      "prompt": "Adopt this existing codebase into a docdoki library.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "reads entrypoints, public contracts, tests, and data flow before writing docs",
+        "writes specs by coherent code/data area with covers globs",
+        "flags uncertain claims instead of presenting them as checked"
+      ]
+    },
+    {
+      "id": "ask-library-question",
+      "protocol": "ask",
+      "mode": "read",
+      "prompt": "According to docdoki, what still needs attention in the export pipeline?",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "answers from documents plus read-only code checks",
+        "separates document claims from verified code behavior and unverifiable points",
+        "does not modify files"
+      ]
+    },
+    {
+      "id": "follow-abstract-edit",
+      "protocol": "follow",
+      "mode": "write",
+      "prompt": "I edited docdoki/spec_abstract.md. Follow the edit and propagate it.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "uses git diff and the working tree to find the human edit",
+        "treats the edit as rough intent, polishes it, and propagates into affected specs and code when clear",
+        "records a visible mismatch or asks when the edit is unclear or risky"
+      ]
+    },
+    {
+      "id": "challenge-auth-expiry",
+      "protocol": "challenge",
+      "mode": "review",
+      "prompt": "Review the auth spec against the code and report drift only.",
+      "fixture": "fixtures/challenge-auth-expiry/project",
+      "golden": "golden/challenge-auth-expiry.json",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "reads docdoki/specs/auth.md and the files matched by its covers glob",
+        "reports that the spec claims 15 minutes while src/auth.py sets TOKEN_TTL_MINUTES = 30",
+        "does not treat git history as verdict and does not modify files in review mode"
+      ]
+    },
+    {
+      "id": "challenge-rides-along-covered-code",
+      "protocol": "challenge",
+      "mode": "write",
+      "prompt": "Update src/auth.py so tokens last 60 minutes instead of 30.",
+      "fixture": "fixtures/challenge-auth-expiry/project",
+      "golden": "golden/challenge-rides-along.json",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "loads the skill on its own because the project has a docdoki/ library and the task touches code a spec covers, without being told to use docdoki",
+        "after editing src/auth.py, reconciles docdoki/specs/auth.md by reading the code under its covers",
+        "updates the spec's expiry claim to 60 minutes because the code change is legitimate, rather than leaving the spec stale or weakening it"
+      ]
+    },
+    {
+      "id": "groom-stage-noise",
+      "protocol": "groom",
+      "mode": "write",
+      "prompt": "Clean up the docdoki library. Remove process noise but keep lessons worth not re-learning.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/philosophy.md", "references/schemas.md"],
+      "checks": [
+        "leaves content that earns its place",
+        "promotes durable gotchas or repeated decisions before deletion",
+        "drops low-value process residue only when its loss carries no future cost"
+      ],
+      "fixture": "fixtures/groom-stage-noise/project",
+      "golden": "golden/groom-stage-noise.json"
+    },
+    {
+      "id": "handoff-current-stage",
+      "protocol": "handoff",
+      "mode": "write",
+      "prompt": "Compact this session and give the next agent a kickoff prompt.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/stages.md", "references/schemas.md"],
+      "checks": [
+        "selects the matching active stage by the stage-selection rules",
+        "rewrites the stage toward current state instead of appending a transcript",
+        "prints a short kickoff prompt and does not route durable content outside the stage during handoff"
+      ]
+    }
+  ],
+  "negative_cases": [
+    {
+      "id": "ordinary-readme-copyedit",
+      "prompt": "Polish this README paragraph for grammar without changing meaning.",
+      "should_use_skill": false,
+      "reason": "one-off writing outside docdoki/"
+    },
+    {
+      "id": "pure-code-debug",
+      "prompt": "Fix this failing unit test in src/parser.py. The docs are unrelated.",
+      "should_use_skill": false,
+      "reason": "pure code question that does not touch the documentation library"
+    },
+    {
+      "id": "ordinary-docs-folder",
+      "prompt": "Generate API docs under docs/ for the public Python functions.",
+      "should_use_skill": false,
+      "reason": "ordinary docs/ output, not a docdoki library"
+    },
+    {
+      "id": "nearby-session-summary",
+      "prompt": "Summarize our chat so I can paste it into an email update.",
+      "should_use_skill": false,
+      "reason": "summary not intended for a docdoki stage handoff"
+    }
+  ]
+}

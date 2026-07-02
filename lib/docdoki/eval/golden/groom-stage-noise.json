@@ -1,0 +1,33 @@
+{
+  "case": "groom-stage-noise",
+  "protocol": "groom",
+  "mode": "write",
+  "expected_decisions": [
+    {
+      "id": "drop-process-residue",
+      "action": "forget",
+      "source": "docdoki/stages/handoff-panel-polish-2026-06-27.md",
+      "evidence": "09:12 tried a blue footer tint",
+      "reason": "chronological process residue does not change a later decision"
+    },
+    {
+      "id": "drop-preference-wavering",
+      "action": "forget",
+      "source": "docdoki/stages/handoff-panel-polish-2026-06-27.md",
+      "evidence": "09:27 user wondered about purple, then preferred steel again",
+      "reason": "changed preference is deliberation, not a dead end"
+    },
+    {
+      "id": "keep-panel-state-dead-end",
+      "action": "promote-or-keep",
+      "source": "docdoki/stages/handoff-panel-polish-2026-06-27.md",
+      "evidence": "❌ Persist drag positions in spec frontmatter",
+      "reason": "failed approach is worth not retrying because it would recreate panel-owned project facts"
+    }
+  ],
+  "must_not": [
+    "keep chronological selftest reruns as durable history",
+    "treat changed color preference as a dead end",
+    "delete the frontmatter dead end without routing or preserving its lesson"
+  ]
+}
