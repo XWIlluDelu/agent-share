@@ -1,0 +1,204 @@
+---
+name: remote-compute
+description: "Run work on machines reachable by SSH: establish the connection, inspect the host, prepare or reuse an environment, move code and data, launch and monitor jobs, retrieve outputs, and clean up. Use when the user wants something run on a remote server, cluster, workstation, or GPU box, a long job dispatched remotely, an environment set up on a remote host, or results fetched back. Covers plain hosts, Slurm/PBS/LSF schedulers, GPUs, and long-running services as conditional patterns."
+---
+
+# Remote compute
+
+Running work on an SSH-reachable machine is a loop: orient, prepare, move,
+run, monitor, retrieve, clean up. The expensive failures are rarely exotic:
+re-discovering the same host every session, launching before the environment
+is proven, and losing outputs or jobs to a dropped connection. Each section
+below prevents one of them.
+
+## Establish the machine
+
+Address hosts by an alias in `~/.ssh/config` (host, user, key, port,
+`ProxyJump` for bastions), never by ad-hoc flags; the alias keeps every later
+`ssh`/`scp`/`rsync` command short and reproducible. For a session of repeated
+commands, connection multiplexing (`ControlMaster auto`, `ControlPersist`)
+removes the per-command handshake.
+
+If the connection itself fails (key not loaded, VPN down, host unreachable),
+that is the user's to fix. Report the exact error and stop; do not retry in a
+loop.
+
+## Orient before acting
+
+Keep one durable note per host: what scheduler it runs, which
+partitions/accounts work, activation commands that succeeded, storage layout
+(home quota, scratch path, purge policy), and gotchas. Keep it project-local
+when the host serves one project, otherwise somewhere stable such as
+`~/.config/remote-compute/<alias>.md`. Read it before probing. Afterward,
+append only facts true of the host, tagged with how you know them
+(`verified <date>`, `per user`, `inferred`); project results and per-job
+state do not belong there. If the session taught nothing new about the host,
+write nothing.
+
+On first contact, one batched probe answers most of it:
+
+```sh
+ssh <alias> 'uname -a; id; sudo -n true 2>&1; df -h ~ /tmp; nvidia-smi -L 2>/dev/null; command -v sbatch qsub bsub docker apptainer conda module 2>/dev/null; conda env list 2>/dev/null'
+```
+
+Recognize the host's shape rather than choosing one: a plain host (direct
+execution, possibly yours to administer), a scheduler cluster (login node
+plus `sbatch`/`qsub`/`bsub`, no root, compute nodes possibly without
+internet, scratch with a purge policy), or a container-capable host
+(docker/apptainer). The shape decides what "install", "run", and "background"
+mean below.
+
+Sudo is a fact to establish, not to assume: `sudo -n true` answers without
+prompting. Without it, everything installs user-space: venv/conda under home
+or scratch, `pip --user`, `~/.local`, `systemctl --user`. With it, on a
+machine the user administers, system routes are legitimate; on a machine
+other people share, confirm with the user before any system-level change.
+
+## Prepare or reuse an environment
+
+Reuse first. Before concluding a tool is missing, spend about five cheap
+probes: `command -v <tool>`, `conda env list`, `module avail <tool>`, `ls`
+the likely install dirs, `python -c 'import <pkg>'`. If they come back
+empty, ask before installing; the tool may exist under a name you did not
+guess, and installing may not be wanted.
+
+Provisioning is its own task with its own validation, never folded inline
+into the real run: build the environment, prove it, then launch. Install
+user-space by default. When install order matters — a package that would
+drag in the wrong build of a dependency, such as a CPU-only torch — install
+the pinned dependency in its own earlier `pip install` invocation; pip
+leaves an already-satisfied requirement alone.
+
+Large assets (model weights, reference databases) download once to
+persistent storage, with the tool's cache variable pointed there. Use the
+tool's own downloader, not hand-fetched files: layouts often include marker
+files the tool checks. Verify from the tool's perspective by running the
+real entrypoint once against the staged data.
+
+Validation is a ladder, and only the top rung counts:
+
+1. Import or `--version` exits 0 — cheap, catches almost nothing.
+2. A tiny end-to-end run on toy input — catches GPU/library/cache
+   mismatches.
+3. The exact invocation you intend to use, verbatim — catches wrong flags,
+   config files that override the command line, and paths that exist but
+   lack what the tool checks for.
+
+Run rung 3 before building real work on the environment, and again after
+any rebuild.
+
+## Move code and data
+
+Code moves by git when the host can reach the repository (the remote copy
+then has provenance); `rsync -a` the working tree only when it cannot. Data
+moves by `rsync -a --partial` so interrupted transfers resume. Data already
+on the host is referenced in place, never round-tripped through your
+machine, and host-to-host transfers go direct between the hosts. Budget
+transfer time before starting: at typical link rates, gigabytes are minutes
+to tens of minutes, and a large recurring dataset deserves a persistent
+remote copy rather than per-run staging.
+
+## Run
+
+Give each run its own working directory on the host
+(`.../runs/<name>-<timestamp>`): inputs staged in, outputs and logs written
+under it. That directory is the unit of monitoring, retrieval, and cleanup.
+
+Write the job as a script file, transfer it, and run `bash job.sh`. Never
+build multi-layer quoting into an inline `ssh host "..."` command; escaping
+bugs are the most common self-inflicted remote failure. In the script:
+
+- `set -eo pipefail`; write activation explicitly (`source .../activate`,
+  `module load ...`) rather than assuming the login shell provides it.
+- Redirect output to files in the run dir and record the exit code (for
+  example `trap 'echo $? > exit_code' EXIT`) so status stays inspectable
+  after the fact.
+- If you background children, `wait "$pid"` each one; a bare `wait` returns
+  0 regardless of their exits.
+- Bound the run with `timeout <budget>` or the scheduler's walltime, and
+  make long jobs checkpoint periodically so a deadline or preemption costs
+  one interval, not the run.
+- Export thread caps matching your allocation (`OMP_NUM_THREADS`,
+  `MKL_NUM_THREADS`); `nproc` sees the whole machine, not your share.
+
+Anything longer than a few minutes must survive your SSH session dying: run
+it under the scheduler if there is one, otherwise
+`tmux new -d -s <name> 'bash job.sh'` or `nohup setsid bash job.sh &`. Never
+leave a long job attached to your terminal.
+
+Before spending a shared allocation or billed resource, state in one line
+what you are about to run — tool, input, scale, expected duration. Honor any
+budget the user gave (N jobs at a time, M GPUs) structurally: cap the loop
+that launches, do not merely remember the number.
+
+## Monitor
+
+Poll, don't babysit: `ssh <alias> tail -n 50 <rundir>/run.log` and
+`ssh <alias> cat <rundir>/exit_code` (scheduler: `squeue`/`qstat`/`bjobs`)
+at intervals matched to the job's expected duration. A job silent in its log
+for far longer than expected is worth inspecting (`ps`, GPU utilization)
+before waiting more.
+
+## Retrieve
+
+`rsync -a` the run dir's outputs and logs back, on failure as well as
+success; the log is the diagnosis. Retrieve selectively: pull deliverables
+and logs, leave bulky intermediates remote, and record their remote path.
+Verify the bytes arrived (sizes, or a checksum for anything critical) before
+deleting anything remote.
+
+## Clean up
+
+Leaving is part of the run: kill tmux/screen sessions you started, close
+tunnels, cancel orphaned scheduler jobs, and remove the run dir's scratch
+once outputs are confirmed local (keep the run dir itself if resuming is
+plausible, and say which you did). On billed or shared machines, idle things
+you left running cost money or goodwill; end the task with nothing of yours
+running that the user did not ask to keep. Then update the host note if the
+session taught something durable.
+
+## When a run fails
+
+Read the exit code and log tail first; they usually say which failure you
+have. An infrastructure failure (wrong partition or account, environment not
+activated, missing module, out-of-memory, walltime, disk quota) is yours to
+fix: adjust, record the fix in the host note, relaunch. A tool failure (the
+tool ran and errored on its inputs or flags) needs the invocation or the
+data fixed, not the host. Network errors from an offline or fenced compute
+node (connection reset, cannot resolve host) mean there is no route out:
+fetch where the network exists — the login node or your machine — and stage
+the result in; retrying in place cannot succeed. Retries are cheap on a
+smoke test and expensive on a long allocation: after two failed launches of
+the same job, stop and reassess (or ask) rather than launch a third variant
+blind.
+
+## Conditional patterns
+
+Apply only when the host actually has them.
+
+**Scheduler (Slurm/PBS/LSF).** Directives go at the top of the job script
+(`#SBATCH ...`); on most clusters `--partition`, `--account`, and `--time`
+are mandatory alongside the resource request. Submit one job per task.
+Compute nodes often lack internet: pre-stage downloads from the login node.
+Scratch is usually purge-on-idle; record the purge window in the host note.
+
+**GPU.** `nvidia-smi` shows what is there; match the framework's CUDA build
+to the driver. Validate with rung 2 of the ladder — a tiny forward pass that
+prints the device name — because a clean import says nothing about kernels
+matching the hardware.
+
+**Long-running service** (a model server, a database, a notebook). Bind to
+`127.0.0.1` and reach it through an SSH tunnel
+(`ssh -L <port>:127.0.0.1:<port> <alias>`), never a publicly exposed port.
+Make start idempotent (already-running is success), readiness mean answering
+a real request correctly (not the process merely existing), and stop
+verified (the port actually freed). Secrets reach the service via
+environment variables or tight-mode files, never argv (world-readable in
+`ps`), and caches are never world-writable on a shared host. Run it under a
+supervisor that survives logout: the scheduler, a `systemctl --user` unit,
+or a tmux session named after the service.
+
+**Sudo/admin.** Established in Orient, used sparingly: prefer the user-space
+route even when sudo exists, and reach for it when the task genuinely
+requires it (drivers, system packages, ports below 1024). On shared
+machines, confirm with the user before system-level changes.

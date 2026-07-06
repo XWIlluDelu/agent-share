@@ -47,7 +47,9 @@ entrypoints, data flow, public contracts, tests — then write:
 3. `specs/*.md` — one per coherent code/data area: a unit a contract can be
    stated and audited about on its own (a public module, a pipeline step, a data
    area), not one per file. Give each `covers` globs; optionally set `after`
-   (pipeline order) where the code makes it clear.
+   (pipeline order) where the code makes it clear. A spec holds the standing
+   contract only, never the live position of the work — the standing-contract
+   rule is in `references/schemas.md` (specs/*.md).
 4. `notes/*.md` — reusable methods and gotchas you found, with source pointers.
 5. a stage for any work in flight.
 
@@ -131,8 +133,21 @@ For each piece of content, decide one of:
 
 The two failure modes grooming exists to prevent: something important buried in
 detail, and the human's review surface (`northstar`, `spec_abstract`) filling
-with trivia or with facts that are fixed and no longer in play. Promote the
-first up; forget or sink the second.
+with trivia or with facts that are fixed and no longer in play. Promote the first
+up; forget or sink the second. A third leak runs the other way: transient status
+that settled into a timeless document, forbidden by the standing-contract rule
+(`references/schemas.md`, specs/*.md). Judge by what the content is, not the
+heading it hides under: a measurement table titled `## Compute budget` is the
+same leak as a `## Status` block. Route it to the
+stage that owns the work — keeping only a durable constraint or the rationale for
+a settled choice — so the spec and the map read as the standing surfaces they
+are.
+
+Grooming also carries a formatting pass, since malformed text is a defect like
+any other: a heading with nothing under it, display code left outside a fence, a
+`purpose` that only echoes its H1 title, a heading not in sentence case, a list
+whose items are not parallel. Fix these in place as `polish` — they never need
+permission and never block. Formatting conventions are in `references/schemas.md`.
 
 Restraint is the default. Most content should be left alone; grooming is not a
 quota. Don't manufacture cleanup — if nothing crosses the threshold of being
@@ -176,9 +191,10 @@ These are not separate protocols; they happen inside the ones above.
   stages, which specs look behind (read their `covers`, or `git diff`/`git log`
   over it, to check), and what needs attention. It is a reading, not a stored
   artifact.
-- **route** — move durable content to its right home during `follow`,
-  `challenge`, `groom`, and stage close. Don't let important things stay buried
-  in a stage or note.
+- **route** — move content to its right home during `follow`, `challenge`,
+  `groom`, and stage close: durable content out of a stage or note where it is
+  buried, and — the reverse — transient status back to the stage when it has
+  crept into a spec or the abstract's design map.
 - **stage close** — when a stage's objective is done, abandoned, or superseded,
   route its durable content, then archive it (`references/stages.md`).
 

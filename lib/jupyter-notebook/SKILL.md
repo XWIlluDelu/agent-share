@@ -79,7 +79,7 @@ Use the final pass checklist in `references/quality-checklist.md`.
 - The helper script loads a template, updates the title cell, and writes a notebook.
 
 Script path:
-- `$JUPYTER_NOTEBOOK_CLI` (installed default: `the project-local skill installation`)
+- `$JUPYTER_NOTEBOOK_CLI` (default: `./.agent/skills/jupyter-notebook/scripts/new_notebook.py`)
 
 ## Temp and output conventions
 - Use `tmp/jupyter-notebook/` for intermediate files; delete when done.

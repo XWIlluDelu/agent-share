@@ -4,6 +4,14 @@ Why docdoki exists, and how humans and agents are meant to share its document
 library. This is the thinking the rest of the design must serve; it stays at the
 level of principle, not mechanism.
 
+## Contents
+
+- The problem
+- What docdoki is
+- Ownership
+- Collaboration
+- What stays out
+
 ## The problem
 
 Under agent-driven development the agent writes most of the code — and two

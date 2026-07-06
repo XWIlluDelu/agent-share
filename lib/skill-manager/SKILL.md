@@ -19,14 +19,9 @@ whether a skill should exist.
    affected `agents-fragments/`.
 3. Apply the matching workflow below. Do not mix workflows unless the user
    requested a compound change.
-4. Treat `manifest.yaml` as the registry of provenance, pack membership, and
-   normalization intent.
-5. Treat `lib/<skill>/` as the canonical maintained executable copy.
-6. Treat `skills/` as the materialized view for `pack: always-on`, never as a
-   second canonical copy.
-7. Delete stale generated debris, obsolete names, broken symlinks, and abandoned
+4. Delete stale generated debris, obsolete names, broken symlinks, and abandoned
    transitional files created by the maintenance operation.
-8. Run the audit checklist and report changed paths, audit result, and
+5. Run the audit checklist and report changed paths, audit result, and
    unresolved inconsistencies.
 
 ## Model
@@ -36,11 +31,12 @@ whether a skill should exist.
   here.
 - `agents-fragments/AGENT-*.md`: reusable project-instruction fragments consumed
   by `project-setup`; not skills and not manifest entries.
-- `skills/<skill> -> ../lib/<skill>`: materialized `always-on` pack only.
+- `skills/<skill> -> ../lib/<skill>`: materialized view for `pack: always-on`
+  only, never a second canonical copy.
 - Runtime activation roots are outside this repo. They point installed agents at
   `~/.agent-share/skills/`; they never own skill content.
 - `manifest.yaml`: registry for skill name, pack, source provenance, and
-  normalization notes.
+  normalization intent (`notes`).
 
 ## Rules
 

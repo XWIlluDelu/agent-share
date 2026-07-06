@@ -88,14 +88,23 @@ the root of most drift:
    machine specs), byte counts, timings, and "we downloaded / built / verified"
    narration. That is execution residue; git and the run already hold it. Keep the
    capability that binds (what the run requires), not the identity that locates
-   (which machine, which address). Select by information density against the space
-   you have — a dense summary beats an exhaustive log.
-2. **Which layer?** A checkable assertion the implementation must satisfy, with a
-   code target to reconcile against, is a **spec**. A how-to, a gotcha, or reusable
-   evidence with no binding code target is a **note**. The current state of
-   in-flight work is a **stage** — a work capsule, not a reference store: it points
+   (which machine, which address) — everywhere except the stage. The stage is the
+   handoff surface, so it alone may hold the concrete locations a fresh agent
+   needs to resume (hosts, paths, log and artifact locations); they serve the
+   handoff and are discarded when the stage closes. Select by information density
+   against the space you have — a dense summary beats an exhaustive log.
+2. **Which layer?** A **spec** is a standing assertion the implementation must
+   satisfy — true of the code as it stands, re-checkable against a code target at
+   any time. A how-to, a gotcha, reusable evidence, or the residue of a completed
+   activity ("we validated X, it passed") with no standing code target is a
+   **note**. The current state of in-flight work — status, next actions, results
+   so far — is a **stage**, a work capsule, not a reference store: it points
    reference depth (paper derivations, code maps, data writeups) into notes rather
-   than holding it. Decide by this test, not by what the fact is nominally "about."
+   than holding it. A spec is timeless — transient status stays in the stage, and
+   "did X and it worked" is an event whose residue is a note or a stage, never a
+   fresh spec; the standing-contract rule and the sections it forbids live in
+   `references/schemas.md` (specs/*.md). Decide by this test, not by what the fact
+   is nominally "about."
 
 Child units use `parent: ../../docdoki/northstar.md`; parent units list children
 under `## Units`; child northstars include `## Contribution`. Schemas and
@@ -106,6 +115,11 @@ parent/child links: `references/schemas.md`.
 - Read a document before you change it. A human edit you have not yet propagated
   is a requirement, not noise — understand it, polish it, align the code; never
   blind-overwrite it away.
+- **Formatting is meaning.** A heading is sentence case (an identifier keeps its
+  own casing); a command, code line, or standalone path belongs inside a fence,
+  since unfenced it reads as prose and a leading `#` reads as a heading; an empty
+  section heading is a promise unkept, so omit it. Full conventions:
+  `references/schemas.md` (Formatting conventions).
 - **Never weaken a correct spec to ratify wrong code.** When documents and code
   disagree, decide by cause, not convenience — the three-way split (fix the doc
   / fix the code / the human decides) is in `references/philosophy.md`
@@ -118,7 +132,10 @@ parent/child links: `references/schemas.md`.
 - **Forgetting keeps only a recovery trace.** When you drop low-value content,
   the working tree reads as if it had always said the current thing. Only
   committed text has that recovery trace; durable lessons are routed before
-  deletion, not hidden in commit messages. Do not create a side-channel ledger.
+  deletion, not hidden in commit messages. Do not create a side-channel ledger,
+  and do not point a document's durable content at an external store (an agent
+  `MEMORY.md`, a chat log): a lesson's home is a library note or spec, so the
+  library stays self-contained for what it claims to hold.
 - **Reconcile a spec by reading the code it covers** — when asked, or when you
   work in that code. Never assume a claim holds; confidence is earned by the
   reading. Flag in prose any claim you have not checked, and never present it as
@@ -146,8 +163,8 @@ Read the relevant reference before acting.
 - `references/stages.md` — stage selection, handoff, and the close lifecycle.
 
 An optional panel (`panel/panel.py` in this skill) projects the library as an
-editable dell-1996 canvas — a bonus surface whose write-backs are ordinary human
-document edits that `follow` handles, and whose copy prompt is spoken intent; it
-does not block use. `init` links the script into the project's agent-tooling
+editable dell-1996 (catalog-era visual language) canvas — a bonus surface whose
+write-backs are ordinary human document edits that `follow` handles, and whose
+copy prompt is spoken intent; it does not block use. `init` links the script into the project's agent-tooling
 directory and notes the run command, so the panel is discoverable per project
 while the script remains the single authority.

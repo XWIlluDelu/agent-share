@@ -2,7 +2,7 @@
 
 ## Design map
 
-| Area | Spec | Current design | Attention |
+| Area | Spec | Design | Attention |
 |---|---|---|---|
 | Panel | [panel](specs/panel.md) | Optional presentation surface | Keep view state out of core facts |
 

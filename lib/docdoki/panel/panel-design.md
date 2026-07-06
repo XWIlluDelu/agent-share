@@ -86,9 +86,12 @@ chrome.
   or drag to pan. Its scale comes from the spec-card bounds, not from the
   artificial canvas size, so the project stays centered in the minimap while the
   viewport frame moves and clips symmetrically when panned beyond it.
-- Documents rail: a persistent left column with three tabs (Northstar / Abstract
+- Documents rail: a collapsible left column with three tabs (Northstar / Abstract
   / Active stages; the active tab inverted black, like the menu's current item)
-  over the document title with a clear `10px` gap before the section stack.
+  over the document title with a clear `10px` gap before the section stack. A
+  toggle anchored to the rail's outer-top corner folds it to a 26px handle (over a
+  vertical label) so the canvas claims the width; the collapsed state is a
+  persisted preference.
   Sections are `## section` blocks — a Helvetica caps header bar over an
   editable Times body; a pending edit shows a red offset shadow. Active stages
   list one such block-stack each.
@@ -101,7 +104,10 @@ chrome.
   added line bold under `+`, a line edited in place shown under `~` with only
   the changed words marked (struck-red / bold), unchanged runs collapsed to `⋯`.
   Prompt in a Courier black-bordered surface; black-fill primary button (red on
-  hover), bordered ghost buttons; a rotated ✎ sticker empty state.
+  hover), bordered ghost buttons; a rotated ✎ sticker empty state. Like the
+  documents rail it collapses to a handle, and it starts collapsed — the handle's
+  badge still carries the pending count — springing open when the first edit lands
+  so pending work is never hidden.
 
 ## Interactions
 
@@ -109,11 +115,17 @@ chrome.
   ⌘/Ctrl/Alt + wheel (to cursor), toolbar ±, or `+`/`-`; `0` fits; clicking the
   zoom readout locks the current zoom (−/+, wheel, `0` all disabled while
   locked; panning and the minimap stay live).
-- Documents: the left rail is always open; its tabs switch Northstar / Abstract
-  / Active stages.
+- Rails: each rail's toggle sits at its outer-top corner and is pixel-stable
+  across states — collapse and expand never move the cursor — folding the rail to a
+  26px handle so the canvas claims the freed width (floored at 340px). The
+  documents rail's tabs switch Northstar / Abstract / Active stages and its
+  collapsed state persists; the changes rail starts collapsed and springs open on
+  the first edit.
 - Minimap: click or drag inside it to recenter the canvas on that point.
 - Keyboard: `/` focuses search; `Esc` cancels an edit, clears search, closes the
-  menu, exits connect mode, or deselects; ⌘/Ctrl+Z undoes the last change.
+  menu, exits connect mode, or deselects; ⌘/Ctrl+Z undoes the last change. A card
+  is focusable — Enter/Space selects it, `o` expands it — and the status cell is a
+  focusable control that opens its popover on Enter.
 - Connections: edges derive from each spec's `after` list and are rendered as
   directed arrows: A→B means A's stem is in B's `after`. The router recalculates
   after every layout/drag change from geometry only. Card-center direction

@@ -2,7 +2,7 @@
 
 ## Design map
 
-| Area | Spec | Current design | Attention |
+| Area | Spec | Design | Attention |
 |---|---|---|---|
 | Auth | [auth](specs/auth.md) | Token validation and expiry | Challenge before changing security docs |
 

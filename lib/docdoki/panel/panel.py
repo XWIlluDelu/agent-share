@@ -488,8 +488,31 @@ TEMPLATE = r"""<!doctype html>
   button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;}
   .num{font-variant-numeric:tabular-nums;}
   :focus-visible{outline:2px solid var(--link);outline-offset:2px;}
-  .app{display:grid;grid-template-columns:400px 1fr 348px;grid-template-rows:50px 1fr;height:100vh;
+  .app{display:grid;grid-template-columns:var(--lw,400px) minmax(340px,1fr) var(--rw,348px);grid-template-rows:50px 1fr;height:100vh;
     border:8px solid #000;background:#fff;}
+  /* collapsible rails: a collapsed rail shrinks to a 26px handle and the canvas (1fr,
+     floored at 340px) claims the freed width. See panel/panel-design.md. */
+  .app.lc{--lw:26px;} .app.rc{--rw:26px;}
+  /* one toggle per rail, anchored to the rail's outer-top corner, so it is pixel-identical
+     whether the rail is open or a 26px handle — collapse and expand never move the cursor. */
+  .rail-tgl{position:absolute;top:0;z-index:6;width:26px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  /* dividers are box-shadows, not borders: a border shrinks the flex content box and pulls the
+     chevron off the visual centre. The chevron is a symmetric SVG for the same reason — a text
+     glyph carries its own off-centre bearings (‹/› measured ~1px horizontal, 1.5px vertical). */
+  .rail-tgl.left{left:0;height:36px;background:#f4f4f4;color:#000;box-shadow:inset -2px 0 0 #000, inset 0 -2px 0 #000;}
+  .rail-tgl.right{right:0;height:var(--dh);background:#000;color:#fff;box-shadow:inset 2px 0 0 #fff, inset 0 -2px 0 #000;}
+  .rail-tgl:hover{background:var(--yellow);color:#000;}
+  .chev{display:block;width:10px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:miter;stroke-linecap:butt;}
+  .rail-tgl.pl .chev{transform:rotate(180deg);}
+  .rail.left .ov-tabs{padding-left:26px;}   /* reserve the corner the toggle sits over */
+  .rail-strip{display:none;flex:1;flex-direction:column;align-items:center;gap:12px;cursor:pointer;user-select:none;background:#fff;}
+  .rail.left .rail-strip{padding:44px 0 10px;}  .rail.right .rail-strip{padding:54px 0 10px;}
+  .rail-strip:hover{background:var(--yellow);}
+  .rail-strip .vlabel{writing-mode:vertical-rl;font-family:var(--fs-ui);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.1em;}
+  .rail-strip .sbadge{font-family:var(--fs-ui);font-size:11px;font-weight:700;color:#000;background:var(--yellow);border:1.5px solid #000;padding:0 5px;min-width:20px;text-align:center;}
+  .rail-strip .sbadge.zero{display:none;}
+  .app.lc .rail.left>:not(.rail-strip):not(.rail-tgl){display:none;}   .app.lc .rail.left .rail-strip{display:flex;}
+  .app.rc .rail.right>:not(.rail-strip):not(.rail-tgl){display:none;}  .app.rc .rail.right .rail-strip{display:flex;}
   .top{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 14px;background:#000;color:#fff;}
   .brand{font-family:var(--fs-disp);font-weight:900;font-size:18px;text-transform:uppercase;white-space:nowrap;}
   .brand .heart{color:var(--red);font-size:1em;vertical-align:middle;margin:0 3px;line-height:1;}
@@ -574,10 +597,10 @@ TEMPLATE = r"""<!doctype html>
   .toasts{position:fixed;left:50%;bottom:62px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;}
   .toast{background:#000;color:#fff;border:2px solid #000;box-shadow:3px 3px 0 var(--yellow);font-family:var(--fs-ui);
     font-size:12px;font-weight:700;padding:8px 12px;transition:opacity .25s;}
-  .rail.right{border-left:2px solid #000;display:flex;flex-direction:column;padding:0;overflow:hidden;position:relative;}
-  .disp-h{padding:13px 14px;border-bottom:2px solid #000;background:#000;color:#fff;}
-  .disp-h .t{font-family:var(--fs-disp);font-weight:900;font-size:15px;text-transform:uppercase;}
-  .badge{font-family:var(--fs-ui);font-size:11px;font-weight:700;color:#000;background:var(--yellow);border:1.5px solid #fff;padding:0 7px;margin-left:9px;}
+  .rail.right{border-left:2px solid #000;display:flex;flex-direction:column;padding:0;overflow:hidden;position:relative;--dh:46px;}
+  .disp-h{height:var(--dh);padding:0 14px;border-bottom:2px solid #000;background:#000;color:#fff;display:flex;align-items:center;}
+  .disp-h .t{font-family:var(--fs-disp);font-weight:900;font-size:15px;text-transform:uppercase;line-height:1;}
+  .badge{font-family:var(--fs-ui);font-size:11px;font-weight:700;color:#000;background:var(--yellow);border:1.5px solid #fff;padding:1px 7px;margin-left:9px;display:inline-flex;align-items:center;line-height:1;}
   .badge.zero{background:#333;color:#999;border-color:#555;}
   .changes{flex:1;overflow:auto;padding:12px 13px;display:flex;flex-direction:column;gap:9px;}
   .ov-body,.changes{scrollbar-width:none;overflow-x:hidden;}
@@ -648,9 +671,11 @@ TEMPLATE = r"""<!doctype html>
     <button class="langbtn" id="langbtn">中</button>
   </div>
   <div class="rail left">
+    <button class="rail-tgl left" id="tgl-l" data-collapse="l" title="Collapse documents"><svg class="chev" viewBox="0 0 10 14"><polyline points="3,3 7,7 3,11"/></svg></button>
     <div class="ov-tabs" id="ov-tabs"></div>
     <div class="ov-body" id="ov-body"></div>
     <div class="rail-thumb" id="lthumb"></div>
+    <div class="rail-strip" data-collapse="l" title="Expand documents"><span class="vlabel" id="vlabel-l">Documents</span></div>
   </div>
   <div class="stage" id="stage">
     <div class="vp" id="vp"></div>
@@ -661,9 +686,11 @@ TEMPLATE = r"""<!doctype html>
     <div class="minimap" id="minimap"><div class="mm-inner" id="mm"></div><div class="mm-view" id="mmview"></div></div>
   </div>
   <div class="rail right">
+    <button class="rail-tgl right" id="tgl-r" data-collapse="r" title="Collapse changes"><svg class="chev" viewBox="0 0 10 14"><polyline points="3,3 7,7 3,11"/></svg></button>
     <div class="disp-h"><span class="t" id="lbl-changes">Changes</span><span class="badge zero" id="badge">0</span></div>
     <div class="changes" id="changes"></div>
     <div class="rail-thumb" id="rthumb"></div>
+    <div class="rail-strip" data-collapse="r" title="Expand changes"><span class="vlabel" id="vlabel-r">Changes</span><span class="sbadge zero" id="sbadge-r">0</span></div>
     <div class="disp-foot">
       <textarea class="out" id="out" readonly spellcheck="false"></textarea>
       <div class="btns">
@@ -680,8 +707,8 @@ TEMPLATE = r"""<!doctype html>
 const GRAPH = __GRAPH_JSON__;
 let lang=(localStorage.getItem("ddpanel-lang")||"en");
 const I18N={
- en:{searchPh:"Search… ( / )",clear:"Clear (Esc)",changes:"Changes",writeBack:"Write back",copyPrompt:"Copy",clearBtn:"Clear",emptyChanges:"No changes yet.",emptyCanvas:"No specs to show yet.",expand:"Expand",collapse:"Collapse",noClaims:"no claims",goalClaims:"Goal / claims",emptyBody:"(empty)",saved:"Written back — now let the agent follow",copied:"Prompt copied",saveFail:"Write-back failed: ",undo:"undo",mmTip:"Click/drag to navigate",connMode:"Connect mode — click two cards to toggle",connOff:"Connect (c)",connected:"Connected",disconnected:"Disconnected",zoomLock:"Lock zoom",zoomLocked:"Zoom locked — click to release",langBtn:"中",docNorthstar:"Northstar",docAbstract:"Abstract",docStage:"Active stages",docMissing:"This document does not exist yet.",noStages:"No active stages.",promptIntro:"These edits come from the docdoki panel; treat them as one human document edit and follow them: apply each to its file, then propagate into the other documents and the code, judging order and method yourself.",fields:{content:"content",claim:"claim",title:"title",after:"after",covers:"covers",progress:"progress",section:"section"}},
- zh:{searchPh:"搜索… ( / )",clear:"清除 (Esc)",changes:"改动",writeBack:"写回文件",copyPrompt:"复制",clearBtn:"清空",emptyChanges:"还没有改动。",emptyCanvas:"该库还没有可呈现的规格。",expand:"展开",collapse:"收起",noClaims:"无断言",goalClaims:"目标 / 断言",emptyBody:"（空）",saved:"已写回文件 — 现在执行 follow",copied:"提示已复制",saveFail:"写回失败：",undo:"撤销",mmTip:"点击/拖动定位",connMode:"连接模式 — 点两张卡切换连接",connOff:"连接 (c)",connected:"已连接",disconnected:"已断开",zoomLock:"锁定缩放",zoomLocked:"缩放已锁定 — 点击解锁",langBtn:"EN",docNorthstar:"北极星",docAbstract:"设计图",docStage:"进行中阶段",docMissing:"该文档尚不存在。",noStages:"没有进行中的阶段。",promptIntro:"这些改动来自 docdoki 面板的一次编辑，请作为一次人类文档编辑来 follow：把每一项落到对应文件，再传播到其他文档与代码，顺序与做法你自行判断。",fields:{content:"内容",claim:"断言",title:"标题",after:"after",covers:"covers",progress:"进度",section:"小节"}}
+ en:{searchPh:"Search… ( / )",clear:"Clear (Esc)",changes:"Changes",writeBack:"Write back",copyPrompt:"Copy",clearBtn:"Clear",emptyChanges:"No changes yet.",emptyCanvas:"No specs to show yet.",expand:"Expand",collapse:"Collapse",noClaims:"no claims",goalClaims:"Goal / claims",emptyBody:"(empty)",saved:"Written back — now let the agent follow",copied:"Prompt copied",saveFail:"Write-back failed: ",undo:"undo",mmTip:"Click/drag to navigate",connMode:"Connect mode — click two cards to toggle",connOff:"Connect (c)",connected:"Connected",disconnected:"Disconnected",zoomLock:"Lock zoom",zoomLocked:"Zoom locked — click to release",langBtn:"中",railDocs:"Documents",docNorthstar:"Northstar",docAbstract:"Abstract",docStage:"Active stages",docMissing:"This document does not exist yet.",noStages:"No active stages.",promptIntro:"These edits come from the docdoki panel; treat them as one human document edit and follow them: apply each to its file, then propagate into the other documents and the code, judging order and method yourself.",fields:{content:"content",claim:"claim",title:"title",after:"after",covers:"covers",progress:"progress",section:"section"}},
+ zh:{searchPh:"搜索… ( / )",clear:"清除 (Esc)",changes:"改动",writeBack:"写回文件",copyPrompt:"复制",clearBtn:"清空",emptyChanges:"还没有改动。",emptyCanvas:"该库还没有可呈现的规格。",expand:"展开",collapse:"收起",noClaims:"无断言",goalClaims:"目标 / 断言",emptyBody:"（空）",saved:"已写回文件 — 现在执行 follow",copied:"提示已复制",saveFail:"写回失败：",undo:"撤销",mmTip:"点击/拖动定位",connMode:"连接模式 — 点两张卡切换连接",connOff:"连接 (c)",connected:"已连接",disconnected:"已断开",zoomLock:"锁定缩放",zoomLocked:"缩放已锁定 — 点击解锁",langBtn:"EN",railDocs:"文档",docNorthstar:"北极星",docAbstract:"设计图",docStage:"进行中阶段",docMissing:"该文档尚不存在。",noStages:"没有进行中的阶段。",promptIntro:"这些改动来自 docdoki 面板的一次编辑，请作为一次人类文档编辑来 follow：把每一项落到对应文件，再传播到其他文档与代码，顺序与做法你自行判断。",fields:{content:"内容",claim:"断言",title:"标题",after:"after",covers:"covers",progress:"进度",section:"小节"}}
 };
 const STATUS={en:{"not-started":"not started","in-progress":"in progress",done:"done"},zh:{"not-started":"未开始","in-progress":"进行中",done:"已完成"}};
 const STATUS_OPTS={spec:["not-started","in-progress","done"]};
@@ -689,6 +716,7 @@ const t=k=>I18N[lang][k];
 const statusLabel=s=>STATUS[lang][s]||s;
 const fieldLabel=f=>(I18N[lang].fields[f]||f);
 let scale=1,panX=0,panY=0,selId=null,curL=null,query="",zoomLocked=false,connMode=false,connPick=null;
+let lcol=(localStorage.getItem("ddpanel-lcol")==="1"),rcol=true,focusCardId=null,kbdNav=false,prevChangeCount=0;
 const dragOff={};   // id -> {x,y} runtime displacement added atop auto layout
 const titleEditing=new Set();   // spec ids whose title is in edit mode
 let syncLThumb=()=>{},syncRThumb=()=>{};
@@ -785,12 +813,12 @@ function cardHTML(id){
       <div class="kv"><b>after</b><span class="ev mono" contenteditable data-id="${id}" data-f="after">${esc(afterS)}</span></div>
       <div class="kv"><b>covers</b><span class="ev mono" contenteditable data-id="${id}" data-f="covers">${esc(coversS)}</span></div>`;
   return `<div class="node ${n.kind} c-${esc(status)} ${dirty?"dirty":""} ${selId===id?"sel":""} ${connPick===id?"conn-pick":""} ${open.has(id)?"open":""} ${dim?"dim":""} ${nomatch?"nomatch":""} ${hit?"hit":""}" data-node="${id}">
-    <div class="card">
+    <div class="card" tabindex="0" aria-label="${esc(title)} — ${esc(statusLabel(status))}">
       <div class="bar">
         <div class="ttl" data-id="${id}" data-f="title" title="${esc(n.title)}" ${editT&&titleEditing.has(id)?`contenteditable`:""}>${esc(title)}</div></div>
       ${body}
       <div class="more">${more}</div>
-      <div class="foot"><button data-toggle="${id}">${open.has(id)?t("collapse"):t("expand")}</button><span class="pill c-${esc(status)} ${pillEditable?"editable":""}" ${pillEditable?`data-status="${id}"`:""}>${esc(statusLabel(status))}</span></div>
+      <div class="foot"><button data-toggle="${id}">${open.has(id)?t("collapse"):t("expand")}</button><span class="pill c-${esc(status)} ${pillEditable?"editable":""}" ${pillEditable?`data-status="${id}" tabindex="0" role="button"`:""}>${esc(statusLabel(status))}</span></div>
     </div></div>`;
 }
 function render(){
@@ -805,6 +833,7 @@ function render(){
   const cards=L.ids.map(id=>{const p=L.pos[id];return `<div style="position:absolute;left:${p.x}px;top:${p.y}px">${cardHTML(id)}</div>`;}).join("");
   vp.style.width=L.width+"px";vp.style.height=L.height+"px";
   vp.innerHTML=`<svg class="links" width="${L.width}" height="${L.height}"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 z" fill="#000"/></marker><marker id="arrow-lit" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 z" fill="#e91d2a"/></marker><marker id="arrow-dim" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 z" fill="#cfcfcf"/></marker></defs>${links}</svg>${cards}`;
+  if(kbdNav&&focusCardId){const fc=document.querySelector(`[data-node="${focusCardId}"] .card`);if(fc)fc.focus({preventScroll:true});}
   renderMinimap(L);
 }
 function xform(){document.getElementById("vp").style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;document.getElementById("zl").textContent=Math.round(scale*100)+"%";mmState?updateMMView():renderMinimap(curL);}
@@ -835,6 +864,20 @@ const ZOOM_BTNS=["zout","zin","fit"];
 function setLock(on){zoomLocked=on;
   const zl=document.getElementById("zl");zl.classList.toggle("locked",on);zl.title=on?t("zoomLocked"):t("zoomLock");
   ZOOM_BTNS.forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=on;});}
+
+/* ── collapsible rails: each rail folds to a 26px handle so the canvas claims the width.
+   The left state is a persisted preference; the right rail is content-driven — collapsed
+   at rest, sprung open when the first edit lands so pending work is never hidden. ── */
+function refit(){requestAnimationFrame(()=>{if(curL)fit();syncLThumb();syncRThumb();});}
+function setLcol(on){lcol=on;document.querySelector(".app").classList.toggle("lc",on);const b=document.getElementById("tgl-l");b.classList.toggle("pl",!on);b.title=on?"Expand documents":"Collapse documents";localStorage.setItem("ddpanel-lcol",on?"1":"");refit();}
+function setRcol(on){rcol=on;document.querySelector(".app").classList.toggle("rc",on);const b=document.getElementById("tgl-r");b.classList.toggle("pl",on);b.title=on?"Expand changes":"Collapse changes";refit();}
+function toggleRail(w){w==="l"?setLcol(!lcol):setRcol(!rcol);}
+function toggleOpen(id){open.has(id)?open.delete(id):open.add(id);delete measured[id];render();requestAnimationFrame(()=>{measure();render();});}
+function activateCard(id){
+  if(connMode){if(!connPick){connPick=id;render();}else if(connPick!==id){toggleConn(connPick,id);connPick=null;}else{connPick=null;render();}return;}
+  selId=id;render();}
+document.addEventListener("mousedown",()=>{kbdNav=false;},true);   /* focus-restore is for keyboard nav only, never a mouse drag */
+document.addEventListener("focusin",e=>{const c=(e.target.classList&&e.target.classList.contains("card"))?e.target.closest("[data-node]"):null;focusCardId=c?c.dataset.node:null;});
 
 /* ── edits → changeset ── */
 function origOf(id,f,i){const o=ORIG[id];if(f==="claim")return (o.claims[i]!=null?o.claims[i]:"");
@@ -886,6 +929,9 @@ function renderChanges(){
   const items=[...CH.values()],box=document.getElementById("changes"),badge=document.getElementById("badge");
   document.getElementById("save").disabled=!items.length;document.getElementById("gen").disabled=!items.length;
   badge.textContent=items.length;badge.classList.toggle("zero",!items.length);
+  const sb=document.getElementById("sbadge-r");if(sb){sb.textContent=items.length;sb.classList.toggle("zero",!items.length);}
+  if(prevChangeCount===0&&items.length>0&&rcol)setRcol(false);   // surface pending work the first time an edit lands
+  prevChangeCount=items.length;
   if(!items.length){box.innerHTML='<div class="disp-empty"><div class="mk">✎</div><p>'+esc(t("emptyChanges"))+'</p></div>';
     out.style.display="none";clearBtn.style.display="none";syncRThumb();return;}
   box.innerHTML=items.map((it,ix)=>{
@@ -937,6 +983,11 @@ document.addEventListener("keydown",e=>{
   if(ce){if(e.key==="Escape"){e.preventDefault();const id=el.dataset.id,f=el.dataset.f;el.innerText=origOf(id,f,el.dataset.i);el.blur();}
     else if(e.key==="Enter"&&f_inline(el)&&!e.shiftKey){e.preventDefault();el.blur();}return;}
   if(inp){if(e.key==="Escape"){el.blur();if(el.id==="q"){el.value="";query="";render();}}return;}
+  const _card=el.classList&&el.classList.contains("card")?el.closest("[data-node]"):null;
+  if(_card){const id=_card.dataset.node;kbdNav=true;
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();activateCard(id);return;}
+    if(e.key==="o"||e.key==="O"){e.preventDefault();toggleOpen(id);return;}}
+  if(el.dataset&&el.dataset.status&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openMenu(el.dataset.status,el);return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();const last=[...CH.keys()].pop();if(last){CH.delete(last);render();renderChanges();renderOverlay();}return;}
   if(e.key==="Escape"){closeMenu();if(connMode){setConnMode(false);return;}if(selId){selId=null;render();}return;}
   if(e.key==="/"){e.preventDefault();qEl.focus();qEl.select();return;}
@@ -953,19 +1004,17 @@ document.addEventListener("paste",e=>{const t=e.target;if(t.isContentEditable){e
   document.execCommand("insertText",false,txt);}});
 document.addEventListener("click",e=>{
   if(!e.target.closest(".menu,[data-status]"))closeMenu();
+  const _cb=e.target.closest("[data-collapse]");if(_cb){toggleRail(_cb.dataset.collapse);return;}
   const eg=e.target.closest("[data-edge]");if(eg){const eId=eg.dataset.edge,ed=edgeById[eId];
     if(ed){const toId=ed.to,srcStem=stemOf(ed.from),af=curAfter(toId).filter(s=>s!==srcStem);
       recordEdit(toId,"after",af.join(", "));toast(t("disconnected"));render();}return;}
   const tb=e.target.closest("[data-tab]");if(tb){ovTab=tb.dataset.tab;renderOverlay();return;}
   const ms=e.target.closest(".menu [data-set]");if(ms){applyStatus(document.getElementById("menu").dataset.id,ms.dataset.set);closeMenu();return;}
-  const tg=e.target.closest("[data-toggle]");if(tg){const k=tg.dataset.toggle;open.has(k)?open.delete(k):open.add(k);delete measured[k];render();requestAnimationFrame(()=>{measure();render();});return;}
+  const tg=e.target.closest("[data-toggle]");if(tg){toggleOpen(tg.dataset.toggle);return;}
   const stp=e.target.closest("[data-status]");if(stp){const m=document.getElementById("menu");if(m.style.display!=="none"&&m.dataset.id===stp.dataset.status){closeMenu();}else{openMenu(stp.dataset.status,stp);}return;}
   const un=e.target.closest("[data-undo]");if(un){const it=[...CH.values()][+un.dataset.undo];if(it){CH.delete(keyOf(it));render();renderChanges();renderOverlay();}return;}
   const tt=e.target.closest(".ttl");if(tt&&tt.dataset.id&&!connMode&&!e.target.isContentEditable){titleEditing.add(tt.dataset.id);render();const el=document.querySelector(`[data-node="${tt.dataset.id}"] .ttl`);if(el){el.focus();const r=document.createRange();r.selectNodeContents(el);getSelection().removeAllRanges();getSelection().addRange(r);}return;}
-  const nd=e.target.closest("[data-node]");if(nd&&!e.target.isContentEditable&&!e.target.closest(".pill,button")){
-    const id=nd.dataset.node;
-    if(connMode){if(!connPick){connPick=id;render();}else if(connPick!==id){toggleConn(connPick,id);connPick=null;}else{connPick=null;render();}return;}
-    selId=id;render();return;}
+  const nd=e.target.closest("[data-node]");if(nd&&!e.target.isContentEditable&&!e.target.closest(".pill,button")){activateCard(nd.dataset.node);return;}
   if(!e.target.closest("button,input,.menu,.toast,.toolbar,.minimap,.rail,[data-node]")){if(selId){selId=null;render();}}});
 function keyOf(it){return chKey(it.id,it.field,it.field==="claim"?it.i:it.field==="section"?it.section:undefined);}
 document.getElementById("zin").onclick=()=>zoom(scale*1.15);
@@ -1056,6 +1105,8 @@ function applyStatic(){
   document.getElementById("langbtn").textContent=t("langBtn");
   document.getElementById("minimap").title=t("mmTip");
   document.getElementById("zl").title=zoomLocked?t("zoomLocked"):t("zoomLock");
+  document.getElementById("vlabel-l").textContent=t("railDocs");
+  document.getElementById("vlabel-r").textContent=t("changes");
 }
 function bindRailScroll(body,thumb,rail,side){
   function sync(){const ch=body.clientHeight,sh=body.scrollHeight;
@@ -1076,6 +1127,8 @@ function bindRailScroll(body,thumb,rail,side){
 syncLThumb=bindRailScroll(document.getElementById("ov-body"),document.getElementById("lthumb"),document.querySelector(".rail.left"),"right");
 syncRThumb=bindRailScroll(document.getElementById("changes"),document.getElementById("rthumb"),document.querySelector(".rail.right"),"left");
 document.getElementById("langbtn").onclick=()=>{lang=lang==="en"?"zh":"en";localStorage.setItem("ddpanel-lang",lang);applyStatic();render();renderChanges();renderOverlay();};
+document.querySelector(".app").classList.toggle("lc",lcol);document.querySelector(".app").classList.toggle("rc",rcol);
+document.getElementById("tgl-l").classList.toggle("pl",!lcol);document.getElementById("tgl-r").classList.toggle("pl",rcol);
 applyStatic();renderChanges();renderOverlay();render();requestAnimationFrame(()=>{measure();render();fit();syncLThumb();syncRThumb();});
 window.addEventListener("resize",()=>{if(curL)fit();syncLThumb();syncRThumb();});
 </script>

@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 SKIP_TAGS = {"script", "style"}
-REMOTE_DEPENDENCY_TAGS = {"script", "link", "source", "audio", "video", "iframe", "embed", "object"}
 REMOTE_ASSET_SCHEMES = {"http", "https"}
 EXECUTABLE_SCHEMES = {"javascript"}
 BENIGN_LINK_SCHEMES = {"mailto", "tel"}
@@ -54,6 +53,9 @@ class AuditParser(html.parser.HTMLParser):
         self.rails: list[dict[str, str]] = []
         self.math_elements: list[dict[str, str]] = []
         self.canonical_text_stack: list[str | None] = []
+        self.wrap_stack: list[bool] = []
+        self.table_wrap_depth = 0
+        self.tables_outside_wrap = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attr_names: set[str] = set()
@@ -145,6 +147,12 @@ class AuditParser(html.parser.HTMLParser):
             skipped_here = True
         self.capture_stack.append(not skipped_here)
         self.canonical_text_stack.append(canonical_text_attr if not skipped_here and not self.skip and canonical_text_attr else None)
+        wraps_table = "brh-table-wrap" in class_tokens
+        if wraps_table:
+            self.table_wrap_depth += 1
+        self.wrap_stack.append(wraps_table)
+        if tag == "table" and not self.table_wrap_depth:
+            self.tables_outside_wrap += 1
         if canonical_text_attr and not skipped_here and not self.skip:
             self.parts.append(canonical_text_attr)
             self.skip += 1
@@ -157,10 +165,17 @@ class AuditParser(html.parser.HTMLParser):
             self.parts.append("\t")
 
     def handle_endtag(self, tag: str) -> None:
+        # Void tags never push onto the stacks in handle_starttag, but a
+        # self-closed form (<br/>) still reaches here via handle_startendtag;
+        # popping would desynchronize skip accounting.
+        if tag in VOID_TAGS:
+            return
         if not self.in_main:
             return
         captured = self.capture_stack.pop() if self.capture_stack else True
         canonical_text_attr = self.canonical_text_stack.pop() if self.canonical_text_stack else None
+        if self.wrap_stack and self.wrap_stack.pop():
+            self.table_wrap_depth -= 1
         if self.skip and canonical_text_attr is not None:
             self.skip -= 1
             captured = False
@@ -306,6 +321,8 @@ def main() -> int:
         readability_warnings.append("internal links present but no :target style found")
     if "<table" in html_text.lower() and not re.search(r"overflow-x\s*:\s*auto", html_text, re.I):
         readability_warnings.append("tables present but no horizontal overflow handling found")
+    elif parser.tables_outside_wrap and "brh-table-wrap" in html_text:
+        readability_warnings.append(f"tables not inside a .brh-table-wrap overflow wrapper: {parser.tables_outside_wrap}")
     if "@media print" not in html_text:
         readability_warnings.append("missing print stylesheet")
 
@@ -315,9 +332,13 @@ def main() -> int:
         lead = re.search(r"\S", main_inner)
         if lead:
             lead_fragment = main_inner[lead.start(): lead.start() + 1200]
-            if re.match(r"<header\b[^>]*data-canonical=[\"']false[\"']", lead_fragment, re.I | re.S):
-                rest = re.sub(r"^<header\b[^>]*>.*?</header>", "", lead_fragment, flags=re.I | re.S)
-                title_in_header = re.search(r"<h1\b[^>]*>(.*?)</h1>", lead_fragment, re.I | re.S)
+            header_match = re.match(
+                r"<header\b[^>]*data-canonical=[\"']false[\"'][^>]*>(?P<hbody>.*?)</header>",
+                lead_fragment, re.I | re.S,
+            )
+            if header_match:
+                rest = lead_fragment[header_match.end():]
+                title_in_header = re.search(r"<h1\b[^>]*>(.*?)</h1>", header_match.group("hbody"), re.I | re.S)
                 title_after_header = re.search(r"<h1\b[^>]*>(.*?)</h1>", rest, re.I | re.S)
                 if title_in_header and title_after_header:
                     a = norm_compare(re.sub(r"<[^>]+>", "", title_in_header.group(1)))

@@ -28,3 +28,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Runtime browser artifacts
+.playwright-mcp/
+/lib/.playwright-mcp/
+/lib/*.png

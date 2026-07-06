@@ -15,7 +15,6 @@
   --brh-accent-active: #0043ce;
   --brh-accent-soft: rgba(15, 98, 254, 0.12);
   --brh-warning: #f1c21b;
-  --brh-radius: 0;
   --brh-sans: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
   --brh-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   --brh-measure: 56rem;
@@ -47,7 +46,7 @@ a:hover { color: var(--brh-accent-active); }
   outline: 2px solid var(--brh-accent); outline-offset: 2px; background: var(--brh-accent-soft);
 }
 
-sup, sub { line-height: 0; font-feature-settings: "sups"; font-size: 0.72em; }
+sup, sub { line-height: 0; font-size: 0.72em; }
 
 .brh-skip {
   position: absolute; left: 1rem; top: 1rem; transform: translateY(-200%);
@@ -117,6 +116,8 @@ th { color: var(--brh-ink); background: var(--brh-ground); text-align: left; fon
 .brh-asset-card img, .brh-figure-peek img { display: block; max-width: 100%; height: auto; }
 figcaption, .brh-caption { color: var(--brh-muted); font-size: 0.875rem; line-height: 1.45; margin-top: var(--sp-sm); }
 .brh-status { color: var(--brh-muted-soft); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.brh-kicker { color: var(--brh-muted); font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 var(--sp-md); }
+.brh-meta { color: var(--brh-muted); font-size: 0.875rem; margin: 0 0 var(--sp-lg); }
 .brh-equation-source { white-space: pre-wrap; }
 
 .brh-reference, .brh-citation-ref { font-feature-settings: "lnum", "tnum"; }
@@ -151,7 +152,6 @@ figcaption, .brh-caption { color: var(--brh-muted); font-size: 0.875rem; line-he
 .brh-figure-peek { margin: 0 0 1rem; padding: var(--sp-sm) 0; border-top: 1px solid var(--brh-hairline); border-bottom: 1px solid var(--brh-hairline); }
 
 .brh-equation[data-math-copy], .brh-math-copy { cursor: copy; }
-.brh-equation [data-math-source], .brh-math-copy { border-radius: 0; }
 .brh-generated, [data-generated="true"] { border-left: 2px solid var(--brh-accent); padding-left: 1rem; }
 .brh-warning { border-left-color: var(--brh-warning); color: var(--brh-ink); }
 .brh-colophon { margin-top: var(--sp-2xl); padding-top: var(--sp-md); border-top: 1px solid var(--brh-hairline); color: var(--brh-muted); font-size: 0.75rem; }

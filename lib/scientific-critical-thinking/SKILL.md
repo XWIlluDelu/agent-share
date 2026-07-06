@@ -3,8 +3,6 @@ name: scientific-critical-thinking
 description: Evaluate scientific claims and evidence quality. Use for assessing experimental design validity, identifying biases and confounders, applying evidence grading frameworks (GRADE, Cochrane Risk of Bias), or teaching critical analysis. Best for understanding evidence quality, identifying flaws. For formal peer review writing use peer-review.
 allowed-tools: Read Write Edit
 license: MIT license
-compatibility: Analytical guidance needs no network. Optional figures via the scientific-schematics skill require OPENROUTER_API_KEY and outbound API access to OpenRouter.
-metadata: {"version": "1.1", "skill-author": "K-Dense Inc."}
 ---
 
 # Scientific Critical Thinking
@@ -26,25 +24,13 @@ This skill should be used when:
 
 ## Visual Aids (Optional)
 
-Only add figures when the **user explicitly requests** a diagram (for example, a GRADE flowchart, bias decision tree, or evidence-quality framework).
+Add figures only when they clarify the analysis or the user asks for them. Use `figure-composer` for figure-deck composition or schematic planning; keep this skill focused on critical evaluation.
 
-**When figures help:**
+Useful figure types:
 - Critical thinking framework diagrams
 - Bias identification decision trees
 - Evidence quality assessment flowcharts
 - GRADE or risk-of-bias evaluation frameworks
-
-**How to create figures:**
-- **Preferred:** Use the **scientific-schematics** skill for AI-generated diagrams from a natural-language description
-- **Alternative:** Build figures in your usual tools (draw.io, PowerPoint, matplotlib, etc.)
-
-From the `scientific-schematics` skill directory, with `OPENROUTER_API_KEY` set:
-
-```bash
-python scripts/generate_schematic.py "GRADE evidence assessment flowchart with downgrade and upgrade factors" -o figures/grade_flowchart.png --doc-type report
-```
-
-**Disclosure:** AI schematic generation sends your prompt to [OpenRouter](https://openrouter.ai/) (a third-party API). Do not include unpublished sensitive details unless that transmission is appropriate for your project.
 
 ---
 

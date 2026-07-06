@@ -18,7 +18,8 @@
         <p class="brh-meta">{{ note_path_or_source_label }}</p>
       </header>
 
-      <section class="brh-generated" data-canonical="false" data-generated="true" data-target="source-frontmatter" id="properties">
+      <!-- Retarget data-target to the canonical frontmatter block id when one is rendered; "main" is the guaranteed fallback. -->
+      <section class="brh-generated" data-canonical="false" data-generated="true" data-target="main" id="properties">
         <h2>Properties</h2>
         {{ frontmatter_panel_html }}
       </section>

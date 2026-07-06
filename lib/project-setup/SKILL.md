@@ -45,8 +45,6 @@ repository or URL.
 - Require a valid `SKILL.md`.
 - Write `.agents/skills/<name>/.source.yaml` with source URL, install time, and
   reason.
-- Do not add external skills to `~/.agent-share`; shared-library maintenance
-  belongs to `skill-manager`.
 
 ## Agent fragments
 

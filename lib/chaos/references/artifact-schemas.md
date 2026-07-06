@@ -1,6 +1,7 @@
 # CHAOS artifact schemas
 
-Use Markdown tables or compact field lists. Keep artifacts proportional to the task; nontrivial runs need at least a frame, claim ledger, and decision receipt.
+Use Markdown tables or compact field lists. Keep artifacts proportional to the
+task; nontrivial runs need at least a frame, claim ledger, and decision receipt.
 
 ## Task frame
 
@@ -10,12 +11,12 @@ scope: ""
 non_goals: []
 evidence_standard: ""
 success_criterion: ""
-expansion_policy: skip/direct | all-suitable-model-family-parallel | exhaustive-model-family-review
+expansion_policy: "" # all-suitable-parallel by default; record any narrowing and its reason
 allowed_tools: []
 allowed_models: []
 stop_rule: ""
 decision_owner: parent/final writer unless user names another owner
-run_status: full | degraded single-agent claim audit | degraded missing perspective
+run_status: full | reduced single model family | degraded single-agent claim audit | degraded missing perspective
 planned_perspectives: [] # lenses/evidence emphases for whole-frame first positions, not exclusive topic shards
 launched_models_or_routes: []
 failed_perspectives: []
@@ -26,7 +27,8 @@ failed_perspectives: []
 ```yaml
 agent_or_source: ""
 diversity_axis: "source path | method | assumptions | evidence standard | failure mode | stakeholder criterion | verification technique | model family"
-answer: "" # must address the whole framed question for Council/Deep first positions
+answer: "" # must address the whole framed question for Council first positions
+strongest_alternative_rejected: "" # best competing answer considered, and why it lost
 claims: []
 evidence: []
 assumptions: []
@@ -52,7 +54,9 @@ confidence_basis: ""
 | `status` | `survived`, `narrowed`, `rejected`, `withdrawn`, `merged`, `unresolved`, or `dissent`. |
 | `decision_impact` | What changes if this claim is true or false. |
 
-Code-related claims require locatable code evidence: `file:line`, diff hunk, test output, command output, or stable commit/permalink. If unavailable, mark the claim as a hypothesis or validation gap.
+Code-related claims require locatable code evidence: `file:line`, diff hunk,
+test output, command output, or stable commit/permalink. If unavailable, mark
+the claim as a hypothesis or validation gap.
 
 ## Critique record
 
@@ -76,7 +80,10 @@ support: ""
 accepted_by_judge: "parent/final writer only"
 ```
 
-Advisory agents may propose claim statuses and revisions. Only the parent/final writer fills final judge acceptance fields unless the user explicitly names another human decision owner.
+Advisory agents may propose claim statuses and revisions. Only the parent/final
+writer fills final judge acceptance fields unless the user explicitly names
+another human decision owner. A reversal whose `support` is empty is conformity:
+record it and give it no decision weight.
 
 ## Decision receipt
 
@@ -108,4 +115,6 @@ consequence_if_true: ""
 
 ## Evidence appendix
 
-Use when the main ledger would become noisy. Include claim ID, evidence type, locator, observed output or quote, expected output if relevant, validation status, and retrieval date if source freshness matters.
+Use when the main ledger would become noisy. Include claim ID, evidence type,
+locator, observed output or quote, expected output if relevant, validation
+status, and retrieval date if source freshness matters.
