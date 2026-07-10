@@ -33,11 +33,15 @@ default.
 
 1. **Frame.** Fill the task frame from
    [references/artifact-schemas.md](references/artifact-schemas.md): question,
-   scope, evidence standard, success criterion, mode, stop rule, perspectives.
-   State the question neutrally — advisers never see the user's leaning or the
-   parent's preferred answer.
-2. **Separate.** Launch all suitable routes in parallel (protocols: expansion
-   rule; `MODEL_USAGE.md`: suitability) and collect independent first positions
+   scope, evidence standard, success criterion, mode, stop rule, perspectives,
+   model/provider trust boundary, and artifact destination. State the question
+   neutrally — advisers never see the user's leaning or the parent's preferred
+   answer.
+2. **Separate.** Apply the expansion rule in `references/protocols.md`: explicit
+   exhaustive CHAOS uses all suitable approved routes; every other activation
+   starts with the smallest sufficient independent set and expands only for a
+   missing decision-relevant axis. Launch the selected routes in parallel and collect
+   independent first positions
    before any agent sees peer answers. Every Council first-position adviser
    answers the same whole frame and names the strongest alternative it rejected;
    topic-sharded research is scouting only.
@@ -53,9 +57,11 @@ default.
    against the frame. Agreement counts are never truth; unanimous first
    positions trigger a diversity-failure check, not a conclusion.
 7. **Record.** For nontrivial runs, keep a claim ledger. Save substantial
-   outputs, verify files exist, retry one failed perspective once with a smaller
-   prompt, or record the degraded perspective. Code claims require locatable
-   evidence: `file:line`, diff hunk, test output, command output, or stable
+   outputs in the runtime's artifact directory or an OS temporary directory by
+   default; write them into the project only when the user asks for durable
+   artifacts. Verify files exist, retry one failed perspective once with a
+   smaller prompt, or record the degraded perspective. Code claims require
+   locatable evidence: `file:line`, diff hunk, test output, command output, or stable
    permalink.
 
 ## Output contract

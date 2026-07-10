@@ -12,10 +12,16 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import os
 import re
+import secrets
+import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+MAX_SAVE_BYTES = 1_048_576
+WRITE_LOCK = threading.Lock()
 
 # --- frontmatter (the deliberately small YAML subset; see references/schemas.md) ---
 
@@ -106,10 +112,22 @@ def _split_list(inner: str) -> list[str]:
 
 
 def _scalar(val: str):
+    val = val.strip()
+    if (val.startswith("[") and val.endswith("]")) or (val.startswith('"') and val.endswith('"')):
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return [str(item) for item in parsed]
+            if isinstance(parsed, str):
+                return parsed
+        except json.JSONDecodeError:
+            pass
     if val.startswith("[") and val.endswith("]"):
         inner = val[1:-1].strip()
         return _split_list(inner) if inner else []
-    return val.strip().strip("'\"")
+    if len(val) >= 2 and val.startswith("'") and val.endswith("'"):
+        return val[1:-1].replace("''", "'")
+    return val
 
 
 # --- body helpers ---
@@ -227,6 +245,10 @@ def _inline(val) -> str:
     return " ".join(str(val).replace("\r\n", "\n").splitlines()).strip()
 
 
+def _yaml_scalar(val) -> str:
+    return json.dumps(_inline(val), ensure_ascii=False)
+
+
 def replace_fm_key(text: str, key: str, new_lines: list[str]) -> str:
     fm, body = split_frontmatter_raw(text)
     if fm is None:
@@ -251,12 +273,12 @@ def replace_fm_key(text: str, key: str, new_lines: list[str]) -> str:
 
 
 def set_fm_scalar(text, key, val):
-    return replace_fm_key(text, key, [f"{key}: {_inline(val)}"])
+    return replace_fm_key(text, key, [f"{key}: {_yaml_scalar(val)}"])
 
 
 def set_fm_list(text, key, items):
-    val = ", ".join(_inline(x) for x in items)
-    return replace_fm_key(text, key, [f"{key}: [{val}]"])
+    values = [_inline(item) for item in items]
+    return replace_fm_key(text, key, [f"{key}: {json.dumps(values, ensure_ascii=False)}"])
 
 
 def section_bounds(lines: list[str], heading: str) -> tuple[int, int] | None:
@@ -337,6 +359,34 @@ def edit_path(root: Path, e: dict) -> tuple[Path | None, str]:
     return path, "ok"
 
 
+def addressed_value(text: str, e: dict) -> tuple[bool, str, str]:
+    fm, body = split_frontmatter(text)
+    field = e.get("field")
+    if field == "progress":
+        return True, "ok", str(fm.get("progress") or "not-started")
+    if field == "content":
+        value = fm.get("purpose", "")
+        return True, "ok", value if isinstance(value, str) else str(value)
+    if field == "title":
+        return True, "ok", h1(body)
+    if field in ("after", "covers"):
+        value = fm.get(field) or []
+        items = value if isinstance(value, list) else [value]
+        return True, "ok", ", ".join(str(item) for item in items)
+    if field == "claim":
+        try:
+            index = int(e.get("i"))
+        except (TypeError, ValueError):
+            return False, "bad claim index", ""
+        claims = bullets(sections(body).get("Goal", ""))
+        return (True, "ok", claims[index]) if 0 <= index < len(claims) else (False, "claim not found", "")
+    if field == "section":
+        heading = e.get("section", "")
+        values = sections(body)
+        return (True, "ok", values[heading]) if heading in values else (False, "section not found", "")
+    return False, f"unknown field: {field}", ""
+
+
 def patch_text(text: str, e: dict) -> tuple[bool, str, str]:
     field, to = e.get("field"), e.get("to", "")
     if field == "progress":
@@ -360,8 +410,21 @@ def patch_text(text: str, e: dict) -> tuple[bool, str, str]:
     return False, f"unknown field: {field}", text
 
 
-def apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
+def atomic_write(path: Path, text: str) -> None:
+    tmp = path.with_name(f".{path.name}.{secrets.token_hex(8)}.tmp")
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.chmod(tmp, path.stat().st_mode & 0o7777)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def _apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
+    if not edits:
+        return [(False, "no edits")]
     pending: dict[Path, str] = {}
+    originals: dict[Path, str] = {}
     results: list[tuple[bool, str]] = []
     for e in edits:
         path, msg = edit_path(root, e)
@@ -371,6 +434,17 @@ def apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
         text = pending.get(path)
         if text is None:
             text = path.read_text(encoding="utf-8")
+            originals[path] = text
+        if "from" not in e:
+            results.append((False, "missing edit precondition"))
+            break
+        ok, msg, current = addressed_value(text, e)
+        if not ok:
+            results.append((False, msg))
+            break
+        if current != str(e.get("from", "")):
+            results.append((False, f"conflict: expected {e.get('from', '')!r}, found {current!r}"))
+            break
         ok, msg, text = patch_text(text, e)
         results.append((ok, msg))
         if not ok:
@@ -380,9 +454,35 @@ def apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
         results.extend([(False, "not written: batch failed")] * (len(edits) - len(results)))
     if not all(ok for ok, _ in results):
         return [(False, msg if not ok else "not written: batch failed") for ok, msg in results]
-    for path, text in pending.items():
-        path.write_text(text, encoding="utf-8")
+    for path, original in originals.items():
+        if path.read_text(encoding="utf-8") != original:
+            return [(False, "conflict: file changed during save") for _ in edits]
+    written: list[Path] = []
+    try:
+        for path, text in pending.items():
+            if path.read_text(encoding="utf-8") != originals[path]:
+                raise RuntimeError(f"conflict: {path} changed during save")
+            atomic_write(path, text)
+            written.append(path)
+    except Exception as ex:
+        rollback_errors: list[str] = []
+        for path in reversed(written):
+            try:
+                if path.read_text(encoding="utf-8") != pending[path]:
+                    raise RuntimeError("file changed again after replacement")
+                atomic_write(path, originals[path])
+            except Exception as rollback_ex:
+                rollback_errors.append(f"{path}: {rollback_ex}")
+        message = f"save failed and completed writes were rolled back: {ex}"
+        if rollback_errors:
+            message += f"; rollback incomplete: {'; '.join(rollback_errors)}"
+        return [(False, message) for _ in edits]
     return results
+
+
+def apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
+    with WRITE_LOCK:
+        return _apply_edits(root, edits)
 
 
 def apply_edit(root: Path, e: dict) -> tuple[bool, str]:
@@ -395,17 +495,40 @@ def _hjson(data) -> str:
     return json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 
 
-def render(dd: Path) -> str:
+def render(dd: Path, save_token: str = "") -> str:
     graph = build_graph(dd)
     return (TEMPLATE
             .replace("__TITLE__", html.escape(graph["meta"]["title"] or "workspace"))
-            .replace("__GRAPH_JSON__", _hjson(graph)))
+            .replace("__GRAPH_JSON__", _hjson(graph))
+            .replace("__SAVE_TOKEN__", save_token))
+
+
+def request_host_error(headers, expected_host: str) -> tuple[int, str] | None:
+    return None if headers.get("Host") == expected_host else (403, "invalid request host")
+
+
+def save_request_error(headers, token: str, expected_origin: str) -> tuple[int, str] | None:
+    expected_host = expected_origin.split("://", 1)[1]
+    host_error = request_host_error(headers, expected_host)
+    if host_error:
+        return host_error
+    content_type = headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+    if content_type != "application/json":
+        return 415, "save requires application/json"
+    supplied = headers.get("X-DocDoki-Token", "")
+    if not supplied or not secrets.compare_digest(supplied, token):
+        return 403, "invalid save token"
+    origin = headers.get("Origin")
+    if origin and origin != expected_origin:
+        return 403, "invalid save origin"
+    return None
 
 
 # --- server ---
 
 class Handler(BaseHTTPRequestHandler):
     dd: Path = Path(".")
+    save_token: str = ""
 
     def log_message(self, *a):
         pass
@@ -414,7 +537,12 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.split("?")[0] not in ("/", "/index.html"):
             self.send_error(404)
             return
-        page = render(self.dd).encode("utf-8")
+        port = self.server.server_address[1]
+        error = request_host_error(self.headers, f"127.0.0.1:{port}")
+        if error:
+            self.send_error(*error)
+            return
+        page = render(self.dd, self.save_token).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(page)))
@@ -425,13 +553,28 @@ class Handler(BaseHTTPRequestHandler):
         if self.path != "/save":
             self.send_error(404)
             return
-        n = int(self.headers.get("Content-Length", 0))
+        port = self.server.server_address[1]
+        error = save_request_error(self.headers, self.save_token, f"http://127.0.0.1:{port}")
+        if error:
+            self.send_error(*error)
+            return
         try:
-            payload = json.loads(self.rfile.read(n) or b"{}")
-            results = apply_edits(self.dd.parent, payload.get("edits", []))
+            n = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            self.send_error(400, "invalid Content-Length")
+            return
+        if n <= 0 or n > MAX_SAVE_BYTES:
+            self.send_error(413 if n > MAX_SAVE_BYTES else 400, "invalid save body size")
+            return
+        try:
+            payload = json.loads(self.rfile.read(n))
+            edits = payload.get("edits") if isinstance(payload, dict) else None
+            if not isinstance(edits, list) or not edits:
+                raise ValueError("save requires a non-empty edits list")
+            results = apply_edits(self.dd.parent, edits)
         except Exception as ex:  # surface failure to the panel rather than 500-crash
             results = [(False, str(ex))]
-        ok = all(r[0] for r in results)
+        ok = bool(results) and all(r[0] for r in results)
         body = json.dumps({"ok": ok, "results": [{"ok": a, "msg": b} for a, b in results]}).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -450,6 +593,7 @@ def main(argv=None):
     if dd is None:
         ap.error(f"no docdoki/ found at or above {a.root}")
     Handler.dd = dd
+    Handler.save_token = secrets.token_urlsafe(32)
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
     url = f"http://127.0.0.1:{a.port}/"
     print(f"docdoki panel → {url}  (library: {dd})\nCtrl-C to stop.")
@@ -705,6 +849,7 @@ TEMPLATE = r"""<!doctype html>
 <div class="menu" id="menu" style="display:none"></div>
 <script>
 const GRAPH = __GRAPH_JSON__;
+const SAVE_TOKEN="__SAVE_TOKEN__";
 let lang=(localStorage.getItem("ddpanel-lang")||"en");
 const I18N={
  en:{searchPh:"Search… ( / )",clear:"Clear (Esc)",changes:"Changes",writeBack:"Write back",copyPrompt:"Copy",clearBtn:"Clear",emptyChanges:"No changes yet.",emptyCanvas:"No specs to show yet.",expand:"Expand",collapse:"Collapse",noClaims:"no claims",goalClaims:"Goal / claims",emptyBody:"(empty)",saved:"Written back — now let the agent follow",copied:"Prompt copied",saveFail:"Write-back failed: ",undo:"undo",mmTip:"Click/drag to navigate",connMode:"Connect mode — click two cards to toggle",connOff:"Connect (c)",connected:"Connected",disconnected:"Disconnected",zoomLock:"Lock zoom",zoomLocked:"Zoom locked — click to release",langBtn:"中",railDocs:"Documents",docNorthstar:"Northstar",docAbstract:"Abstract",docStage:"Active stages",docMissing:"This document does not exist yet.",noStages:"No active stages.",promptIntro:"These edits come from the docdoki panel; treat them as one human document edit and follow them: apply each to its file, then propagate into the other documents and the code, judging order and method yourself.",fields:{content:"content",claim:"claim",title:"title",after:"after",covers:"covers",progress:"progress",section:"section"}},
@@ -1037,7 +1182,7 @@ document.getElementById("gen").onclick=()=>{out.value=buildPrompt();out.style.di
   if(navigator.clipboard)navigator.clipboard.writeText(out.value);toast(t("copied"));};
 document.getElementById("save").onclick=async()=>{
   const edits=[...CH.values()].map(it=>({id:it.id,path:it.path,field:it.field,from:it.from,to:it.to,section:it.section,i:it.i}));
-  try{const res=await fetch("/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({edits})});
+  try{const res=await fetch("/save",{method:"POST",headers:{"Content-Type":"application/json","X-DocDoki-Token":SAVE_TOKEN},body:JSON.stringify({edits})});
     const j=await res.json();
     if(j.ok){CH.clear();out.style.display="none";out.value="";
       // adopt the written values as the new baseline so re-edits, search, and the

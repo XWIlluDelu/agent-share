@@ -1,9 +1,12 @@
 ---
 name: remote-compute
-description: "Run work on machines reachable by SSH: establish the connection, inspect the host, prepare or reuse an environment, move code and data, launch and monitor jobs, retrieve outputs, and clean up. Use when the user wants something run on a remote server, cluster, workstation, or GPU box, a long job dispatched remotely, an environment set up on a remote host, or results fetched back. Covers plain hosts, Slurm/PBS/LSF schedulers, GPUs, and long-running services as conditional patterns."
+description: "Run work on Unix-like machines reachable by SSH: configure or diagnose the connection, inspect the host, prepare or reuse an environment, stage code and data safely, launch and monitor jobs, retrieve outputs, and clean up. Use for remote servers, clusters, workstations, GPU boxes, long jobs, remote environment setup, or result retrieval. Command examples target GNU/Linux with Bash; Windows/PowerShell hosts are out of scope."
 ---
 
 # Remote compute
+
+Command examples assume a GNU/Linux remote with Bash and OpenSSH. On another
+Unix-like host, use a native equivalent only after verifying its semantics.
 
 Running work on an SSH-reachable machine is a loop: orient, prepare, move,
 run, monitor, retrieve, clean up. The expensive failures are rarely exotic:
@@ -14,14 +17,20 @@ below prevents one of them.
 ## Establish the machine
 
 Address hosts by an alias in `~/.ssh/config` (host, user, key, port,
-`ProxyJump` for bastions), never by ad-hoc flags; the alias keeps every later
-`ssh`/`scp`/`rsync` command short and reproducible. For a session of repeated
+`ProxyJump` for bastions), never by repeated ad-hoc flags; the alias keeps every
+later `ssh`/`scp`/`rsync` command short and reproducible. If the alias is
+missing, inspect existing config for conflicts and create it only from
+user-supplied connection facts. Verify a new host-key fingerprint through a
+trusted source; never disable host-key checking. For a session of repeated
 commands, connection multiplexing (`ControlMaster auto`, `ControlPersist`)
 removes the per-command handshake.
 
-If the connection itself fails (key not loaded, VPN down, host unreachable),
-that is the user's to fix. Report the exact error and stop; do not retry in a
-loop.
+On failure, diagnose the part under local control first: inspect `ssh -G
+<alias>`, key path and permissions, agent state, `ProxyJump`, DNS, and the exact
+SSH error. Repair reversible user-owned config when the evidence is clear.
+Missing credentials or authorization, a required VPN, firewall policy, DNS
+outside local config, and an unavailable host require the user or operator;
+report the exact blocker and stop. Do not retry in a loop.
 
 ## Orient before acting
 
@@ -38,7 +47,7 @@ write nothing.
 On first contact, one batched probe answers most of it:
 
 ```sh
-ssh <alias> 'uname -a; id; sudo -n true 2>&1; df -h ~ /tmp; nvidia-smi -L 2>/dev/null; command -v sbatch qsub bsub docker apptainer conda module 2>/dev/null; conda env list 2>/dev/null'
+ssh <alias> 'uname -a; id; df -h ~ /tmp; nvidia-smi -L 2>/dev/null; command -v sbatch qsub bsub docker apptainer conda module 2>/dev/null; conda env list 2>/dev/null'
 ```
 
 Recognize the host's shape rather than choosing one: a plain host (direct
@@ -48,19 +57,22 @@ internet, scratch with a purge policy), or a container-capable host
 (docker/apptainer). The shape decides what "install", "run", and "background"
 mean below.
 
-Sudo is a fact to establish, not to assume: `sudo -n true` answers without
-prompting. Without it, everything installs user-space: venv/conda under home
-or scratch, `pip --user`, `~/.local`, `systemctl --user`. With it, on a
-machine the user administers, system routes are legitimate; on a machine
-other people share, confirm with the user before any system-level change.
+When a system-level change is actually in scope on a machine the user
+administers, `sudo -n true` establishes noninteractive sudo without prompting.
+Do not probe or use sudo on a shared login node without explicit authorization.
+Without authorized sudo, everything installs user-space: venv/conda under home
+or scratch, `pip --user`, `~/.local`, `systemctl --user`. Even when sudo works,
+confirm before a system-level change on any machine other people share.
 
 ## Prepare or reuse an environment
 
-Reuse first. Before concluding a tool is missing, spend about five cheap
-probes: `command -v <tool>`, `conda env list`, `module avail <tool>`, `ls`
-the likely install dirs, `python -c 'import <pkg>'`. If they come back
-empty, ask before installing; the tool may exist under a name you did not
-guess, and installing may not be wanted.
+Reuse first. Before concluding a tool is missing, use the few cheap probes that
+fit the host: `command -v <tool>`, `conda env list`, `module avail <tool>`, likely
+install directories, and `python -c 'import <pkg>'`. If they come back empty,
+ask before installing unless the user already authorized remote environment
+setup and the proposed install is user-space, reversible, and within the stated
+budget. Dependency choice, shared/system changes, or large downloads still
+require a decision.
 
 Provisioning is its own task with its own validation, never folded inline
 into the real run: build the environment, prove it, then launch. Install
@@ -89,14 +101,21 @@ any rebuild.
 
 ## Move code and data
 
-Code moves by git when the host can reach the repository (the remote copy
-then has provenance); `rsync -a` the working tree only when it cannot. Data
-moves by `rsync -a --partial` so interrupted transfers resume. Data already
-on the host is referenced in place, never round-tripped through your
-machine, and host-to-host transfers go direct between the hosts. Budget
-transfer time before starting: at typical link rates, gigabytes are minutes
-to tens of minutes, and a large recurring dataset deserves a persistent
-remote copy rather than per-run staging.
+Record `git rev-parse HEAD` and `git status --short` before staging code. When
+the intended code is a committed revision and the host can reach the repository,
+clone or fetch that exact revision so the remote copy has provenance. Otherwise
+stage an explicit file set: review tracked and required untracked files, run an
+`rsync` dry run, and exclude `.git`, credentials and secret files, environments,
+caches, prior outputs, sockets, and unrelated large files. Add ignored files
+only when the task explicitly needs them; never use an unreviewed `rsync -a` of
+the whole working tree.
+
+Data moves separately by `rsync -a --partial` so interrupted transfers resume.
+Data already on the host is referenced in place, never round-tripped through
+your machine, and host-to-host transfers go direct between the hosts. Budget
+transfer time before starting: at typical link rates, gigabytes are minutes to
+tens of minutes, and a large recurring dataset deserves a persistent remote
+copy rather than per-run staging.
 
 ## Run
 
@@ -113,8 +132,19 @@ bugs are the most common self-inflicted remote failure. In the script:
 - Redirect output to files in the run dir and record the exit code (for
   example `trap 'echo $? > exit_code' EXIT`) so status stays inspectable
   after the fact.
-- If you background children, `wait "$pid"` each one; a bare `wait` returns
-  0 regardless of their exits.
+- If you background children, record every PID and wait for all of them without
+  letting `set -e` abort the loop. Accumulate a nonzero status, then exit only
+  after every child has been reaped:
+
+  ```bash
+  status=0
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=$?
+  done
+  exit "$status"
+  ```
+
+  A bare `wait` can hide child failures.
 - Bound the run with `timeout <budget>` or the scheduler's walltime, and
   make long jobs checkpoint periodically so a deadline or preemption costs
   one interval, not the run.
@@ -176,11 +206,23 @@ blind.
 
 Apply only when the host actually has them.
 
-**Scheduler (Slurm/PBS/LSF).** Directives go at the top of the job script
-(`#SBATCH ...`); on most clusters `--partition`, `--account`, and `--time`
-are mandatory alongside the resource request. Submit one job per task.
-Compute nodes often lack internet: pre-stage downloads from the login node.
-Scratch is usually purge-on-idle; record the purge window in the host note.
+**Scheduler (Slurm/PBS/LSF).** Detect the scheduler and use its own directive
+and lifecycle commands; never write one scheduler's directives into another's
+job file.
+
+| Scheduler | Directive | Submit | Inspect | Cancel |
+|---|---|---|---|---|
+| Slurm | `#SBATCH` | `sbatch` | `squeue` | `scancel` |
+| PBS | `#PBS` | `qsub` | `qstat` | `qdel` |
+| LSF | `#BSUB` | `bsub` | `bjobs` | `bkill` |
+
+Queue/partition, account/project, walltime, memory, GPU, and log directives are
+site policy: derive them from verified host notes, site documentation, or a
+known-good job, not generic assumptions. Use a scheduler array with an explicit
+concurrency cap for many homogeneous tasks; use separate jobs when tasks differ
+or need distinct recovery. Compute nodes often lack internet, so pre-stage
+downloads from the login node. Scratch is usually purge-on-idle; record the
+verified purge window in the host note.
 
 **GPU.** `nvidia-smi` shows what is there; match the framework's CUDA build
 to the driver. Validate with rung 2 of the ladder — a tiny forward pass that

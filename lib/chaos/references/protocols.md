@@ -11,11 +11,20 @@
 
 ## Expansion rule
 
-When CHAOS is not skipped, cost is not a constraint: run all suitable
-model-family advisers and useful evidence routes in parallel, unless the user
-narrows scope or a route is unavailable, unsafe, off-modality, not independent,
-below the capability floor (`MODEL_USAGE.md`), or weaker than direct
-verification.
+When the user explicitly requests exhaustive CHAOS, all available models, or a
+full council, run all suitable approved model-family advisers and useful
+evidence routes in parallel. Respect any stated budget, provider, privacy, or
+modality boundary.
+
+For every other activation, including proactive use for an important decision,
+start with the smallest sufficient independent set that covers the
+decision-relevant axes:
+usually a broad position, a careful critic, a task/evidence specialist, and a
+counterpoint only when it adds a distinct source, method, failure mode, or model
+family. Expand only when an uncovered axis or unresolved claim could change the
+decision. A route is excluded when it is unavailable, unsafe, outside the data
+trust boundary, off-modality, not independent, below the capability floor
+(`MODEL_USAGE.md`), or weaker than direct verification.
 
 **Test before debate.** Any claim a cheap direct check can settle is settled by
 the check and enters the ledger as tested evidence. Deliberation handles only
@@ -34,9 +43,9 @@ a valid input appendix, never a first position.
 1. Extract falsifiable or decision-relevant claims from the target.
 2. Assign each claim an evidence standard and current support; settle directly
    testable claims by test before launching critics.
-3. Launch every suitable critic in parallel against the anonymized claim set:
-   attack weak evidence, invalid inference, hidden premises, missing
-   alternatives, and practical risks. When the target is a proposal awaiting a
+3. Select critics under the expansion rule and launch them in parallel against
+   the anonymized claim set: attack weak evidence, invalid inference, hidden
+   premises, missing alternatives, and practical risks. When the target is a proposal awaiting a
    decision, brief critics as refuters: steelman the proposal, then target the
    strongest remaining flaws.
 4. Mark each claim `survived`, `narrowed`, `rejected`, `withdrawn`, `merged`,

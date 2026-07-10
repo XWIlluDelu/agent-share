@@ -9,14 +9,48 @@ import json
 import re
 import unicodedata
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
 SKIP_TAGS = {"script", "style"}
-REMOTE_ASSET_SCHEMES = {"http", "https"}
+REMOTE_ASSET_SCHEMES = {"http", "https", "ftp", "ftps"}
 EXECUTABLE_SCHEMES = {"javascript"}
 BENIGN_LINK_SCHEMES = {"mailto", "tel"}
 REFERENCE_ATTRS = {"data-target", "data-duplicate-of", "aria-controls", "aria-describedby", "aria-labelledby"}
+
+
+def is_remote(url: str) -> bool:
+    return url.startswith("//") or urlparse(url).scheme.lower() in REMOTE_ASSET_SCHEMES
+
+
+def srcset_urls(value: str) -> list[str]:
+    """Extract common srcset candidates without splitting commas inside data URLs."""
+    urls: list[str] = []
+    i = 0
+    while i < len(value):
+        while i < len(value) and (value[i].isspace() or value[i] == ","):
+            i += 1
+        if i >= len(value):
+            break
+        start = i
+        if value[i:].lower().startswith("data:"):
+            while i < len(value) and not value[i].isspace():
+                i += 1
+        else:
+            while i < len(value) and not value[i].isspace() and value[i] != ",":
+                i += 1
+        if i > start:
+            urls.append(value[start:i])
+        while i < len(value) and value[i] != ",":
+            i += 1
+    return urls
+
+
+def local_candidate(html_path: Path, ref: str) -> Path:
+    path = unquote(urlparse(ref).path)
+    if not path:
+        return html_path
+    return html_path.parent / path.lstrip("/") if path.startswith("/") else html_path.parent / path
 
 
 def norm_compare(text: str, *, compatibility: bool = False) -> str:
@@ -42,9 +76,12 @@ class AuditParser(html.parser.HTMLParser):
         self.assets: list[str] = []
         self.remote_dependencies: list[str] = []
         self.external_links: list[str] = []
+        self.local_links: list[str] = []
         self.inline_data_assets: list[str] = []
         self.executable_links: list[str] = []
         self.benign_external_links: list[str] = []
+        self.navigation_hazards: list[str] = []
+        self.base_hrefs: list[str] = []
         self.image_alts: list[tuple[str, str, bool]] = []
         self.html_validity_errors: list[str] = []
         self.title_seen = False
@@ -56,6 +93,35 @@ class AuditParser(html.parser.HTMLParser):
         self.wrap_stack: list[bool] = []
         self.table_wrap_depth = 0
         self.tables_outside_wrap = 0
+
+    def record_asset(self, url: str) -> None:
+        if not url or url.startswith("#"):
+            return
+        scheme = urlparse(url).scheme.lower()
+        if scheme in EXECUTABLE_SCHEMES:
+            self.executable_links.append(url)
+        elif is_remote(url):
+            self.remote_dependencies.append(url)
+        elif scheme == "data":
+            if url.lower().startswith("data:image/"):
+                self.inline_data_assets.append(url[:48] + "...")
+            else:
+                self.remote_dependencies.append(url[:48] + "...")
+        else:
+            self.assets.append(url)
+
+    def record_link(self, url: str) -> None:
+        if not url:
+            return
+        scheme = urlparse(url).scheme.lower()
+        if scheme in EXECUTABLE_SCHEMES or scheme == "data":
+            self.executable_links.append(url)
+        elif scheme in BENIGN_LINK_SCHEMES:
+            self.benign_external_links.append(url)
+        elif is_remote(url):
+            self.external_links.append(url)
+        else:
+            self.local_links.append(url)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attr_names: set[str] = set()
@@ -97,34 +163,31 @@ class AuditParser(html.parser.HTMLParser):
         if any(token.startswith("brh-math") or token == "brh-equation" for token in class_tokens):
             self.math_elements.append(attrs_d)
 
-        href = attrs_d.get("href")
         if href and not href.startswith("#"):
-            parsed = urlparse(href)
-            if parsed.scheme in EXECUTABLE_SCHEMES:
-                self.executable_links.append(href)
-            elif parsed.scheme in BENIGN_LINK_SCHEMES:
-                self.benign_external_links.append(href)
-            elif tag == "a" and (parsed.scheme in REMOTE_ASSET_SCHEMES or href.startswith("//")):
-                self.external_links.append(href)
-            elif tag in {"link", "script"}:
-                if parsed.scheme in REMOTE_ASSET_SCHEMES or href.startswith("//"):
+            if tag == "base":
+                self.base_hrefs.append(href)
+                self.navigation_hazards.append(f"base href changes URL resolution: {href}")
+                if is_remote(href):
                     self.remote_dependencies.append(href)
-                else:
-                    self.assets.append(href)
+            elif tag in {"a", "area"}:
+                self.record_link(href)
+            elif tag in {"link", "script", "image"}:
+                self.record_asset(href)
 
-        src = attrs_d.get("src")
-        if src and not src.startswith("#"):
-            parsed = urlparse(src)
-            if parsed.scheme in EXECUTABLE_SCHEMES:
-                self.executable_links.append(src)
-            elif src.startswith("data:image/"):
-                self.inline_data_assets.append(src[:48] + "...")
-            elif parsed.scheme == "data":
-                self.remote_dependencies.append(src[:48] + "...")
-            elif parsed.scheme in REMOTE_ASSET_SCHEMES or src.startswith("//"):
-                self.remote_dependencies.append(src)
-            else:
-                self.assets.append(src)
+        self.record_asset(attrs_d.get("src", ""))
+        self.record_asset(attrs_d.get("poster", ""))
+        if tag == "object":
+            self.record_asset(attrs_d.get("data", ""))
+        for candidate in srcset_urls(attrs_d.get("srcset", "")):
+            self.record_asset(candidate)
+
+        if tag == "meta" and attrs_d.get("http-equiv", "").lower() == "refresh":
+            content = attrs_d.get("content", "")
+            match = re.search(r"(?:^|;)\s*url\s*=\s*['\"]?([^'\";]+)", content, re.I)
+            target = match.group(1).strip() if match else content.strip()
+            self.navigation_hazards.append(f"meta refresh: {target or 'unspecified target'}")
+            if target:
+                self.record_link(target)
         if tag == "main":
             self.in_main = True
             self.main_seen = True
@@ -224,27 +287,34 @@ def has_reference_attr(tag_text: str) -> bool:
     return bool(re.search(r'''\b(?:data-target|data-evidence)\s*=''', tag_text, re.I))
 
 
-def css_remote_dependencies(html_text: str) -> list[str]:
+def css_dependencies(html_text: str) -> tuple[list[str], list[str], list[str]]:
     css_parts = re.findall(r"<style\b[^>]*>(.*?)</style>", html_text, re.I | re.S)
     css_parts.extend(match.group(2) for match in re.finditer(r'''\bstyle\s*=\s*(["'])(.*?)\1''', html_text, re.I | re.S))
     remote: list[str] = []
+    local: list[str] = []
+    inline: list[str] = []
+
+    def classify(url: str, *, allow_inline_image: bool = False) -> None:
+        url = url.strip()
+        if not url or url.startswith("#"):
+            return
+        scheme = urlparse(url).scheme.lower()
+        if is_remote(url):
+            remote.append(url)
+        elif scheme == "data" and allow_inline_image and url.lower().startswith("data:image/"):
+            inline.append(url[:48] + "...")
+        elif scheme == "data":
+            remote.append(url[:48] + "...")
+        else:
+            local.append(url)
+
     for css in css_parts:
         css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
         for match in re.finditer(r'''@import\s+(?:url\(\s*)?(["']?)([^"')\s;]+)\1''', css, re.I):
-            url = match.group(2).strip()
-            parsed = urlparse(url)
-            if parsed.scheme in REMOTE_ASSET_SCHEMES or url.startswith("//"):
-                remote.append(url)
-            elif parsed.scheme == "data":
-                remote.append(url[:48] + "...")
+            classify(match.group(2))
         for match in re.finditer(r'''url\(\s*(["']?)(.*?)\1\s*\)''', css, re.I | re.S):
-            url = match.group(2).strip()
-            parsed = urlparse(url)
-            if parsed.scheme in REMOTE_ASSET_SCHEMES or url.startswith("//"):
-                remote.append(url)
-            elif parsed.scheme == "data":
-                remote.append(url[:48] + "...")
-    return remote
+            classify(match.group(2), allow_inline_image=True)
+    return remote, local, inline
 
 
 def main() -> int:
@@ -253,7 +323,7 @@ def main() -> int:
     ap.add_argument("--assets-dir", type=Path, help="Directory containing local assets. Defaults to HTML sibling assets/ if present.")
     ap.add_argument("--source-text", type=Path, help="Optional canonical source text to compare against canonical HTML text")
     ap.add_argument("--strict", action="store_true", help="Exit nonzero for duplicate ids, broken links, unresolved refs, missing assets, missing main, remote dependencies, executable links, or source mismatch")
-    ap.add_argument("--allow-remote", action="store_true", help="Do not fail strict mode for remote http(s)/data dependencies")
+    ap.add_argument("--allow-remote", action="store_true", help="Do not fail strict mode for remote network/data dependencies")
     ap.add_argument("--allow-no-main", action="store_true", help="Do not fail strict mode when no <main> element is present")
     ap.add_argument("--allow-empty-canonical", action="store_true", help="Do not fail strict mode when canonical text is empty")
     ap.add_argument("--require-source-text", action="store_true", help="Fail strict mode unless --source-text is supplied")
@@ -264,7 +334,10 @@ def main() -> int:
     html_text = html_path.read_text(encoding="utf-8")
     parser = AuditParser(source_order=True)
     parser.feed(html_text)
-    parser.remote_dependencies.extend(css_remote_dependencies(html_text))
+    css_remote, css_local, css_inline = css_dependencies(html_text)
+    parser.remote_dependencies.extend(css_remote)
+    parser.assets.extend(css_local)
+    parser.inline_data_assets.extend(css_inline)
 
     ids = set(parser.ids)
     broken_internal_links = sorted({href for href in parser.hrefs if href not in ids})
@@ -274,14 +347,14 @@ def main() -> int:
     missing_assets: list[str] = []
     asset_refs = sorted(set(parser.assets))
     for ref in asset_refs:
-        if ref.startswith("/"):
-            candidate = html_path.parent / ref.lstrip("/")
-        else:
-            candidate = html_path.parent / ref
-            if not candidate.exists() and assets_dir.exists():
-                candidate = assets_dir / Path(ref).name
+        candidate = local_candidate(html_path, ref)
+        if not candidate.exists() and assets_dir.exists():
+            candidate = assets_dir / Path(unquote(urlparse(ref).path)).name
         if not candidate.exists():
             missing_assets.append(ref)
+
+    local_links = sorted(set(parser.local_links))
+    missing_local_links = [ref for ref in local_links if not local_candidate(html_path, ref).exists()]
 
     html_canonical_text = norm_compare("".join(parser.parts))
     html_canonical_text_nfkc = norm_compare("".join(parser.parts), compatibility=True)
@@ -520,10 +593,14 @@ def main() -> int:
         "unresolved_attribute_refs": unresolved_attribute_refs,
         "asset_references": asset_refs,
         "missing_referenced_assets": sorted(set(missing_assets)),
+        "local_links": local_links,
+        "missing_local_links": sorted(set(missing_local_links)),
         "remote_dependencies": sorted(set(parser.remote_dependencies)),
         "external_links": sorted(set(parser.external_links)),
         "inline_data_assets": sorted(set(parser.inline_data_assets)),
         "executable_links": sorted(set(parser.executable_links)),
+        "base_hrefs": sorted(set(parser.base_hrefs)),
+        "navigation_hazards": sorted(set(parser.navigation_hazards)),
         "benign_external_links": sorted(set(parser.benign_external_links)),
         "html_validity_errors": parser.html_validity_errors,
         "accessibility_warnings": accessibility_warnings,
@@ -543,9 +620,11 @@ def main() -> int:
         or broken_internal_links
         or unresolved_attribute_refs
         or missing_assets
+        or missing_local_links
         or parser.html_validity_errors
         or source_boundary_errors
         or parser.executable_links
+        or parser.navigation_hazards
         or (parser.remote_dependencies and not args.allow_remote)
         or (not parser.main_seen and not args.allow_no_main)
         or (not html_canonical_text and not args.allow_empty_canonical)

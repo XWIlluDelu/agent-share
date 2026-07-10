@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: "Maintain the local .agent-share skill library: sync upstream skill sources, add/update/delete/rename shared skills, manage manifest packs, normalize lib copies, materialize always-on symlinks, maintain agent fragments, and audit consistency. Use when modifying .agent-share itself, shared skills, packs, fragments, or the shared skill registry."
+description: "Own mutations to the local .agent-share skill library: sync upstream sources, add/update/delete/rename shared skills, manage manifest provenance and packs, normalize lib copies, materialize always-on symlinks, maintain agent fragments, and audit consistency. Use whenever .agent-share itself or its registry is modified. For skill content quality, triggering, or evaluation, apply skill-creator as the authoring method while this skill remains the write/provenance/audit owner."
 ---
 
 # Skill Manager
@@ -60,17 +60,21 @@ whether a skill should exist.
 
 1. Read `pack: always-on` names from `manifest.yaml` and compare them with
    `skills/`.
-2. Inspect installed runtime roots only: `~/.pi/agent/skills`,
-   `~/.claude/skills`, and `~/.codex/skills`. Do not create roots for absent
-   agents.
-3. If a runtime root has no platform-owned payload, prefer one relative
-   directory symlink to `~/.agent-share/skills`.
-4. If a runtime root has platform-owned payload, such as
-   `~/.codex/skills/.system/`, preserve it and add per-skill relative symlinks
-   to `~/.agent-share/skills/<name>`.
-5. OpenCode scans Claude and Codex roots; a separate OpenCode root is
-   unnecessary unless OpenCode-only skills exist. OpenClaw does not scan those
-   roots; link it only when installed or used.
+2. Inspect only roots used by installed agents. Current shared-standard roots
+   include `~/.agents/skills` for Codex, Pi, Gemini CLI, OpenCode, and GitHub
+   Copilot; platform roots include `~/.pi/agent/skills`, `~/.claude/skills`,
+   and `~/.qwen/skills`. Confirm live client documentation/configuration before
+   changing them.
+3. Treat an existing `~/.codex/skills` as a legacy or installation-specific
+   root: preserve platform-owned payload such as `.system/`, but do not create
+   it as the current canonical Codex root without live evidence.
+4. If a runtime root has no platform-owned payload, prefer one relative
+   directory symlink to `~/.agent-share/skills`. If it has platform-owned
+   payload, preserve it and add per-skill relative symlinks to
+   `~/.agent-share/skills/<name>`.
+5. Do not create roots for absent agents. OpenCode needs no separate root when a
+   compatible shared root is already active; create agent-specific roots only
+   when current discovery behavior requires them.
 6. Skip and report real files or nonmatching symlinks.
 7. Run the audit checklist.
 
@@ -107,11 +111,13 @@ whether a skill should exist.
 ### Add custom/local skill
 
 1. Ensure the user already chose the skill.
-2. Create or update `lib/<name>/SKILL.md`.
-3. Add manifest entry with `source_repo: custom`, `source_path: "lib/<name>"`,
+2. Load `skill-creator` and apply its authoring method to capability design,
+   triggering, resources, and evaluation; this workflow remains the sole writer.
+3. Create or update `lib/<name>/SKILL.md` and required resources.
+4. Add manifest entry with `source_repo: custom`, `source_path: "lib/<name>"`,
    `pack`, and `notes` when needed.
-4. If `pack: always-on`, create `skills/<name> -> ../lib/<name>`.
-5. Run the audit checklist.
+5. If `pack: always-on`, create `skills/<name> -> ../lib/<name>`.
+6. Run the audit checklist.
 
 ### Delete skill
 
@@ -124,10 +130,14 @@ whether a skill should exist.
 
 ### Modify skill
 
-1. Update `manifest.yaml.notes` first when the content change creates or changes
+1. When the request concerns capability design, prompt quality, triggering, or
+   evaluation, load `skill-creator` and use its method. This workflow still owns
+   all writes, provenance, materialization, and final audit inside
+   `.agent-share`.
+2. Update `manifest.yaml.notes` first when the content change creates or changes
    local normalization intent.
-2. Edit skill content only in `lib/<name>/`.
-3. Run the audit checklist.
+3. Edit skill content only in `lib/<name>/`.
+4. Run the audit checklist.
 
 ### Rename skill
 
@@ -162,14 +172,20 @@ completion.
 
 - Manifest parses; skill names are unique.
 - Every manifest skill has `lib/<name>/SKILL.md`.
+- Every touched skill passes
+  `python3 lib/openai-skill-creator/scripts/quick_validate.py lib/<name>` from
+  the `.agent-share` root; independently confirm non-empty `name` and
+  `description` plus `name == <name>` because the bundled check is only a basic
+  validator.
 - Every source-backed entry has `sources/<repo>/<source_path>/SKILL.md`; custom
   entries resolve locally.
 - `agents-fragments/` contains only reusable `AGENT-*.md` fragments.
 - `skills/` contains only relative symlinks for `pack: always-on` entries.
 - Each always-on symlink target is exactly `../lib/<name>`.
-- Requested runtime activation roots expose every `pack: always-on` skill
-  through relative links or a directory link to `~/.agent-share/skills/`, while
-  preserving platform-owned directories such as `.codex/skills/.system/`.
+- Requested live runtime roots expose every `pack: always-on` skill through
+  relative links or a directory link to `~/.agent-share/skills/`, while
+  preserving platform-owned payload and treating legacy roots as compatibility
+  surfaces rather than current authority.
 - Touched upstream repos are clean after local normalization.
 - Source-backed updates used overwrite-then-reapply: new `lib/<name>` started
   from updated `sources/<repo>/<path>`, then only documented local normalization

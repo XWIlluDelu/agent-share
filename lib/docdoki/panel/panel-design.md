@@ -165,6 +165,12 @@ chrome.
 - Feedback: each edit and progress change lands in the dispatch panel and as
   toasts. «写回文件» writes them straight to the documents (surgical — one fragment
   each); «复制 PROMPT» emits one consolidated `follow` prompt as the fallback.
+  Write-back uses the page's per-process token, emits valid YAML for the
+  supported frontmatter subset, rejects the whole batch when an addressed field
+  changed since the page loaded, and rechecks each file immediately before its
+  replacement. A later conflict or replacement failure rolls back completed
+  replacements. If restoration itself fails, the save reports
+  the incomplete rollback explicitly.
 
 ## Guardrails
 

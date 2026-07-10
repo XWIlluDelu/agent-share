@@ -54,11 +54,14 @@ A useful audit report should include:
   "duplicate_ids": [],
   "broken_internal_links": [],
   "missing_referenced_assets": [],
+  "local_links": [],
+  "missing_local_links": [],
   "unreferenced_assets": [],
   "warnings": [],
   "unsupported_content": [],
   "remote_dependencies": [],
-  "external_links": []
+  "external_links": [],
+  "navigation_hazards": []
 }
 ```
 
@@ -88,9 +91,13 @@ Recommended lightweight checks:
 - Duplicate ids, broken internal links, unresolved
   `data-target`/`data-duplicate-of`/evidence refs.
 - Unauthorized remote render dependencies such as scripts, stylesheets, fonts,
-  iframes, remote media, or CDN math; executable links. Ordinary external
-  source/citation anchors are reported as `external_links`, not failed as
-  dependencies unless an offline-no-external policy is selected.
+  iframes, remote media, CSS URLs, responsive-image candidates, embedded
+  objects, or CDN math; executable links; missing local document links and
+  local CSS/media dependencies. Ordinary external source/citation anchors are
+  reported as `external_links`, not failed as dependencies unless an
+  offline-no-external policy is selected. `<base href>` and meta refresh are
+  strict navigation hazards because they change or bypass ordinary URL
+  resolution.
 - Visible `:focus-visible` and `:target` styles when the artifact has navigation
   or anchors; long URLs and code-like tokens wrap or scroll without body-level
   horizontal overflow.
@@ -116,9 +123,10 @@ JavaScript, remote fonts, or subjective aesthetic scores.
 Use `scripts/audit_html.py` for already-rendered HTML. It is a partial
 structural/source audit, not a full accessibility or visual test. It checks
 duplicate ids, missing `<main>` in strict mode, empty canonical text in strict
-mode, broken internal links, selected reference/evidence attributes, local asset
-references, remote render dependencies, executable links, external source links,
-minimal accessibility warnings, optional canonical text parity, selected
+mode, broken internal links, local document links, selected reference/evidence
+attributes, local asset references across HTML/CSS/srcset/object surfaces,
+remote render dependencies, executable links, navigation hazards, external
+source links, minimal accessibility warnings, optional canonical text parity, selected
 readability/design warnings, and emits JSON. `--strict` is a
 structural/source-boundary gate; it can still report accessibility, readability,
 design, or scholarly warnings without failing unless those warnings also violate

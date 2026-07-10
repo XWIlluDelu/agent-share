@@ -11,9 +11,11 @@ scope: ""
 non_goals: []
 evidence_standard: ""
 success_criterion: ""
-expansion_policy: "" # all-suitable-parallel by default; record any narrowing and its reason
+expansion_policy: "" # minimum-sufficient by default; all-suitable only when explicitly exhaustive; record expansion reasons
 allowed_tools: []
 allowed_models: []
+data_boundary: "" # approved providers/routes, sensitive inputs, redaction or local-only constraints
+artifact_destination: "" # runtime artifact dir or OS temp by default; project path only by request
 stop_rule: ""
 decision_owner: parent/final writer unless user names another owner
 run_status: full | reduced single model family | degraded single-agent claim audit | degraded missing perspective
