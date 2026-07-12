@@ -18,6 +18,7 @@ venv/
 
 # Runtime session artifacts
 .chaos/
+.pi-subagents/
 
 # OS
 .DS_Store
