@@ -2,9 +2,13 @@
 
 ## Mode chooser
 
+Skip/direct is the default and needs no gate. Every other row presupposes the
+gate (SKILL.md): the user asked for a deliberation mode by name, or said yes
+to a one-sentence proposal. No mode in this file is an entry point on its own.
+
 | Mode | Use when | Default shape | Required artifact | Stop condition |
 |---|---|---|---|---|
-| Skip/direct | Simple lookup, deterministic calculation, routine low-stakes work, raw divergent ideation, or tightly coupled work better solved by direct verification. | Direct verification by parent | Brief note if useful | Answer is directly verifiable |
+| Skip/direct | Reading or assessing a document, diff, or answer; simple lookup; deterministic calculation; routine work; raw divergent ideation; or tightly coupled work better solved by direct verification. | Direct verification by parent | Brief note if useful | Answer is directly verifiable |
 | Claim audit | An existing answer, plan, proposal, document, claim set, or diff needs claim-led stress testing or focused refutation before decision. | Extract claims → settle testable claims by test → parallel anonymized critique → status table → synthesis | Claim ledger; decision receipt when a decision follows | Claims have statuses or evidence is insufficient |
 | Council | Broad ambiguous decision or high-stakes research/design needs independent same-question first positions. | Frame → same-question independent positions → ledger → parent-routed cross-review → revision → synthesis/minority report | Position memos + ledger; escalation artifacts when used | No new material claims or useful narrowing remains |
 | Review loop | An implementation or artifact needs parent-controlled writing plus fresh independent review. | Validation contract → one writer → parallel fresh reviewers → synthesized fixes → validation | Ledger/receipt plus validation evidence | No fixes worth doing now or unapproved decision appears |
@@ -16,9 +20,9 @@ full council, run all suitable approved model-family advisers and useful
 evidence routes in parallel. Respect any stated budget, provider, privacy, or
 modality boundary.
 
-For every other activation, including proactive use for an important decision,
-start with the smallest sufficient independent set that covers the
-decision-relevant axes:
+Every other activation was explicitly requested or approved by the user — the
+gate (SKILL.md) — and starts with the smallest sufficient independent set that
+covers the decision-relevant axes:
 usually a broad position, a careful critic, a task/evidence specialist, and a
 counterpoint only when it adds a distinct source, method, failure mode, or model
 family. Expand only when an uncovered axis or unresolved claim could change the

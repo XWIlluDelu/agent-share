@@ -1,25 +1,36 @@
 ---
 name: chaos
-description: "Claim-led multi-agent deliberation for high-value ambiguous or risky judgment. Use when the user asks for CHAOS, council, multi-agent debate, structured disagreement, adversarial review, claim audit, minority report, stress-test, or evidence-standard synthesis; also use for important research/design/architecture/document-interpretation decisions needing independent dissent. Avoid simple lookup, deterministic calculation, routine low-stakes edits, raw brainstorming before pruning, or tightly coupled work better solved by direct verification."
+description: "Claim-led multi-agent deliberation for judgment that is both high-stakes and unsettleable by direct verification. Use when the user explicitly asks for CHAOS, council, multi-agent debate, structured disagreement, adversarial review, claim audit, minority report, stress-test, or evidence-standard synthesis. Unasked, never launch: when a decision is hard to reverse, costly if wrong, and undecidable by a direct read or check — all three together — propose deliberation in one sentence and let the user decide; felt importance is not even grounds to propose. Do directly, without this skill: reading or assessing documents and diffs, lookup, deterministic calculation, routine edits, brainstorming, and anything one agent can verify."
 ---
 
 # CHAOS
 
-Use CHAOS to make an important judgment survive independent search and
-adversarial criticism. The parent remains judge and final writer; agents advise.
+Use CHAOS to make a judgment that verification cannot settle survive
+independent search and adversarial criticism. The parent remains judge and
+final writer; agents advise.
 
 ## Gate
 
-Before launching agents, ask whether direct verification would answer better
-than plural deliberation. If yes, verify directly and skip CHAOS machinery. The
-gate also applies inside a run: any claim a cheap direct check can settle is
-settled by the check; deliberation handles only what verification cannot reach.
+CHAOS is off by default, and loading this skill is not a decision to run it.
+Launch agents only when the user asked for a deliberation mode by name.
+Unasked, the strongest case — a judgment hard to reverse, costly if wrong, and
+beyond direct verification, all three — buys a one-sentence proposal to the
+user, never a launch. Felt importance buys nothing: a task is not promoted to
+deliberation by mattering. Reading, reviewing, or assessing a document, diff,
+or answer is one reader's direct work, whatever its stakes, unless the user
+asked for independent review. When in doubt, work directly; when direct work
+exposes a genuinely contested claim, that is the moment to propose escalation
+— cheap to offer, and the user decides. The gate also applies inside a run:
+any claim a cheap direct check can settle is settled by the check;
+deliberation handles only what verification cannot reach.
 
-## Mode chooser
+## Modes after the gate
+
+Choose a deliberation mode only after the gate admits CHAOS.
 
 | Mode | Use when |
 |---|---|
-| Skip/direct | Simple lookup, deterministic calculation, routine low-stakes work, raw divergent ideation, or tightly coupled work better solved by direct verification. |
+| Skip/direct | Reading or assessing a document, diff, or answer; simple lookup; deterministic calculation; routine work; raw divergent ideation; or tightly coupled work better solved by direct verification. |
 | Claim audit | An existing answer, plan, proposal, document, claim set, or diff needs claim-led stress testing or focused refutation before decision. |
 | Council | Broad ambiguous decision or high-stakes research/design needs independent same-question first positions. |
 | Review loop | An implementation or artifact needs parent-controlled writing plus fresh independent review. |
