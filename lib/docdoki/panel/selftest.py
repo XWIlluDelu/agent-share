@@ -73,6 +73,28 @@ covers: [old-c]
 
 - duplicate
 """)
+    private_spec = write(root / "docdoki/private/specs/local.md", """---
+purpose: private purpose
+progress: not-started
+after: [a]
+covers: [local/**]
+---
+# Local
+
+## Goal
+
+- private claim
+""")
+    write(root / "docdoki/private/stages/handoff-local-2026-07-12.md", """---
+scope:
+  - local/**
+---
+# Local stage
+
+## Objective
+
+Keep local work resumable.
+""")
 
     print("frontmatter write-back")
     crlf = "---\r\npurpose: old\r\nprogress: not-started\r\n---\r\n# Title\r\n"
@@ -235,6 +257,59 @@ covers: [old-c]
         server.shutdown()
         server.server_close()
         thread.join()
+
+    print("private documents")
+    graph = panel.build_graph(root / "docdoki")
+    private_nodes = [node for node in graph["nodes"] if node.get("private")]
+    check(len(private_nodes) == 1 and private_nodes[0]["path"] == "docdoki/private/specs/local.md",
+          "graph includes private specs with a derived visibility flag")
+    private_stages = [stage for stage in graph["docs"]["stages"] if stage.get("private")]
+    check(len(private_stages) == 1 and private_stages[0]["title"] == "Local stage",
+          "documents rail includes private active stages")
+    ok, _ = panel.apply_edit(root, {
+        "path": "docdoki/specs/a.md", "field": "covers",
+        "from": "src/{a,b}/**, tests/**", "to": "src/private/**",
+    })
+    check(ok and panel.split_frontmatter(spec.read_text(encoding="utf-8"))[0]["covers"] == ["src/private/**"],
+          "project paths named private remain valid public covers")
+    before_public = spec.read_text(encoding="utf-8")
+    ok, msg = panel.apply_edit(root, {
+        "path": "docdoki/specs/a.md", "field": "after",
+        "from": "b, c", "to": "local",
+    })
+    check(not ok and "cannot reference private" in msg,
+          "write-back rejects a public after dependency on a private spec")
+    check(spec.read_text(encoding="utf-8") == before_public,
+          "rejected private dependency leaves the public spec unchanged")
+    ok, msg = panel.apply_edit(root, {
+        "path": "docdoki/specs/a.md", "field": "section", "section": "Notes",
+        "from": "- duplicate", "to": "See [[local]].",
+    })
+    check(not ok and "cannot reference private" in msg,
+          "write-back rejects a public prose link to a private document")
+    ok, msg = panel.apply_edit(root, {
+        "path": "docdoki/specs/a.md", "field": "section", "section": "Notes",
+        "from": "- duplicate", "to": "Read `../private/notes/local.md`.",
+    })
+    check(not ok and "cannot contain a private path" in msg,
+          "write-back rejects a plain relative path into the private overlay")
+    ok, _ = panel.apply_edit(root, {
+        "path": "docdoki/private/specs/local.md", "field": "content",
+        "from": "private purpose", "to": "private saved",
+    })
+    check(ok and panel.split_frontmatter(private_spec.read_text(encoding="utf-8"))[0]["purpose"] == "private saved",
+          "write-back edits a private spec in place")
+    duplicate = write(root / "docdoki/private/specs/a.md", "---\npurpose: duplicate\n---\n# Duplicate\n")
+    try:
+        panel.build_graph(root / "docdoki")
+        duplicate_rejected = False
+    except ValueError as ex:
+        duplicate_rejected = "duplicate DocDoki document stem" in str(ex)
+    duplicate.unlink()
+    check(duplicate_rejected, "panel rejects duplicate public/private spec stems")
+    rendered = panel.render(root / "docdoki")
+    check('privateLabel:"Private"' in rendered and '"private": true' in rendered,
+          "rendered panel labels private payloads")
 
     print("graph payload")
     graph = panel.build_graph(root / "docdoki")

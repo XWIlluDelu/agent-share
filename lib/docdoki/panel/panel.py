@@ -185,23 +185,27 @@ def rel(p: Path, root: Path) -> str:
 
 
 def build_graph(dd: Path) -> dict:
-    """Canvas = the spec pipeline (one node type, `after` edges). northstar, the
-    abstract, and active stages are not cards — they ride in the documents overlay
-    (`docs`), each as an ordered list of editable `## section` blocks."""
+    """Canvas = the public and private spec pipeline. Northstar, the abstract,
+    and public/private active stages ride in the documents overlay (`docs`)."""
     root = dd.parent
 
-    def doc(path: Path, did: str):
+    def doc(path: Path, did: str, private: bool = False):
         if not path.exists():
             return None
         _, body = split_frontmatter(path.read_text(encoding="utf-8"))
         return {"id": did, "path": rel(path, root), "title": h1(body) or path.stem,
+                "private": private,
                 "sections": [[k, v] for k, v in sections(body).items()]}
 
-    spec_dir = dd / "specs"
     raw = {}
-    for p in (sorted(spec_dir.glob("*.md")) if spec_dir.is_dir() else []):
-        fm, body = split_frontmatter(p.read_text(encoding="utf-8"))
-        raw[p.stem] = {"fm": fm, "secs": sections(body), "path": p, "body": body}
+    spec_roots = ((dd / "specs", False), (dd / "private" / "specs", True))
+    for spec_dir, private in spec_roots:
+        for p in (sorted(spec_dir.glob("*.md")) if spec_dir.is_dir() else []):
+            if p.stem in raw:
+                raise ValueError(f"duplicate DocDoki document stem: {p.stem}")
+            fm, body = split_frontmatter(p.read_text(encoding="utf-8"))
+            raw[p.stem] = {"fm": fm, "secs": sections(body), "path": p,
+                           "body": body, "private": private}
 
     def depth(name, seen=()):  # column = longest `after` chain (pipeline order)
         af = [a for a in (raw[name]["fm"].get("after") or []) if a in raw and a not in seen]
@@ -217,16 +221,22 @@ def build_graph(dd: Path) -> dict:
         title = h1(r["body"]) or name
         nodes.append({"id": sid, "kind": "spec", "title": title,
                       "content": fm.get("purpose", ""), "status": progress,
+                      "private": r["private"],
                       "path": rel(p, root), "edit": ["content", "title"],
                       "col": 1 + depth(name),
                       "claims": bullets(secs.get("Goal", "")), "after": after, "covers": covers})
 
-    st_dir = dd / "stages"
     stages = []
-    for p in (sorted(st_dir.glob("*.md")) if st_dir.is_dir() else []):  # active only; archived live in archive/
-        d = doc(p, "G:" + p.stem)
-        if d:
-            stages.append(d)
+    stage_roots = ((dd / "stages", False), (dd / "private" / "stages", True))
+    seen_stage_stems = set()
+    for stage_dir, private in stage_roots:
+        for p in (sorted(stage_dir.glob("*.md")) if stage_dir.is_dir() else []):
+            if p.stem in raw or p.stem in seen_stage_stems:
+                raise ValueError(f"duplicate DocDoki document stem: {p.stem}")
+            seen_stage_stems.add(p.stem)
+            d = doc(p, "G:" + p.stem, private)
+            if d:
+                stages.append(d)
 
     docs = {"northstar": doc(dd / "northstar.md", "northstar"),
             "abstract": doc(dd / "spec_abstract.md", "abstract"),
@@ -420,6 +430,40 @@ def atomic_write(path: Path, text: str) -> None:
         tmp.unlink(missing_ok=True)
 
 
+def visibility_error(root: Path, path: Path, edit: dict) -> str | None:
+    private_root = (root / "docdoki" / "private").resolve()
+    try:
+        path.relative_to(private_root)
+        return None
+    except ValueError:
+        pass
+
+    private_stems = {
+        candidate.stem for candidate in private_root.rglob("*.md")
+    } if private_root.is_dir() else set()
+    value = str(edit.get("to", ""))
+    targets = _split_list(value) if edit.get("field") == "after" else []
+    targets.extend(re.findall(r"\[\[([^\]#|]+)(?:[#|][^\]]*)?\]\]", value))
+    for target in targets:
+        normalized = target.replace("\\", "/").strip()
+        if normalized.rsplit("/", 1)[-1] in private_stems or normalized.startswith(("private/", "docdoki/private/")):
+            return f"public document cannot reference private document: {target}"
+    path_targets = re.findall(r"\]\(([^)\s]+)(?:\s+[^)]*)?\)", value)
+    path_targets.extend(re.findall(r"(?<![\w/.-])((?:(?:\.\.?)/)*private/[^\s`'\"\)\]]+)", value))
+    for href in path_targets:
+        if "://" in href or href.startswith(("#", "mailto:")):
+            continue
+        target = (path.parent / href.split("#", 1)[0]).resolve()
+        try:
+            target.relative_to(private_root)
+        except ValueError:
+            continue
+        return "public document cannot contain a private path"
+    if "docdoki/private/" in value:
+        return "public document cannot contain a private path"
+    return None
+
+
 def _apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
     if not edits:
         return [(False, "no edits")]
@@ -430,6 +474,10 @@ def _apply_edits(root: Path, edits: list[dict]) -> list[tuple[bool, str]]:
         path, msg = edit_path(root, e)
         if path is None:
             results.append((False, msg))
+            break
+        error = visibility_error(root, path, e)
+        if error:
+            results.append((False, error))
             break
         text = pending.get(path)
         if text is None:
@@ -688,6 +736,7 @@ TEMPLATE = r"""<!doctype html>
   .node.dirty .card{box-shadow:5px 5px 0 var(--red);}
   .node.dim{opacity:.4;} .node.nomatch{opacity:.18;} .node.hit .card{outline:3px solid var(--yellow);outline-offset:-1px;}
   .bar{padding:8px 11px 9px;background:#fff;border-bottom:2px solid #000;}
+  .privacy{float:right;font-family:var(--fs-ui);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#000;color:#fff;padding:2px 5px;margin-left:8px;}
   .pill{font-family:var(--fs-ui);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;
     padding:1px 6px;border:1.5px solid #000;background:#fff;color:#000;cursor:pointer;white-space:nowrap;display:flex;align-items:center;}
   .pill.editable::after{content:"";}
@@ -852,8 +901,8 @@ const GRAPH = __GRAPH_JSON__;
 const SAVE_TOKEN="__SAVE_TOKEN__";
 let lang=(localStorage.getItem("ddpanel-lang")||"en");
 const I18N={
- en:{searchPh:"Search… ( / )",clear:"Clear (Esc)",changes:"Changes",writeBack:"Write back",copyPrompt:"Copy",clearBtn:"Clear",emptyChanges:"No changes yet.",emptyCanvas:"No specs to show yet.",expand:"Expand",collapse:"Collapse",noClaims:"no claims",goalClaims:"Goal / claims",emptyBody:"(empty)",saved:"Written back — now let the agent follow",copied:"Prompt copied",saveFail:"Write-back failed: ",undo:"undo",mmTip:"Click/drag to navigate",connMode:"Connect mode — click two cards to toggle",connOff:"Connect (c)",connected:"Connected",disconnected:"Disconnected",zoomLock:"Lock zoom",zoomLocked:"Zoom locked — click to release",langBtn:"中",railDocs:"Documents",docNorthstar:"Northstar",docAbstract:"Abstract",docStage:"Active stages",docMissing:"This document does not exist yet.",noStages:"No active stages.",promptIntro:"These edits come from the docdoki panel; treat them as one human document edit and follow them: apply each to its file, then propagate into the other documents and the code, judging order and method yourself.",fields:{content:"content",claim:"claim",title:"title",after:"after",covers:"covers",progress:"progress",section:"section"}},
- zh:{searchPh:"搜索… ( / )",clear:"清除 (Esc)",changes:"改动",writeBack:"写回文件",copyPrompt:"复制",clearBtn:"清空",emptyChanges:"还没有改动。",emptyCanvas:"该库还没有可呈现的规格。",expand:"展开",collapse:"收起",noClaims:"无断言",goalClaims:"目标 / 断言",emptyBody:"（空）",saved:"已写回文件 — 现在执行 follow",copied:"提示已复制",saveFail:"写回失败：",undo:"撤销",mmTip:"点击/拖动定位",connMode:"连接模式 — 点两张卡切换连接",connOff:"连接 (c)",connected:"已连接",disconnected:"已断开",zoomLock:"锁定缩放",zoomLocked:"缩放已锁定 — 点击解锁",langBtn:"EN",railDocs:"文档",docNorthstar:"北极星",docAbstract:"设计图",docStage:"进行中阶段",docMissing:"该文档尚不存在。",noStages:"没有进行中的阶段。",promptIntro:"这些改动来自 docdoki 面板的一次编辑，请作为一次人类文档编辑来 follow：把每一项落到对应文件，再传播到其他文档与代码，顺序与做法你自行判断。",fields:{content:"内容",claim:"断言",title:"标题",after:"after",covers:"covers",progress:"进度",section:"小节"}}
+ en:{searchPh:"Search… ( / )",clear:"Clear (Esc)",changes:"Changes",writeBack:"Write back",copyPrompt:"Copy",clearBtn:"Clear",emptyChanges:"No changes yet.",emptyCanvas:"No specs to show yet.",expand:"Expand",collapse:"Collapse",privateLabel:"Private",noClaims:"no claims",goalClaims:"Goal / claims",emptyBody:"(empty)",saved:"Written back — now let the agent follow",copied:"Prompt copied",saveFail:"Write-back failed: ",undo:"undo",mmTip:"Click/drag to navigate",connMode:"Connect mode — click two cards to toggle",connOff:"Connect (c)",connected:"Connected",disconnected:"Disconnected",zoomLock:"Lock zoom",zoomLocked:"Zoom locked — click to release",langBtn:"中",railDocs:"Documents",docNorthstar:"Northstar",docAbstract:"Abstract",docStage:"Active stages",docMissing:"This document does not exist yet.",noStages:"No active stages.",promptIntro:"These edits come from the docdoki panel; treat them as one human document edit and follow them: apply each to its file, then propagate into the other documents and the code, judging order and method yourself.",fields:{content:"content",claim:"claim",title:"title",after:"after",covers:"covers",progress:"progress",section:"section"}},
+ zh:{searchPh:"搜索… ( / )",clear:"清除 (Esc)",changes:"改动",writeBack:"写回文件",copyPrompt:"复制",clearBtn:"清空",emptyChanges:"还没有改动。",emptyCanvas:"该库还没有可呈现的规格。",expand:"展开",collapse:"收起",privateLabel:"私有",noClaims:"无断言",goalClaims:"目标 / 断言",emptyBody:"（空）",saved:"已写回文件 — 现在执行 follow",copied:"提示已复制",saveFail:"写回失败：",undo:"撤销",mmTip:"点击/拖动定位",connMode:"连接模式 — 点两张卡切换连接",connOff:"连接 (c)",connected:"已连接",disconnected:"已断开",zoomLock:"锁定缩放",zoomLocked:"缩放已锁定 — 点击解锁",langBtn:"EN",railDocs:"文档",docNorthstar:"北极星",docAbstract:"设计图",docStage:"进行中阶段",docMissing:"该文档尚不存在。",noStages:"没有进行中的阶段。",promptIntro:"这些改动来自 docdoki 面板的一次编辑，请作为一次人类文档编辑来 follow：把每一项落到对应文件，再传播到其他文档与代码，顺序与做法你自行判断。",fields:{content:"内容",claim:"断言",title:"标题",after:"after",covers:"covers",progress:"进度",section:"小节"}}
 };
 const STATUS={en:{"not-started":"not started","in-progress":"in progress",done:"done"},zh:{"not-started":"未开始","in-progress":"进行中",done:"已完成"}};
 const STATUS_OPTS={spec:["not-started","in-progress","done"]};
@@ -960,7 +1009,7 @@ function cardHTML(id){
   return `<div class="node ${n.kind} c-${esc(status)} ${dirty?"dirty":""} ${selId===id?"sel":""} ${connPick===id?"conn-pick":""} ${open.has(id)?"open":""} ${dim?"dim":""} ${nomatch?"nomatch":""} ${hit?"hit":""}" data-node="${id}">
     <div class="card" tabindex="0" aria-label="${esc(title)} — ${esc(statusLabel(status))}">
       <div class="bar">
-        <div class="ttl" data-id="${id}" data-f="title" title="${esc(n.title)}" ${editT&&titleEditing.has(id)?`contenteditable`:""}>${esc(title)}</div></div>
+        ${n.private?`<span class="privacy">${esc(t("privateLabel"))}</span>`:""}<div class="ttl" data-id="${id}" data-f="title" title="${esc(n.title)}" ${editT&&titleEditing.has(id)?`contenteditable`:""}>${esc(title)}</div></div>
       ${body}
       <div class="more">${more}</div>
       <div class="foot"><button data-toggle="${id}">${open.has(id)?t("collapse"):t("expand")}</button><span class="pill c-${esc(status)} ${pillEditable?"editable":""}" ${pillEditable?`data-status="${id}" tabindex="0" role="button"`:""}>${esc(statusLabel(status))}</span></div>
@@ -1230,11 +1279,12 @@ const ovLabel=k=>k==="northstar"?t("docNorthstar"):k==="abstract"?t("docAbstract
 function secHTML(id,name){const k=chKey(id,"section",name),dirty=CH.has(k),o=ORIG[id];
   const text=dirty?CH.get(k).to:((o&&o.sections&&o.sections[name]!=null)?o.sections[name]:"");
   return `<div class="ov-sec ${dirty?"dirty":""}"><h4>${esc(name)}</h4><div class="docsec" contenteditable data-id="${esc(id)}" data-f="section" data-i="${esc(name)}" data-ph="${esc(t('emptyBody'))}">${esc(text)}</div></div>`;}
+function privacyHTML(d){return d&&d.private?`<span class="privacy">${esc(t("privateLabel"))}</span>`:"";}
 function docHTML(d){if(!d)return '<div class="ov-empty">'+esc(t("docMissing"))+'</div>';
   const secs=d.sections.length?d.sections.map(([n])=>secHTML(d.id,n)).join(""):'<div class="ov-empty">'+esc(t("emptyBody"))+'</div>';
-  return `<div class="ov-doc"><div class="ov-h1">${esc(d.title)}</div>${secs}</div>`;}
+  return `<div class="ov-doc"><div class="ov-h1">${privacyHTML(d)}${esc(d.title)}</div>${secs}</div>`;}
 function stagesHTML(list){if(!list||!list.length)return '<div class="ov-empty">'+esc(t("noStages"))+'</div>';
-  return list.map(d=>`<div class="ov-doc"><div class="ov-h1">${esc(d.title)}</div>${d.sections.map(([n])=>secHTML(d.id,n)).join("")}</div>`).join("");}
+  return list.map(d=>`<div class="ov-doc"><div class="ov-h1">${privacyHTML(d)}${esc(d.title)}</div>${d.sections.map(([n])=>secHTML(d.id,n)).join("")}</div>`).join("");}
 function renderOverlay(){
   document.getElementById("ov-tabs").innerHTML=["northstar","abstract","stage"].map(k=>`<button class="ov-tab ${ovTab===k?"on":""}" data-tab="${k}">${esc(ovLabel(k))}</button>`).join("");
   const b=document.getElementById("ov-body");

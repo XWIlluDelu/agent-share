@@ -24,13 +24,15 @@ is to keep two alignments current when the protocols run: the human's design ↔
 high level; the agent carries the detail, keeps the library true, and does
 almost all the upkeep.
 
-It is a library, not a program. The protocol names below (`follow`, `challenge`,
-`groom`, …) are codenames for procedures *you*, the agent, carry out with
-ordinary Read / Edit / Bash (including git). There is no CLI and nothing to
-invoke; `follow` means "the human edited a document — understand the change,
-polish it, and align the implementation to it," and `challenge` means "reconcile
-the documents with the code — find untrue records or wrong implementation and
-repair them." You read this skill, then act.
+It is a library, not an application. The protocol names below (`follow`,
+`challenge`, `groom`, …) are codenames for procedures *you*, the agent, carry
+out with ordinary Read / Edit / Bash (including git); there is no protocol CLI.
+`follow` means "the human edited a document — understand the change, polish it,
+and align the implementation to it," and `challenge` means "reconcile the
+documents with the code — find untrue records or wrong implementation and
+repair them." The bundled `scripts/check_privacy.py` is narrower: it performs
+the deterministic Git and reference checks for private documents. You read this
+skill, then act.
 
 ## Protocols
 
@@ -58,12 +60,17 @@ nothing else. Full procedures: `references/operations.md`.
 
 ```text
 <unit>/docdoki/
-  northstar.md            # intent: mission, success criteria, hard constraints
-  spec_abstract.md        # the design map across areas + cross-spec direction
-  specs/<name>.md         # one per code/data area; covers globs index the code
-  stages/<protocol>-<topic>-<date>.md          # active work + handoff state
-  stages/archive/<protocol>-<topic>-<date>.md  # closed snapshots, not routine input
-  notes/<topic>.md        # reusable methods, gotchas, and evidence, with source pointers
+  northstar.md            # public intent: mission, success criteria, hard constraints
+  spec_abstract.md        # public design map + cross-spec direction
+  specs/<name>.md         # public contracts; covers globs index the code
+  stages/<protocol>-<topic>-<date>.md          # public active work + handoff state
+  stages/archive/<protocol>-<topic>-<date>.md  # public closed snapshots
+  notes/<topic>.md        # public reusable methods, gotchas, and evidence
+  private/                # gitignored local overlay; same schemas
+    specs/<name>.md
+    stages/<protocol>-<topic>-<date>.md
+    stages/archive/<protocol>-<topic>-<date>.md
+    notes/<topic>.md
 ```
 
 The layering matches who keeps each thing true most cheaply, and what the human
@@ -78,21 +85,26 @@ needs to see:
 - **`stages/*.md`** and **`notes/*.md`** are the depth: work in flight, dead
   ends, methods, gotchas. The agent retrieves them on demand; the human need not
   hold them.
+- **`private/`** is part of the same library, not a side channel. Its specs,
+  stages, and notes use the same schemas, stage selection, grooming, and unique
+  filename stems as public documents. The path is the visibility authority:
+  public documents may not depend on private documents, while private documents
+  may reference public ones. A public clone must remain internally true without
+  the overlay. Credentials, private keys, and tokens never enter either scope.
 
 Which document a grounded fact enters is a two-step test, and getting it wrong is
 the root of most drift:
 
 1. **Does it enter the library at all?** Keep what constrains or teaches the work
-   — a contract, a method, a gotcha, a reason worth not re-deriving. Drop what only
-   records that an action happened: identity and inventory (host names, addresses,
-   machine specs), byte counts, timings, and "we downloaded / built / verified"
-   narration. That is execution residue; git and the run already hold it. Keep the
-   capability that binds (what the run requires), not the identity that locates
-   (which machine, which address) — everywhere except the stage. The stage is the
-   handoff surface, so it alone may hold the concrete locations a fresh agent
-   needs to resume (hosts, paths, log and artifact locations); they serve the
-   handoff and are discarded when the stage closes. Select by information density
-   against the space you have — a dense summary beats an exhaustive log.
+   — a contract, a method, a gotcha, a reason worth not re-deriving. Drop what
+   only records that an action happened: byte counts, timings, and "we downloaded
+   / built / verified" narration. Identity and inventory need the same
+   load-bearing test rather than automatic deletion: a host alias or local path
+   that durably changes how future work runs belongs in a private note; a
+   transient location needed only to resume belongs in the matching stage; a
+   public document keeps the portable capability rather than the local identity.
+   Select by information density against the space you have — a dense summary
+   beats an exhaustive log.
 2. **Which layer?** A **spec** is a standing assertion the implementation must
    satisfy — true of the code as it stands, re-checkable against a code target at
    any time. A how-to, a gotcha, reusable evidence, or the residue of a completed
@@ -127,8 +139,12 @@ parent/child links: `references/schemas.md`.
 - **Record only what you have grounds for** — read from the code, or heard from
   the human. Reconstructing what the code does is grounds; ungrounded guessing
   is not. Grounds admits a fact; it does not select it — whether a grounded fact
-  belongs in the library at all, and in which layer, is the two-step test under
-  Documents.
+  belongs in the library at all, in which layer, and in which visibility scope
+  is the routing test under Documents.
+- **Keep the private boundary physical.** Put private documents only under
+  `docdoki/private/`, keep that subtree ignored and untracked, and run
+  `scripts/check_privacy.py <unit>` after init and whenever visibility or
+  references change. Never use frontmatter as the access-control authority.
 - **Forgetting keeps only a recovery trace.** When you drop low-value content,
   the working tree reads as if it had always said the current thing. Only
   committed text has that recovery trace; durable lessons are routed before
@@ -162,9 +178,10 @@ Read the relevant reference before acting.
 - `references/schemas.md` — document schemas, covers, parent/child links.
 - `references/stages.md` — stage selection, handoff, and the close lifecycle.
 
-An optional panel (`panel/panel.py` in this skill) projects the library as an
-editable dell-1996 (catalog-era visual language) canvas — a bonus surface whose
-write-backs are ordinary human document edits that `follow` handles, and whose
-copy prompt is spoken intent; it does not block use. `init` links the script into the project's agent-tooling
+An optional panel (`panel/panel.py` in this skill) projects public and private
+specs and active stages on one editable dell-1996 (catalog-era visual language)
+canvas, marking private items from their path. Its write-backs are ordinary
+human document edits that `follow` handles, and its copy prompt is spoken intent;
+it does not block use. `init` links the script into the project's agent-tooling
 directory and notes the run command, so the panel is discoverable per project
 while the script remains the single authority.

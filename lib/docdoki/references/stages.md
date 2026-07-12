@@ -8,7 +8,9 @@ See `references/schemas.md` for the frontmatter and section list.
 
 ## Selecting a stage
 
-When an operation targets a stage, choose by:
+Treat public `docdoki/stages/*.md` and private
+`docdoki/private/stages/*.md` as one active-stage set. When an operation targets
+a stage, choose by:
 
 1. explicit user mention;
 2. unique match by `scope` (the path globs the stage touches);
@@ -18,7 +20,9 @@ When an operation targets a stage, choose by:
 Multiple active stages are normal for multi-agent, multi-branch, or
 multi-objective work, and are justified when objectives or scopes differ.
 Overlapping scopes are a coordination signal, not an error: when you notice
-overlap, name the stage explicitly rather than guess.
+overlap, name the stage explicitly rather than guess. A public operation cannot
+be handed off through a private stage alone; its public state must remain
+resumable without the overlay.
 
 ## Creating vs reusing
 
@@ -49,6 +53,8 @@ or a new one; the completion fact and non-durable closure rationale → the seal
 commit body. Then rewrite the stage into a compact final snapshot and move the
 file to `docdoki/stages/archive/`.
 
-Archived stages are closed reference snapshots. They are excluded from routine
-status reading and challenge, and read only on explicit request or when current
-documents lack context they should have contained.
+Archived stages are closed reference snapshots under the matching visibility
+scope. They are excluded from routine status reading and challenge, and read
+only on explicit request or when current documents lack context they should
+have contained. Closing or merging a stage preserves its visibility unless the
+human explicitly changes the disclosure boundary.

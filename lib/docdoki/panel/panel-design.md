@@ -70,8 +70,9 @@ chrome.
   matching footer cells: natural width, same padding and height, no independent
   sticker border; Expand has a `2px` right divider, status has a `2px` left
   divider, matching the card border weight, and uses the progress tint.
-  Selection shows a `5px 5px
-  0 #000` offset shadow, a pending edit a red one. The title itself is the only
+  A private spec carries a compact black `PRIVATE`/`私有` label in the title bar,
+  derived from its path and never editable. Selection shows a `5px 5px 0 #000`
+  offset shadow, a pending edit a red one. The title itself is the only
   editable title surface and shrinks to its text width; every other part of the
   card — title-bar padding, tinted body margins, the expanded details, the footer
   gap — is a single select/drag surface, and only the live controls (editable
@@ -93,8 +94,9 @@ chrome.
   vertical label) so the canvas claims the width; the collapsed state is a
   persisted preference.
   Sections are `## section` blocks — a Helvetica caps header bar over an
-  editable Times body; a pending edit shows a red offset shadow. Active stages
-  list one such block-stack each.
+  editable Times body; a pending edit shows a red offset shadow. Public and
+  private active stages list one such block-stack each, with private stages
+  carrying the same path-derived label as private spec cards.
 - Dispatch panel: black header + yellow count badge; change cards as mini
   ribbons. Each card carries a field-label sticker tag (content / claim / title
   / progress / after / section …), the spec or document name (plus the section
@@ -182,6 +184,10 @@ chrome.
   periwinkle / steel); the palette is closed — no custom desaturated variants.
 - Status must always read from both the tint and the pill; color maps to real
   state.
+- Private labeling comes only from the document path. The panel may display and
+  edit private documents but never changes their visibility or moves them.
+  Write-back rejects public `after` dependencies, wiki-links, or paths that
+  target private documents.
 - Hard offset shadows and the page frame are the only depth; no soft shadows, no
   gradients, no border-radius on working surfaces.
 - Switching EN/中 must not reflow the layout: buttons whose label changes with

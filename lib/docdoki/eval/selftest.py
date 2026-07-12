@@ -210,6 +210,33 @@ def test_skill_routing_boundaries() -> None:
     ok("routing boundaries")
 
 
+def test_private_boundary_assets() -> None:
+    assert_file(ROOT / "scripts/check_privacy.py", "private-boundary checker")
+    assert_file(ROOT / "scripts/selftest.py", "private-boundary self-test")
+    text = "\n".join(
+        (ROOT / rel).read_text(encoding="utf-8")
+        for rel in ["SKILL.md", "references/philosophy.md", "references/operations.md", "references/schemas.md"]
+    ).lower()
+    required = [
+        "docdoki/private/",
+        "public documents may not depend on private documents",
+        "scripts/check_privacy.py",
+        "credentials, private keys, and tokens",
+    ]
+    for fragment in required:
+        if fragment not in text:
+            fail(f"private-boundary docs missing: {fragment}")
+    cases = load_json(CASES)["positive_cases"]
+    covered = {
+        case["protocol"] for case in cases
+        if "private" in case["id"]
+    }
+    expected = {"init", "adopt", "follow", "challenge", "groom", "handoff"}
+    if covered != expected:
+        fail(f"private protocol coverage mismatch: missing={sorted(expected - covered)} extra={sorted(covered - expected)}")
+    ok("private boundary assets")
+
+
 def main() -> None:
     test_manifest_shape()
     test_fixture_links()
@@ -217,7 +244,8 @@ def main() -> None:
     test_challenge_rides_along_golden()
     test_groom_stage_noise_fixture()
     test_skill_routing_boundaries()
-    print("\n6 passed, 0 failed")
+    test_private_boundary_assets()
+    print("\n7 passed, 0 failed")
 
 
 if __name__ == "__main__":

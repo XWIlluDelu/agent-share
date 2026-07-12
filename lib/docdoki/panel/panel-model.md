@@ -10,10 +10,11 @@ understanding, propagation, and alignment stay with the agent through `follow`
 and the other protocols. Without it the library still works in full; with it, a
 human just sees the documents more easily and is more willing to maintain them.
 
-Its nature is presentation. The panel reads project facts from documents and
-computes only view state: layout, grouping, and panel-owned display defaults
-such as absent `progress` rendering as `not-started`. It does not infer new
-project facts. It generally shows only the *important* information, organized in
+Its nature is presentation. The panel reads public and private project facts
+from the one library and computes only view state: layout, grouping,
+path-derived private labels, and panel-owned display defaults such as absent
+`progress` rendering as `not-started`. It does not infer new project facts or
+change visibility. It generally shows only the *important* information, organized in
 the most intuitive way, without being bound by which documents that information
 happens to be scattered across. An intuitive, interactive surface lowers the
 barrier to using the system and raises the will to use it; the panel is not

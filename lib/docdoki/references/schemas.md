@@ -8,6 +8,7 @@ falls back to the raw lowercase filename stem when it is missing.
 ## Contents
 
 - Formatting conventions
+- Visibility and private overlay
 - northstar.md
 - spec_abstract.md
 - specs/*.md (+ covers)
@@ -44,6 +45,37 @@ sight during `groom`.
   sentences, not a mix. Prose is the default for anything explanatory. Use a
   table only for data that is actually tabular (rows sharing columns), and keep
   the pipes readable.
+
+## Visibility and private overlay
+
+Document visibility is derived only from path. The existing library root is
+public; private documents live under a gitignored overlay:
+
+```text
+docdoki/private/
+  specs/<name>.md
+  stages/<protocol>-<topic>-<date>.md
+  stages/archive/<protocol>-<topic>-<date>.md
+  notes/<topic>.md
+```
+
+Private specs, stages, and notes use the same frontmatter and body schemas as
+their public counterparts. Do not add a `visibility` or `private` frontmatter
+field: it would duplicate the path authority without enforcing Git behavior.
+`northstar.md` and `spec_abstract.md` remain the single public intent and design
+surfaces; private constraints and context descend into private specs, stages,
+or notes rather than creating parallel high-level authorities.
+
+Filename stems remain unique across both scopes and archives. A private document
+may use `[[stem]]` to reference a public document. A public document may not
+reference a private stem or path, because the public library must remain true
+when the overlay is absent. `covers` globs in private specs are still relative
+to the unit root, not to `docdoki/private/`.
+
+The unit's `.gitignore` contains `/docdoki/private/`. Verify every private file
+is ignored and none is tracked by the public repository with
+`scripts/check_privacy.py <unit>`. Secrets do not become document-safe merely by
+being ignored: credentials, private keys, and tokens never enter this subtree.
 
 ## northstar.md
 
@@ -296,7 +328,9 @@ output, or a commit. Notes never hold requirements or active tasks.
 - Cross-references: a document is addressed by its filename stem — the identifier
   a spec's `after:` uses, that `challenge` names, and that a `[[stem]]` wiki-link
   points to in prose. `[[stem]]` is a reading aid the reader resolves, not
-  tooling, so keep stems unique across the whole library: a `specs/x.md` beside a
-  `notes/x.md` makes `[[x]]` ambiguous. Because a reference keys on the stem and
-  not the path, moving a document between directories leaves references intact;
-  renaming its file breaks them, so update the references when you rename.
+  tooling, so keep stems unique across the public tree, private overlay, and
+  archives: a public `specs/x.md` beside `private/notes/x.md` is still ambiguous.
+  Because a reference keys on the stem and not the path, moving a document
+  between directories leaves references intact; renaming its file breaks them,
+  so update the references when you rename. Public documents cannot reference
+  private stems; run the privacy checker after cross-scope moves or edits.

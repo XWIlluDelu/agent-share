@@ -272,7 +272,7 @@ skills:
     pack: always-on
     source_repo: custom
     source_path: "lib/docdoki"
-    notes: "Custom living-documentation skill for docdoki/ libraries. Protocol-based and scriptless: the agent executes procedures with Read/Edit/Bash, no CLI."
+    notes: "Custom living-documentation skill for docdoki/ libraries. The agent executes semantic protocols with Read/Edit/Bash; a bundled deterministic checker enforces the gitignored private-document boundary, and the optional panel presents both visibility scopes."
 
   - name: project-setup
     pack: always-on

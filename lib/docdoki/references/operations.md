@@ -1,12 +1,15 @@
 # Operations
 
 The procedure behind each protocol. A protocol is a codename for work you do
-with Read / Edit / Bash (including git) — there is nothing to invoke and there
-is no script. You read this skill, then act.
+with Read / Edit / Bash (including git) — there is no protocol CLI. The bundled
+privacy checker is deterministic enforcement, not a semantic protocol. You read
+this skill, then act.
 
 Three rules run through every procedure: read before you write; record only what
 you have grounds for; and when documents and code disagree, never weaken a
-correct spec to ratify wrong code. The reasoning is in
+correct spec to ratify wrong code. Public and private documents are read as one
+library, but propagation preserves the path-defined visibility boundary: public
+content cannot depend on private content. The reasoning is in
 `references/philosophy.md`.
 
 ## Contents
@@ -22,23 +25,29 @@ correct spec to ratify wrong code. The reasoning is in
 ## init
 
 Scaffold a library for a new project: create `docdoki/northstar.md` and
-`spec_abstract.md` from the schemas, plus the `specs/ stages/ stages/archive/
-notes/` directories. If the unit is not already inside a git repository, run
-`git init` first: committed history is the recovery trace for committed content
-removed during grooming, so a docdoki library should normally live in one. In a
-child unit (a parent `docdoki/` exists above), write `parent:` into the child
-northstar and add the child under the parent's `## Units`. Then draft
-`northstar.md` from the user's stated intent and offer it for review — it is the
-only high-threshold document, so the human is its source and approver, not its
-typist. Link the panel script (`panel/panel.py` in this skill) into the
-project's agent-tooling directory so it is discoverable from the project root,
-and record the run command in a note under `notes/` — the script stays the
-single authority; only the link and the note live in the project.
+`spec_abstract.md` from the schemas, plus the public `specs/ stages/
+stages/archive/ notes/` directories and the local
+`private/{specs,stages,stages/archive,notes}/` overlay. If the unit is not
+already inside a git repository, run `git init` first: committed history is the
+recovery trace for public content removed during grooming, so a DocDoki library
+should normally live in one. Add `/docdoki/private/` to the unit's `.gitignore`
+without replacing existing rules, then verify the path is ignored and untracked
+with `scripts/check_privacy.py <unit>`. In a child unit (a parent `docdoki/`
+exists above), write `parent:` into the child northstar and add the child under
+the parent's `## Units`. Then draft `northstar.md` from the user's stated intent
+and offer it for review — it is the only high-threshold document, so the human
+is its source and approver, not its typist. Link the panel script
+(`panel/panel.py` in this skill) into the project's agent-tooling directory so it
+is discoverable from the project root, and record the run command in a public
+note under `notes/` — the script stays the single authority; only the link and
+the note live in the project.
 
 ## adopt
 
 Generate a library for a project that already has code. Read the code deeply —
-entrypoints, data flow, public contracts, tests — then write:
+entrypoints, data flow, public contracts, tests — and read any existing private
+overlay. Route portable claims to public documents and durable local-only
+context to `docdoki/private/`, then write:
 
 1. `northstar.md` — mission, success criteria, hard constraints. Offer it for
    review before treating it as settled.
@@ -58,10 +67,12 @@ and flag it as not yet checked.
 
 ## ask
 
-Read-only project Q&A. Answer from the documents plus read-only code checks,
-keeping distinct what a document *claims*, what the code actually *does*, where
-they *disagree*, and what you *could not verify*. Change no project meaning. If
-the question reveals drift worth fixing, say so and point to `challenge`.
+Read-only project Q&A. Answer from public and private documents plus read-only
+code checks, keeping distinct what a document *claims*, what the code actually
+*does*, where they *disagree*, and what you *could not verify*. Do not expose
+private context in an answer intended for a public artifact. Change no project
+meaning. If the question reveals drift worth fixing, say so and point to
+`challenge`.
 
 ## follow
 
@@ -79,7 +90,9 @@ A human edit to `spec_abstract.md` is the common case: propagate the design
 direction into concrete specs and code, or record an explicit open mismatch.
 Treat the human's text as rough intent, not final wording — re-understand it
 into the written result, and flag what you propagate as not yet checked against
-the code until you have audited it.
+the code until you have audited it. A private edit stays private unless the
+human also settled a portable claim that independently belongs in the public
+library; write that claim without making it depend on the private source.
 
 A panel write-back (`panel/`) is one of these human document edits — it writes
 straight to the file, so you find and follow it exactly the same way. If the
@@ -90,10 +103,10 @@ intent.
 
 Reconcile the documents with the implementation. This is the anti-rot pass.
 
-It runs on a scope you are given or choose: a single spec, a module or area, or
-the whole library. (It also rides along whenever you work in code a spec covers
-— reconcile what you touched.) For each spec in scope, read the code under its
-`covers`, compare it to the claims, and reconcile. git is there to focus you —
+It runs on a scope you are given or choose: a public or private spec, a module
+or area, or the whole library. (It also rides along whenever you work in code a
+spec covers — reconcile what you touched.) For each spec in scope, read the code
+under its `covers`, compare it to the claims, and reconcile. git is there to focus you —
 `git diff` or `git log` over `covers` shows what moved recently — but it only
 points; the judgment is yours, reading the code.
 
@@ -154,10 +167,12 @@ quota. Don't manufacture cleanup — if nothing crosses the threshold of being
 worth a change, the pass is already done. The aim is a library that reads as
 though it had always been this clean, not a library in constant churn.
 
-Grooming never blocks and never asks permission for ordinary cleanup. The one
-thing it does not do on its own is rewrite `northstar.md`'s intent or weaken
-`spec_abstract.md`'s direction — those carry the human's design, so propose the
-change and let the human decide.
+Grooming never blocks and never asks permission for ordinary cleanup. It never
+moves a document across the public/private boundary without explicit human
+intent; that is a disclosure decision, not ordinary cleanup. It also does not
+rewrite `northstar.md`'s intent or weaken `spec_abstract.md`'s direction on its
+own — those carry the human's design, so propose the change and let the human
+decide.
 
 ## handoff
 
@@ -191,10 +206,10 @@ These are not separate protocols; they happen inside the ones above.
   stages, which specs look behind (read their `covers`, or `git diff`/`git log`
   over it, to check), and what needs attention. It is a reading, not a stored
   artifact.
-- **route** — move content to its right home during `follow`, `challenge`,
-  `groom`, and stage close: durable content out of a stage or note where it is
-  buried, and — the reverse — transient status back to the stage when it has
-  crept into a spec or the abstract's design map.
+- **route** — move content to its right layer during `follow`, `challenge`,
+  `groom`, and stage close while preserving visibility: durable content out of
+  a stage or note where it is buried, and — the reverse — transient status back
+  to the stage when it has crept into a spec or the abstract's design map.
 - **stage close** — when a stage's objective is done, abandoned, or superseded,
   route its durable content, then archive it (`references/stages.md`).
 

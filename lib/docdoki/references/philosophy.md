@@ -10,6 +10,7 @@ level of principle, not mechanism.
 - What docdoki is
 - Ownership
 - Collaboration
+- Visibility
 - What stays out
 
 ## The problem
@@ -123,6 +124,27 @@ an agent-maintained, human-steered substrate.
   decides.
 - Nothing blocks. Drift and pending work are visible obligations, not gates; the
   human stays in flow.
+
+## Visibility
+
+Public and private documents are two visibility scopes of one semantic library.
+The public tree must remain true and usable when the private overlay is absent;
+private documents may add local contracts, operational context, and evidence,
+but public documents may not depend on them. This direction lets a public clone
+stand alone while a local agent reads the richer library through the same
+`docdoki/` root.
+
+Visibility is a storage property, not descriptive metadata. Files under
+`docdoki/private/` are private; files elsewhere in the library are public. The
+path lets Git ignore the content before any hook or checker runs. A frontmatter
+field would require generated ignore entries and could leak a newly created or
+already tracked file when that generation step was missed.
+
+The private subtree is ignored by the public repository, so it has no recovery
+history there. When private documents need versioned recovery, make that subtree
+an independently access-controlled Git repository while the public parent still
+ignores it. Git ignore is not a secret vault: credentials, keys, and tokens stay
+in the system that owns them, never in either document scope.
 
 ## What stays out
 

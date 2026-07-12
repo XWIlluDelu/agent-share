@@ -103,6 +103,79 @@
         "rewrites the stage toward current state instead of appending a transcript",
         "prints a short kickoff prompt and does not route durable content outside the stage during handoff"
       ]
+    },
+    {
+      "id": "follow-private-compute-context",
+      "protocol": "follow",
+      "mode": "write",
+      "prompt": "Record my configured compute-server aliases for agents to use, but keep that machine-local context out of the public GitHub repository.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/philosophy.md", "references/schemas.md"],
+      "checks": [
+        "writes the durable local context under docdoki/private/ rather than a side-channel directory",
+        "keeps portable compute requirements public without making public documents reference the private note",
+        "ensures /docdoki/private/ is ignored and untracked and runs scripts/check_privacy.py",
+        "does not store credentials, keys, or tokens in either visibility scope"
+      ]
+    },
+    {
+      "id": "init-private-overlay",
+      "protocol": "init",
+      "mode": "write",
+      "prompt": "Initialize DocDoki for a repository that will be public but also needs local private operational notes.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "creates public library directories and docdoki/private/{specs,stages,stages/archive,notes}",
+        "adds /docdoki/private/ without replacing existing .gitignore rules",
+        "runs scripts/check_privacy.py and leaves no private path tracked by public Git"
+      ]
+    },
+    {
+      "id": "adopt-private-overlay",
+      "protocol": "adopt",
+      "mode": "write",
+      "prompt": "Adopt this codebase and its existing docdoki/private notes without exposing local deployment details.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/philosophy.md", "references/schemas.md"],
+      "checks": [
+        "reads public and private documents as one semantic library",
+        "routes portable contracts to public specs and durable local-only context to private specs or notes",
+        "keeps the public library independently true when the private overlay is absent"
+      ]
+    },
+    {
+      "id": "challenge-private-spec",
+      "protocol": "challenge",
+      "mode": "review",
+      "prompt": "Review the private deployment spec against its covered code and report drift without publishing the private values.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/schemas.md"],
+      "checks": [
+        "includes private specs in challenge scope and audits their covers from the unit root",
+        "reports drift without copying private values into public documents or output intended for publication",
+        "does not change document visibility during reconciliation"
+      ]
+    },
+    {
+      "id": "groom-private-boundary",
+      "protocol": "groom",
+      "mode": "write",
+      "prompt": "Groom the whole DocDoki library, including private notes, without changing what is public.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/philosophy.md", "references/schemas.md"],
+      "checks": [
+        "grooms both visibility scopes using the same layer rules",
+        "does not move documents across the visibility boundary without explicit human intent",
+        "runs the privacy checker after any cross-reference or path change"
+      ]
+    },
+    {
+      "id": "handoff-private-stage",
+      "protocol": "handoff",
+      "mode": "write",
+      "prompt": "Update the private compute stage and hand it off; another unrelated public stage is also active.",
+      "must_read": ["SKILL.md", "references/operations.md", "references/stages.md", "references/schemas.md"],
+      "checks": [
+        "selects from public and private active stages by explicit mention or scope rather than guessing",
+        "rewrites the private stage in place and keeps the kickoff prompt private-aware",
+        "does not make public work resumability depend on a private stage alone"
+      ]
     }
   ],
   "negative_cases": [
