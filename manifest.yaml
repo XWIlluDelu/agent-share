@@ -15,8 +15,6 @@ source_repos:
     url: "https://github.com/michalparkola/tapestry-skills.git"
   mattpocock_skills:
     url: "https://github.com/mattpocock/skills.git"
-  khazix_skills:
-    url: "https://github.com/KKKKhazix/khazix-skills.git"
   semantic_scholar_skills:
     url: "https://github.com/zongmin-yu/semantic-scholar-skills.git"
   humanizer:
@@ -27,6 +25,8 @@ source_repos:
     url: "https://github.com/Factory-AI/factory-plugins.git"
   academic_forge:
     url: "https://github.com/HughYau/AcademicForge.git"
+  ui_ux_pro_max:
+    url: "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git"
   custom:
     type: custom
     path: "."
@@ -61,20 +61,15 @@ skills:
     pack: frontend
     source_repo: anthropic
     source_path: "skills/frontend-design"
-  - name: theme-factory
+  - name: ui-ux-pro-max
     pack: frontend
-    source_repo: anthropic
-    source_path: "skills/theme-factory"
+    source_repo: ui_ux_pro_max
+    source_path: ".claude/skills/ui-ux-pro-max"
+    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, and normalize imported text line endings and trailing whitespace. Only ui-ux-pro-max is selected from this repository."
   - name: webapp-testing
     pack: web-testing
     source_repo: anthropic
     source_path: "skills/webapp-testing"
-  - name: canvas-design
-    pack: visual-artifacts
-    source_repo: anthropic
-    source_path: "skills/canvas-design"
-    notes: "Local normalization: replace 'next Claude' wording with 'next agent'."
-
   # OpenAI official / curated
   - name: openai-skill-creator
     pack: agent-dev
@@ -171,23 +166,7 @@ skills:
     source_repo: scicraft
     source_path: "skills/scientific-computing/sympy-symbolic-math"
 
-  # kepano / obsidian-skills
-  - name: obsidian-markdown
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-markdown"
-  - name: obsidian-cli
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-cli"
-  - name: obsidian-bases
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/obsidian-bases"
-  - name: json-canvas
-    pack: obsidian
-    source_repo: obsidian
-    source_path: "skills/json-canvas"
+  # kepano / obsidian-skills (defuddle only)
   - name: defuddle
     pack: documents
     source_repo: obsidian
@@ -216,34 +195,6 @@ skills:
     pack: always-on
     source_repo: mattpocock_skills
     source_path: "skills/productivity/grilling"
-  - name: neat-freak
-    pack: local-maintenance
-    source_repo: khazix_skills
-    source_path: "neat-freak"
-    notes: "Pack: local-maintenance, not always-on; skip missing platform-specific memory/config files."
-
-  # Matt Pocock engineering skills
-  - name: diagnosing-bugs
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/diagnosing-bugs"
-    notes: "Local normalization: remove command-specific routing and project-specific HITL script references; keep the detailed trigger description upstream later shortened. Pack: software-dev."
-  - name: tdd
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/tdd"
-    notes: "Local normalization: remove references to upstream skills not installed in this library. Pack: software-dev."
-  - name: prototype
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/prototype"
-    notes: "Local normalization: widen trigger description while preserving upstream workflow. Pack: software-dev."
-  - name: improve-codebase-architecture
-    pack: software-dev
-    source_repo: mattpocock_skills
-    source_path: "skills/engineering/improve-codebase-architecture"
-    notes: "Local normalization: agent-neutral exploration/design wording, project-local CONTEXT.md/ADR formats, and self-contained architecture vocabulary; no dependency on separate codebase-design/domain-modeling/grilling skills."
-
   # Factory engineering skills
   - name: simplify
     pack: always-on
@@ -252,6 +203,11 @@ skills:
     notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
 
   # Custom/local skills
+  - name: code-review
+    pack: software-dev
+    source_repo: custom
+    source_path: "lib/code-review"
+    notes: "Custom explicit-use whole-repository or scoped review skill. Independently synthesized from shadcn/improve reconnaissance and evidence vetting, specialone0007/repo-organization-audit structural checks, addyosmani/code-review-and-quality review lenses, and mattpocock/codebase-design module-depth principles; no upstream text is mirrored."
   - name: skill-manager
     pack: local-maintenance
     source_repo: custom
@@ -284,7 +240,7 @@ skills:
     pack: documents
     source_repo: humanizer
     source_path: "."
-    notes: "Pack: documents, not always-on, to avoid broad style interference. Upstream repo mirrored verbatim; it is harness-neutral by design, and repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
+    notes: "Pack: documents, not always-on. Local normalization: move the upstream top-level version field into standard metadata. The skill is otherwise harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
 
   - name: chaos
     pack: always-on
