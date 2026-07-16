@@ -46,9 +46,11 @@ skill, then act.
 | `groom` | write | Deliberately clean the library: forget low-value churn, promote accumulated detail into structure, keep documents lean. |
 | `handoff` | write | Rewrite the matching stage as current handoff state and print a kickoff prompt. |
 
-Natural language counts: `compact`, `wrap up`, `save context`, `summarize
-session` mean `handoff`; `tidy`, `clean up the docs`, `consolidate` mean
-`groom`. Review mode reads and reports only; write mode makes the changes.
+Natural language counts: a user request to `compact`, `wrap up`, `save context`,
+or `summarize session` means `handoff` — capturing in-flight work so it continues
+in another session or with another agent, not something done unasked mid-session;
+`tidy`, `clean up the docs`, `consolidate` mean `groom`. Review mode reads and
+reports only; write mode makes the changes.
 
 **Grooming and reconciliation also ride along.** Every `follow` and `challenge`
 grooms what it touches and reconciles it against the code — `groom` and

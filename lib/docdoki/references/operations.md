@@ -176,9 +176,12 @@ decide.
 
 ## handoff
 
-Capture the current state into the matching stage (stage selection:
-`references/stages.md`) so a fresh agent can continue without the transcript. In
-one motion:
+Run this only when the user asks to hand off — "compact", "wrap up", "save
+context", "summarize session" — so the work can continue in another session or
+with another agent or person. Within one live session the context carries forward
+and there is nothing to hand off; never write a handoff unasked. Capture the
+current state into the matching stage (stage selection: `references/stages.md`)
+so a fresh agent can continue without the transcript. In one motion:
 
 1. scan the conversation and current files for the objective and goal, current
    state (working / broken / modified files), next actions, decisions worth
@@ -191,8 +194,8 @@ one motion:
 handoff writes its stage and nothing else. It does not route durable content
 into specs, the abstract, or notes, and does not reconcile against code — that
 promotion is the work of `follow`, `challenge`, `groom`, and stage close, not of
-a capture under context pressure. Durable content noticed here is recorded in
-the stage (`Decisions`, `Dead ends`) and promoted later by those passes.
+a handoff capture. Durable content noticed here is recorded in the stage
+(`Decisions`, `Dead ends`) and promoted later by those passes.
 
 Keep it scannable and minimal: orientation in under 30 seconds, concrete next
 actions, dead ends recorded so they are not retried, and no line that exists

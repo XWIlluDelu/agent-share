@@ -34,11 +34,13 @@ selected by rule 2.
 
 ## Handoff
 
-Compacting a session — "compact", "wrap up", "save context", "summarize
-session", or context pressure — updates the matching active stage; it never
-creates separate session files. The procedure, and the rule that handoff writes
-only the stage and routes nothing, are in `references/operations.md` under
-`handoff`.
+Handoff prepares in-flight work to continue across a boundary — a new session, or
+another agent or person. The user asks for it: "compact", "wrap up", "save
+context", "summarize session". It updates the matching active stage; it never
+creates separate session files. Within one live session the context carries
+forward, so there is nothing to hand off — do not write one unasked. The
+procedure, and the rule that handoff writes only the stage and routes nothing,
+are in `references/operations.md` under `handoff`.
 
 ## Closing
 
