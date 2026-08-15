@@ -7,12 +7,12 @@ description: "Claim-led multi-agent deliberation for judgment that is both high-
 
 Use CHAOS to make a judgment that verification cannot settle survive
 independent search and adversarial criticism. The parent remains judge and
-final writer; agents advise.
+final writer; advisers run as native subagents or fresh agent sessions.
 
 ## Gate
 
 CHAOS is off by default, and loading this skill is not a decision to run it.
-Launch agents only when the user asked for a deliberation mode by name.
+Launch adviser runs only when the user asked for a deliberation mode by name.
 Unasked, the strongest case — a judgment hard to reverse, costly if wrong, and
 beyond direct verification, all three — buys a one-sentence proposal to the
 user, never a launch. Felt importance buys nothing: a task is not promoted to
@@ -51,11 +51,14 @@ default.
 2. **Separate.** Apply the expansion rule in `references/protocols.md`: explicit
    exhaustive CHAOS uses all suitable approved routes; every other activation
    starts with the smallest sufficient independent set and expands only for a
-   missing decision-relevant axis. Launch the selected routes in parallel and collect
-   independent first positions
-   before any agent sees peer answers. Every Council first-position adviser
-   answers the same whole frame and names the strongest alternative it rejected;
-   topic-sharded research is scouting only.
+   missing decision-relevant axis. Discover the host's execution capabilities,
+   then launch each route as a native subagent when that backend satisfies the
+   isolation contract, otherwise as a fresh agent session. Start first positions
+   in parallel when possible; if the host can only serialize isolated sessions,
+   keep prior outputs hidden and record `serial-isolated`. Collect every first
+   position before any adviser sees peer answers. Every Council first-position
+   adviser answers the same whole frame and names the strongest alternative it
+   rejected; topic-sharded research is scouting only.
 3. **Externalize.** Convert positions into claims, assumptions, evidence,
    confidence basis, uncertainty, and risks.
 4. **Cross-examine.** The parent mediates: anonymize memos by diversity axis,
@@ -70,10 +73,11 @@ default.
 7. **Record.** For nontrivial runs, keep a claim ledger. Save substantial
    outputs in the runtime's artifact directory or an OS temporary directory by
    default; write them into the project only when the user asks for durable
-   artifacts. Verify files exist, retry one failed perspective once with a
-   smaller prompt, or record the degraded perspective. Code claims require
-   locatable evidence: `file:line`, diff hunk, test output, command output, or stable
-   permalink.
+   artifacts. Verify files exist. For a failed perspective, inspect execution
+   and authoritative output first; retry once only under the failure rules in
+   `references/orchestration.md`, otherwise record the degraded perspective.
+   Code claims require locatable evidence: `file:line`, diff hunk, test output,
+   command output, or stable permalink.
 
 ## Output contract
 

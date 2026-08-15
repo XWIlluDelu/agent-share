@@ -39,6 +39,10 @@ changes, or roleplay without different work do not count.
 - Repeated rounds after no new evidence or useful narrowing appears.
 - Hidden judge responsibility or advisory agents self-accepting final claims.
 - Context contamination before independent first positions.
+- Treating a subagent label, process count, or session count as proof of fresh
+  independent context.
+- Giving claims extra weight because they came from a native subagent rather
+  than an isolated session, or vice versa.
 
 ## Synthesis rubric
 
@@ -78,4 +82,4 @@ Use explicit failure states instead of false certainty:
 | Document understanding dispute | Separate text evidence, interpretation, assumptions, and uncertainty. |
 | Exhausted useful coverage | Return an explicit failure state rather than forced consensus. |
 | Persona-theater prompt | Convert style roles into operational duties or reject them as fake diversity. |
-| Failed agent | Retry once with a smaller prompt or record the missing perspective and reduced coverage in the receipt. |
+| Failed adviser run | Inspect execution, authoritative output, and failure provenance; retry once only when safe, or record the missing perspective and reduced coverage in the receipt. |

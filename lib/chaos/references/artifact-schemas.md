@@ -19,6 +19,9 @@ artifact_destination: "" # runtime artifact dir or OS temp by default; project p
 stop_rule: ""
 decision_owner: parent/final writer unless user names another owner
 run_status: full | reduced single model family | degraded single-agent claim audit | degraded missing perspective
+execution_backend: native subagent | fresh agent session | mixed | unavailable
+concurrency: parallel | serial-isolated | unavailable
+isolation_witnesses: [] # fresh/reset contexts, separate run/session locators, and hidden-peer boundary; counts alone are insufficient
 planned_perspectives: [] # lenses/evidence emphases for whole-frame first positions, not exclusive topic shards
 launched_models_or_routes: []
 failed_perspectives: []
@@ -94,6 +97,8 @@ final_decision: ""
 synthesizer: parent/final writer
 frame_reference: ""
 evidence_standard: ""
+execution_backend: native subagent | fresh agent session | mixed | unavailable
+isolation_and_concurrency: ""
 accepted_claims: []
 rejected_or_changed_claims: []
 withdrawn_claims: []

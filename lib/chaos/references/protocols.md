@@ -17,8 +17,9 @@ to a one-sentence proposal. No mode in this file is an entry point on its own.
 
 When the user explicitly requests exhaustive CHAOS, all available models, or a
 full council, run all suitable approved model-family advisers and useful
-evidence routes in parallel. Respect any stated budget, provider, privacy, or
-modality boundary.
+evidence routes through qualifying native subagents or fresh agent sessions,
+in parallel when the host permits. Respect any stated budget, provider,
+privacy, or modality boundary.
 
 Every other activation was explicitly requested or approved by the user — the
 gate (SKILL.md) — and starts with the smallest sufficient independent set that
@@ -47,11 +48,12 @@ a valid input appendix, never a first position.
 1. Extract falsifiable or decision-relevant claims from the target.
 2. Assign each claim an evidence standard and current support; settle directly
    testable claims by test before launching critics.
-3. Select critics under the expansion rule and launch them in parallel against
-   the anonymized claim set: attack weak evidence, invalid inference, hidden
-   premises, missing alternatives, and practical risks. When the target is a proposal awaiting a
-   decision, brief critics as refuters: steelman the proposal, then target the
-   strongest remaining flaws.
+3. Select critics under the expansion rule and launch them as independent
+   subagents or fresh sessions against the anonymized claim set: attack weak
+   evidence, invalid inference, hidden premises, missing alternatives, and
+   practical risks. When the target is a proposal awaiting a decision, brief
+   critics as refuters: steelman the proposal, then target the strongest
+   remaining flaws.
 4. Mark each claim `survived`, `narrowed`, `rejected`, `withdrawn`, `merged`,
    `unresolved`, or `dissent`.
 5. Synthesize only from claims that meet the frame's evidence standard; preserve
@@ -73,14 +75,15 @@ a valid input appendix, never a first position.
 7. Synthesize with minority report.
 
 **Escalation for high stakes:** precede with scouting; append an independent
-consistency check of the near-final synthesis by a fresh agent; close with a
-formal decision receipt and uncertainty register. Do not add rounds for
+consistency check of the near-final synthesis by a fresh adviser run; close with
+a formal decision receipt and uncertainty register. Do not add rounds for
 rhetoric; continue only when a new round can change a decision-relevant claim.
 
 ### Review loop
 
-Use one writer. Parallelize reading, critique, and validation only. Reviewers
-inspect the actual artifact, not the writer's rationale alone. The parent
+Use one writer. Parallelize reading, critique, and validation only, using native
+subagents or fresh sessions under the orchestration contract. Reviewers inspect
+the actual artifact, not the writer's rationale alone. The parent
 accepts fixes worth doing now, rejects optional noise, and launches a single
 follow-up writer only when implementation is authorized.
 

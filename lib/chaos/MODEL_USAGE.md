@@ -52,19 +52,20 @@ handling as suitability constraints: minimize shared context, remove secrets,
 and do not send private or proprietary material to another provider without the
 user's authorization when it cannot be safely redacted.
 
-- **Multi-model agents (e.g. pi):** inspect the live model/agent discovery
-  surface before every run; it overrides this file for available routes,
+- **Multi-model runtimes:** inspect the live model and execution discovery
+  surfaces before every run; they override this file for available routes,
   context capacity, modality, reasoning controls, tool support, and exact
-  parameters. Select the OpenAI adviser only from that live result; when the
-  built-in model ID `openai-codex/gpt-5.6-terra` is present, prefer it. This is
-  a routing preference, not a cached availability claim. Never preserve
-  provider-specific endpoint aliases in this reference as if they were current
-  configuration. Use higher thinking levels only when the live route accepts
-  them; do not invent temperature/top-p tables.
-- **Single-vendor agents (e.g. Claude Code, Codex):** cross-family routes are
-  unavailable. Run independent subagents with fresh context and differentiated
-  duties, using different model sizes or reasoning levels where the platform
-  allows. Independence holds; family diversity collapses — record `reduced:
-  single model family` (orchestration: independence).
-- **No independent agents:** degraded single-agent claim audit (orchestration:
-  independence).
+  parameters. Select the OpenAI adviser only from that live result; when
+  `openai-codex/gpt-5.6-terra` is present, prefer it. This is a routing
+  preference, not a cached availability claim. Never preserve provider-specific
+  endpoint aliases in this reference as if they were current configuration.
+  Use higher thinking levels only when the live route accepts them; do not
+  invent temperature/top-p tables. Launch each route through a qualifying
+  native subagent or a fresh agent session as defined in orchestration.
+- **Single-family runtimes:** cross-family routes are unavailable. Run
+  independent native subagents or fresh sessions with differentiated duties,
+  using different model sizes or reasoning levels where available. Independence
+  holds; family diversity collapses — record `reduced: single model family`
+  (orchestration: independence).
+- **No independent execution backend:** run a degraded single-agent claim audit
+  (orchestration: execution backends and independence).

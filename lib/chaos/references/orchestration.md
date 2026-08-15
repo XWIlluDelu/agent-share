@@ -1,22 +1,50 @@
 # CHAOS orchestration
 
+## Execution backends
+
+CHAOS requires independent adviser runs, not a particular orchestration product.
+Discover the host's execution and model-routing capabilities before launch, then
+choose the narrowest backend that satisfies the contract:
+
+1. **Native subagents.** Use them when the host can create a fresh isolated run
+   for each adviser, select the intended model or route, dispatch the complete
+   frame, and return output and failure provenance to the parent.
+2. **Fresh agent sessions.** When native subagents are absent or fail that
+   contract, create one new isolated session or process per adviser. Select its
+   model independently and use the host's session controls or inter-agent
+   messaging to dispatch the same frame and collect the result. A long-lived
+   session qualifies only after a real reset that removes prior task and peer
+   content; otherwise create a new one.
+3. **Mixed execution.** Native subagents and fresh sessions may coexist when
+   they share the same frame, evidence standard, output schema, data boundary,
+   and failure reporting. Backend type gives no claim extra weight.
+4. **Unavailable.** If the host exposes neither independent backend, say so and
+   run only the degraded single-agent claim audit. If session creation requires
+   user action, request the sessions rather than simulating independence.
+
+Launch first-position runs concurrently when the host permits. If it can only
+serialize genuinely isolated sessions, keep every earlier output hidden from
+later advisers and record `serial-isolated`; this preserves independence but
+loses concurrency. Never manufacture multiple voices inside one context and
+call them independent.
+
 ## Independence
 
-Full CHAOS needs real independent agent runs across model families. Three tiers:
+Three tiers describe epistemic coverage, independently of backend choice:
 
-- **Full:** independent agents across multiple model families.
-- **Reduced:** independent same-family agents with fresh context and
+- **Full:** independent adviser runs across multiple model families.
+- **Reduced:** independent same-family runs with fresh context and
   differentiated duties. Independence is real; family diversity collapses to
-  one. Record `reduced: single model family`. This is the normal tier for
-  single-vendor agents running subagents.
-- **Degraded:** no independent agents available. Say so and run a degraded
+  one. Record `reduced: single model family`.
+- **Degraded:** no independent adviser runs available. Say so and run a degraded
   single-agent claim audit. Never simulate internal voices and label them
   independent.
 
-Give independent agents the same frame, evidence standard, output schema, and
+Give independent advisers the same frame, evidence standard, output schema, and
 constraints, per the whole-frame rule (protocols). Do not show peer answers,
-model identities, or the user's leaning before first positions are complete. Use
-fresh context or another isolation method when available.
+model identities, or the user's leaning before first positions are complete.
+Record the backend, route, fresh-context witness, concurrency mode, and failures;
+process or session count alone is not evidence of independence.
 
 ## Role assignment
 
@@ -98,19 +126,23 @@ and failed perspectives even when the final decision proceeds.
 
 If an advisory run fails, times out, refuses, or produces unusable output:
 
-1. Record the perspective, failure reason, and affected diversity axis.
-2. Retry once with a clearer or smaller prompt if the perspective is
-   decision-relevant and the failure may be recoverable.
-3. If still missing, continue with remaining evidence only when safe.
-4. Mark the run degraded and list reduced coverage in the decision receipt.
-5. Never fabricate the missing perspective.
+1. Separate the backend's execution result, the acceptance decision, and the
+   usability of its authoritative output or artifact. Inspect termination and
+   failure provenance before deciding that the perspective is missing.
+2. Record the perspective, backend, failure reason, and affected diversity axis.
+3. Retry once with a clearer or smaller prompt only if the perspective is
+   decision-relevant, the failure may be recoverable, and the prior run had no
+   unaccounted side effects.
+4. If still missing, continue with remaining evidence only when safe.
+5. Mark the run degraded and list reduced coverage in the decision receipt.
+6. Never fabricate the missing perspective.
 
 If available parallel coverage still fails to meet the evidence standard, stop
 with `unresolved after exhaustive available review`, `needs direct test`, `needs
 external expertise`, or `insufficient evidence`.
 
-## Saved chains and automation
+## Saved workflows and automation
 
-Saved chains, custom agents, validators, or scripts must not force consensus,
+Saved workflows, custom agents, validators, or scripts must not force consensus,
 replace parent synthesis, hide missing artifacts, or weaken independent first
 positions.
