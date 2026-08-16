@@ -192,12 +192,12 @@ skills:
     source_repo: tapestry
     source_path: "youtube-transcript"
   - name: grilling
-    pack: always-on
+    pack: productivity
     source_repo: mattpocock_skills
     source_path: "skills/productivity/grilling"
   # Factory engineering skills
   - name: simplify
-    pack: always-on
+    pack: software-dev
     source_repo: factory_plugins
     source_path: "plugins/core/skills/simplify"
     notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
@@ -214,7 +214,7 @@ skills:
     source_path: "lib/skill-manager"
     notes: "Custom registry/audit skill for maintaining .agent-share."
   - name: skill-creator
-    pack: always-on
+    pack: agent-dev
     source_repo: custom
     source_path: "lib/skill-creator"
     notes: "Custom orchestrator over anthropic-skill-creator and openai-skill-creator; vendor-neutral wrapper with in-folder relative symlinks to the source creator skills."
@@ -243,10 +243,10 @@ skills:
     notes: "Pack: documents, not always-on. Local normalization: move the upstream top-level version field into standard metadata. The skill is otherwise harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
 
   - name: chaos
-    pack: always-on
+    pack: deliberation
     source_repo: custom
     source_path: "lib/chaos"
-    notes: "Custom always-on deliberation skill; keep lightweight and generic."
+    notes: "Custom deliberation skill; keep lightweight and generic."
 
   - name: remote-compute
     pack: compute
