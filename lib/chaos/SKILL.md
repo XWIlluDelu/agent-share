@@ -1,6 +1,6 @@
 ---
 name: chaos
-description: "Claim-led multi-agent deliberation for judgment that is both high-stakes and unsettleable by direct verification. Use when the user explicitly asks for CHAOS, council, multi-agent debate, structured disagreement, adversarial review, claim audit, minority report, stress-test, or evidence-standard synthesis. Unasked, never launch: when a decision is hard to reverse, costly if wrong, and undecidable by a direct read or check — all three together — propose deliberation in one sentence and let the user decide; felt importance is not even grounds to propose. Do directly, without this skill: reading or assessing documents and diffs, lookup, deterministic calculation, routine edits, brainstorming, and anything one agent can verify."
+description: "Claim-led multi-agent deliberation for high-stakes judgments that direct verification cannot settle. Use only when the user explicitly requests CHAOS, council/debate, structured disagreement, adversarial or claim audit, minority report, stress-test, or evidence-standard synthesis. Unasked, never launch; only propose it when a decision is simultaneously hard to reverse, costly if wrong, and not directly verifiable. Work directly for document/diff review, lookup, calculation, routine edits, brainstorming, or anything one agent can verify."
 ---
 
 # CHAOS

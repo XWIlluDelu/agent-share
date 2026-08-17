@@ -1,19 +1,13 @@
 ---
 name: docdoki
 description: >-
-  Maintain a project's living documentation library under docdoki/: human-readable
-  documents (northstar, spec abstract, living specs, stages, notes) kept aligned with
-  the human's design and with the implementation. Use this whenever the user sets up
-  or adopts documentation for a project, has edited the docs and wants the change
-  understood and propagated into code, wants to compact, wrap up, or hand off
-  in-flight work for the next agent or session, suspects the documents have drifted
-  from the implementation, wants the library cleaned up and consolidated, or asks
-  a project question the library can answer — even when they don't say "docdoki" or
-  name a document by type. Also load it when the project contains a docdoki/ library,
-  before non-trivial work in code the library covers. Do not use it for
-  one-off writing outside this library — a standalone README, code docstrings
-  or comments, or a project's ordinary docs/ folder — unless that content
-  lives in or feeds docdoki/.
+  Maintain a project's docdoki/ living-document library—northstar, spec abstract,
+  specs, stages, and notes—in alignment with human design and implementation. Use to
+  initialize/adopt it; propagate human doc edits into code; reconcile drift;
+  groom/consolidate it; answer project questions from it; or compact, wrap up, save
+  context, and hand off in-flight work. Also load before non-trivial work covered by
+  an existing docdoki/ library, even when unnamed. Exclude standalone README,
+  docstring/comment, and ordinary docs/ work unless it feeds docdoki/.
 ---
 
 # DocDoki

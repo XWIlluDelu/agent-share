@@ -1,6 +1,6 @@
 ---
 name: remote-compute
-description: "Run work on Unix-like machines reachable by SSH: configure or diagnose the connection, inspect the host, prepare or reuse an environment, stage code and data safely, launch and monitor jobs, retrieve outputs, and clean up. Use for remote servers, clusters, workstations, GPU boxes, long jobs, remote environment setup, or result retrieval. Command examples target GNU/Linux with Bash; Windows/PowerShell hosts are out of scope."
+description: "Run work on SSH-reachable Unix-like machines: connect/diagnose, inspect, prepare environments, stage code/data, launch/monitor jobs, retrieve outputs, and clean up. Use for remote servers, clusters, workstations, GPU hosts, long jobs, environment setup, or result retrieval. Examples assume GNU/Linux with Bash; Windows/PowerShell is out of scope."
 ---
 
 # Remote compute

@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: "Set up or update project-level agent assets from .agent-share: shared skills, target-platform discovery links, selected agent fragments, generated AGENTS.md, and only the instruction aliases required by the target agents. Use whenever the user mentions setting up or updating a repo for coding agents, linking shared skills, syncing AGENTS.md, adding project agent instructions, or preparing a project for Claude, Codex, Gemini, Qwen, Copilot, OpenCode, Windsurf, or Pi."
+description: "Set up or sync repository agent assets from .agent-share: shared-skill links, generated AGENTS.md/fragments, platform discovery links, and required instruction aliases. Use for coding-agent project configuration across Claude, Codex, Gemini, Qwen, Copilot, OpenCode, Windsurf, or Pi."
 ---
 
 # Project Setup

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review a whole repository or a user-specified scope for concrete bugs, architecture and maintainability problems, unnecessary cognitive load, duplication, dead code, and obsolete compatibility paths; continue into fixes only when the user authorizes them before or after the review. Use when the user explicitly asks for a code review, repository audit, codebase health or maintainability review, architecture and coupling review, redundancy or dead-code assessment, or invokes this skill. Default to the whole repository when no scope is given; do not trigger merely because code was changed or one known issue needs implementation.
+description: Review a repository or requested scope for evidenced bugs, architecture/maintainability problems, cognitive load, duplication, dead code, and obsolete compatibility; fix only when authorized. Use for explicit code reviews, repository audits, codebase-health, architecture/coupling, or redundancy/dead-code assessments. Default to the whole repository without a scope; do not trigger for routine changed-code review or implementing a known issue.
 ---
 
 # Code Review

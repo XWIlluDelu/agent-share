@@ -1,6 +1,6 @@
 ---
 name: better-read-html
-description: Create or audit source-first static HTML artifacts from formal documents (papers, technical reports, notes, plans, specifications). Use only when the user asks for a browser-readable/local/offline/single-file/printable HTML page, document or note conversion into HTML, source-preserving HTML relayout, evidence-linked HTML report/close-reading page, or validation of an existing/generated HTML artifact. Do not use for general summarization, paper reading, Markdown editing, math explanation, design exploration, or report writing unless the deliverable is HTML.
+description: Create or audit source-first static HTML artifacts from papers, reports, notes, plans, or specifications. Use only for local/offline/single-file/printable HTML, document-to-HTML conversion, source-preserving relayout, evidence-linked reports/close-reading pages, or existing HTML validation. Do not use for general reading, summarization, Markdown/math editing, design exploration, or non-HTML reports.
 ---
 
 # Better Read HTML

@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: "Own mutations to the local .agent-share skill library: sync upstream sources, add/update/delete/rename shared skills, manage manifest provenance and packs, normalize lib copies, materialize always-on symlinks, maintain agent fragments, and audit consistency. Use whenever .agent-share itself or its registry is modified. For skill content quality, triggering, or evaluation, apply skill-creator as the authoring method while this skill remains the write/provenance/audit owner."
+description: "Maintain the local .agent-share skill library: source sync, skill lifecycle, manifest provenance/packs, canonical lib copies, always-on links, agent fragments, and consistency audits. Use for any .agent-share or registry mutation. Skill-creator supplies the authoring/evaluation method; skill-manager owns writes, provenance, materialization, and final audit."
 ---
 
 # Skill Manager

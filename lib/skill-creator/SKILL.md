@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Author skills end to end — design capability and triggering, scaffold SKILL.md and resources, validate, evaluate against baselines, iterate, optimize descriptions, and package. Use whenever the user wants to create, review, improve, repair, or benchmark a skill, even without saying "skill." For skills inside a managed .agent-share library, use skill-manager for writes, registry/provenance, materialization, and final audit; use this skill as the authoring and evaluation method.
+description: "Author and evaluate skills end to end: capability/trigger design, scaffolding, validation, baselines, iteration, description optimization, and packaging. Use for explicit or implicit requests to create, review, improve, repair, or benchmark a skill. In managed .agent-share libraries, skill-manager owns writes, provenance, materialization, and final audit; this skill supplies the authoring/evaluation method."
 ---
 
 # Skill Creator
