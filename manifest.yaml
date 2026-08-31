@@ -46,17 +46,17 @@ skills:
     pack: documents
     source_repo: anthropic
     source_path: "skills/docx"
-    notes: "Claude author wording in tracked changes is accepted; ignore for portability audit."
+    notes: "Claude author wording in tracked changes is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: pptx
     pack: documents
     source_repo: anthropic
     source_path: "skills/pptx"
-    notes: "Claude author default in Office scripts is accepted; ignore for portability audit."
+    notes: "Claude author default in Office scripts is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: xlsx
     pack: documents
     source_repo: anthropic
     source_path: "skills/xlsx"
-    notes: "Claude author default in Office scripts is accepted; ignore for portability audit."
+    notes: "Claude author default in Office scripts is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: frontend-design
     pack: frontend
     source_repo: anthropic
@@ -65,7 +65,7 @@ skills:
     pack: frontend
     source_repo: ui_ux_pro_max
     source_path: ".claude/skills/ui-ux-pro-max"
-    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, and normalize imported text line endings and trailing whitespace. Only ui-ux-pro-max is selected from this repository."
+    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, normalize imported text line endings and trailing whitespace, and omit repository-only refresh/evaluator tests whose required scripts live outside the selected skill path. Only ui-ux-pro-max is selected from this repository."
   - name: webapp-testing
     pack: web-testing
     source_repo: anthropic
@@ -102,7 +102,7 @@ skills:
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/hypothesis-generation"
-    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts."
+    notes: "Local normalization: remove upstream author metadata."
   - name: scientific-critical-thinking
     pack: scientific-thinking
     source_repo: k_dense
@@ -112,12 +112,12 @@ skills:
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/citation-management"
-    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts; keep only NCBI environment hints."
+    notes: "Local normalization: remove upstream author/platform metadata, provider-specific schematic guidance, and imported trailing whitespace; keep only NCBI environment hints."
   - name: peer-review
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/peer-review"
-    notes: "Local normalization: remove upstream author/platform metadata and provider-specific schematic generation guidance/scripts."
+    notes: "Local normalization: remove upstream author metadata."
   - name: exploratory-data-analysis
     pack: scientific-tools
     source_repo: k_dense
@@ -240,7 +240,7 @@ skills:
     pack: documents
     source_repo: humanizer
     source_path: "."
-    notes: "Pack: documents, not always-on. Local normalization: move the upstream top-level version field into standard metadata. The skill is otherwise harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
+    notes: "Pack: documents, not always-on. The skill is harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
 
   - name: chaos
     pack: deliberation
