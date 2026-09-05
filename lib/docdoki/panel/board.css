@@ -1,0 +1,437 @@
+/* Graph Canvas */
+.graph {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Cpath d='M34 0H0V34' fill='none' stroke='%23f1f1f1'/%3E%3C/svg%3E");
+  background-size: 34px 34px;
+}
+
+.empty {
+  padding: 24px;
+  font-family: var(--ui);
+  color: #666;
+}
+
+.viewport {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.edges {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edge {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.2;
+  marker-end: url(#arrow);
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.edge-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.edge-hit:focus-visible {
+  outline: none;
+  stroke: #e91d2a;
+  stroke-width: 4;
+}
+
+.edge.dim {
+  stroke: #cfcfcf;
+  marker-end: url(#arrow-dim);
+}
+
+.edge.selected {
+  stroke: var(--red);
+  stroke-width: 2.4;
+  marker-end: url(#arrow-selected);
+}
+
+/* Spec Card — Dell 1996 Ribbon Card */
+.spec-card {
+  --card-tint: #fff;
+  position: absolute;
+  display: grid;
+  grid-template-rows: 48px minmax(0, 1fr) 34px;
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 2px solid #000;
+  background: #fff;
+  overflow: hidden;
+  cursor: default;
+}
+
+.spec-card header {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 2px solid #000;
+  font: 700 14px/1.2 var(--ui);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background: #fff;
+}
+
+.card-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spec-card .private-tag {
+  flex-shrink: 0;
+}
+
+.spec-card .ribbon {
+  padding: 10px 12px;
+  overflow: hidden;
+  background: var(--card-tint);
+  font: 14px/1.4 var(--body);
+}
+
+.ribbon span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spec-card .card-foot {
+  display: flex;
+  align-items: stretch;
+  border-top: 2px solid #000;
+  font: 700 11px var(--ui);
+  background: #fff;
+}
+
+.card-foot button {
+  border: 0;
+  border-right: 2px solid #000;
+  padding: 5px 11px;
+  font-size: 11px;
+}
+
+.card-foot > [data-doc] {
+  flex: 0 0 calc(2 * var(--control-unit));
+  padding: 5px 4px;
+}
+
+.card-foot .progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 calc(3 * var(--control-unit));
+  min-width: 0;
+  margin-left: auto;
+  padding: 5px 4px;
+  border: 0;
+  border-left: 2px solid #000;
+  background: var(--card-tint);
+}
+
+.spec-card .field-button {
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: text;
+}
+
+.field-button:hover:not(:disabled) {
+  background: none;
+  color: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.card-purpose {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+.card-purpose span {
+  width: 100%;
+}
+
+.card-purpose.is-empty span {
+  color: #666;
+  font-style: italic;
+}
+
+.field-editor {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.field-editor input,
+.field-editor textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  outline: none;
+  padding: 0;
+  font: inherit;
+  line-height: inherit;
+  box-shadow: none;
+}
+
+.field-editor input {
+  height: 100%;
+  align-self: center;
+}
+
+.field-editor textarea {
+  touch-action: auto;
+  line-height: 1.4;
+}
+
+.field-editor.field-progress {
+  flex: 0 0 calc(3 * var(--control-unit));
+  width: calc(3 * var(--control-unit));
+  margin-left: auto;
+  border-left: 2px solid #000;
+  background: var(--card-tint);
+}
+
+.field-progress select {
+  width: 100%;
+  font: 700 11px var(--ui);
+  border: 0;
+  background: transparent;
+  padding: 5px 4px;
+  cursor: pointer;
+}
+
+.field-editor select:focus {
+  outline: none;
+}
+
+.field-active {
+  z-index: 5;
+}
+
+.field-editor [aria-invalid="true"] {
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+}
+
+.connecting .spec-card,
+.connecting .spec-card header,
+.connecting .field-button {
+  cursor: crosshair;
+}
+
+.spec-card.connect-origin {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.spec-card.plan-not-started {
+  --card-tint: var(--sky);
+}
+
+.spec-card.plan-in-progress {
+  --card-tint: var(--purple);
+}
+
+.spec-card.plan-done {
+  --card-tint: var(--sage);
+}
+
+.spec-card:hover {
+  box-shadow: 3px 3px 0 #000;
+}
+
+.spec-card:focus-visible {
+  outline-offset: 3px;
+}
+
+.spec-card.search-match {
+  outline: 3px solid var(--yellow);
+}
+
+.spec-card.selected {
+  box-shadow: 5px 5px 0 #000;
+}
+
+.spec-card.dirty {
+  box-shadow: 5px 5px 0 var(--red);
+}
+
+/* Graph Tools Toolbar */
+.graph-tools {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: var(--control-unit) 48px repeat(4, var(--control-unit));
+  align-items: stretch;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  z-index: 3;
+}
+
+.graph-tools button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  min-width: 0;
+  min-height: 30px;
+  padding: 4px;
+  font: 900 15px/1 var(--display);
+}
+
+.graph-tools button.active,
+.graph-tools button.active:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+
+.graph-tools #zoom-label {
+  font: 700 12px/1.3 var(--ui);
+  text-align: center;
+  padding: 4px 5px;
+}
+
+.graph-tools > :not(:last-child) {
+  border-right: 1px solid #000;
+}
+
+.connect-hint {
+  position: absolute;
+  bottom: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 28px);
+  padding: 7px 12px;
+  background: var(--yellow);
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  z-index: 3;
+  font: 700 13px/1.4 var(--ui);
+  text-align: center;
+  pointer-events: none;
+}
+
+.minimap {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 144px;
+  height: 96px;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  z-index: 3;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* Edge Detail Popup */
+.edge-detail {
+  position: absolute;
+  right: 14px;
+  bottom: 65px;
+  max-width: min(320px, calc(100% - 28px));
+  max-height: 75%;
+  overflow: auto;
+  z-index: 4;
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  padding: 12px;
+  font: 14px var(--ui);
+}
+
+.edge-detail p {
+  margin: 0 0 10px;
+  padding-right: 24px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.edge-detail [data-close-edge] {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  font-size: 16px;
+  line-height: 1;
+  border: 1px solid #000;
+  background: #fff;
+  cursor: pointer;
+}
+
+.edge-detail [data-remove-after] {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 7px 12px;
+  font: 700 12px/1.3 var(--ui);
+  text-align: center;
+  border: 1px solid #000;
+  background: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .field-editor input,
+  .field-editor textarea,
+  .field-editor select {
+    font-size: 16px;
+  }
+  .spec-card {
+    --control-unit: 44px;
+  }
+  .spec-card header,
+  .spec-card .ribbon {
+    font-size: 16px;
+  }
+  .graph-tools {
+    left: 50%;
+    bottom: 12px;
+  }
+  .graph-tools button {
+    min-height: 44px;
+  }
+  .minimap {
+    width: 95px;
+    height: 64px;
+    top: 12px;
+    right: 12px;
+  }
+}
