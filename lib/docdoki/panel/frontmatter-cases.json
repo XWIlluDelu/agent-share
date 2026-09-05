@@ -1,0 +1,11 @@
+[
+  {"name":"plain LF","source":"---\npurpose: test\n---\n# Body\n","body":"# Body\n"},
+  {"name":"trailing whitespace","source":"--- \t\npurpose: test\n---\t \n# Body\n","body":"# Body\n"},
+  {"name":"BOM CRLF whitespace","source":"﻿---\t\r\npurpose: test\r\n--- \r\n# Body\r\n","body":"# Body\r\n"},
+  {"name":"empty metadata","source":"---\n---\n# Body\n","body":"# Body\n"},
+  {"name":"delimiter at EOF","source":"---\npurpose: test\n---","body":""},
+  {"name":"unclosed","source":"--- \nsecret: retained\n# Not body\n","error":true},
+  {"name":"unclosed BOM CRLF","source":"﻿---\t\r\nsecret: retained\r\n","error":true},
+  {"name":"ordinary Markdown","source":"# Body\n\n---\n","body":"# Body\n\n---\n"},
+  {"name":"not a delimiter","source":"---text\n# Body\n","body":"---text\n# Body\n"}
+]

@@ -1,0 +1,38 @@
+{
+  "skill_name": "docdoki",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Initialize DocDoki in this empty project directory. We are building a Python standard-library CLI for local CSV normalization. Row data must stay local and failures must preserve original files. The exact normalization rules are still undecided. Set up the useful project documents, but do not implement the CLI or install a panel.",
+      "expected_output": "A small library capturing supplied intent, decided but unimplemented constraints, and the remaining normalization decision, with the private Git-ignore boundary established.",
+      "files": [],
+      "expectations": [
+        "The main documents distinguish supplied constraints from the undecided normalization rules and absent implementation.",
+        "The private ignore rule is established and checked without installing a panel or writing application code.",
+        "No implemented or verified behavior is invented."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this DocDoki export contract using only the supplied project excerpts; do not write files. The decided spec requires complete UTF-8 CSV output on success and preservation of an old destination on failure. The active stage records failure safety as unimplemented and network-filesystem behavior as untested. The entire export function is: def export_csv(rows, destination):\n    with open(destination, 'w', newline='', encoding='utf-8') as output:\n        csv.writer(output).writerows(rows)\nThe only recorded test covers a successful new-file export. What conforms, what is missing, and what can this evidence not establish?",
+      "expected_output": "A bounded review that identifies the direct-write failure risk as a known unmet contract, retains the requirement, and separates source evidence from unperformed checks.",
+      "files": [],
+      "expectations": [
+        "The answer identifies truncation or partial final output on row-generation failure without weakening the requirement.",
+        "The answer distinguishes a known implementation gap from untested filesystem behavior and does not claim fresh test results.",
+        "No project files are written, including incidental cleanup or generated files."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Follow this human design amendment in DocDoki, documentation only: CSV record terminators must now be LF on every platform. The existing contract also requires local-only UTF-8 output and preservation of old output on failure. The current work entry says successful export exists, failure safety is still unimplemented, and no raw-byte line-ending test has been run. Return the revised spec and current-work entry from this supplied text; do not implement code or claim new verification.",
+      "expected_output": "Revised contract and work-state text that propagates the LF decision, preserves the other obligations, and records the remaining implementation and verification work.",
+      "files": [],
+      "expectations": [
+        "The LF-on-every-platform requirement and the existing local-only, UTF-8, and failure-preservation requirements remain explicit.",
+        "Unimplemented failure safety and unverified line endings remain visible rather than being marked complete.",
+        "The response stays within documentation-only propagation and does not invent implementation changes or passing checks."
+      ]
+    }
+  ]
+}
