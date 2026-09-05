@@ -1,224 +1,295 @@
 # Operations
 
-The procedure behind each protocol. A protocol is a codename for work you do
-with Read / Edit / Bash (including git) — there is no protocol CLI. The bundled
-privacy checker is deterministic enforcement, not a semantic protocol. You read
-this skill, then act.
-
-Three rules run through every procedure: read before you write; record only what
-you have grounds for; and when documents and code disagree, never weaken a
-correct spec to ratify wrong code. Public and private documents are read as one
-library, but propagation preserves the path-defined visibility boundary: public
-content cannot depend on private content. The reasoning is in
-`references/philosophy.md`.
+Read **Shared decisions** before applying a named operation, then its section.
+For ordinary implementation, start with the work loop in [SKILL.md](../SKILL.md).
+These are agent procedures using normal file, Git, and verification tools, not
+a protocol CLI.
 
 ## Contents
 
-- `init`, `adopt` — set up a library, from scratch or from existing code
-- `ask` — answer from the library plus read-only code checks
-- `follow` — act on human doc edits and propagate them
-- `challenge` — reconcile the documents with the code (anti-rot)
-- `groom` — forget low-value churn, promote detail into structure, keep quality
-- `handoff` — capture current state into a stage
-- Maintenance that rides along · When not to use DocDoki
+- [Shared decisions](#shared-decisions)
+- [Init](#init) · [Adopt](#adopt) · [Ask](#ask)
+- [Follow](#follow) · [Challenge](#challenge) · [Groom](#groom)
+- [Work stages](#work-stages): [selection](#select-or-create),
+  [maintenance](#maintain-during-work), [handoff](#handoff), [closure](#close)
+
+## Shared decisions
+
+### Scope, authority, and mode
+
+Start from the user's objective, applicable project instructions, current
+decisions, and requested scope. Read files before changing them and inspect
+existing work so you do not overwrite unrelated or unpropagated human edits.
+A file's timestamp, Git authorship, or position in the library does not by itself
+determine design authority.
+
+The human sets intent and important tradeoffs. The agent drafts, organizes,
+expands, and implements design within its delegated authority. A requirement is
+decided when supported by an applicable human decision or an in-scope agent
+design decision; an agent's tentative suggestion is not a user requirement.
+Polishing preserves strength, scope, conditions, negation, and exceptions. A
+meaning change needs authorization, even when it is a one-word edit in a note
+or a low-level spec. Routine maintenance needs no extra approval in write mode.
+
+**Read/review means zero project writes**, including formatting, status updates,
+stages, caches, generated files, moves, and archives. Choose inspection commands
+that do not write; if a test would create files, report it as not run or ask for
+permission to run it in an isolated copy. Do not write and then restore. In
+write mode, make the requested change and necessary supporting changes, not an
+unrelated library cleanup or a full roadmap implementation. Inspection requests
+such as “check” or “review” without a repair request default to review; `ask`
+is always read-only. A request to repair/reconcile authorizes in-scope fixes.
+When a named `follow` request says to propagate, use write mode unless restricted.
+
+If a material decision or authorization is missing, identify the precise
+question and its effect. Continue independent work; do not cross the unresolved
+boundary. Preserve the gap in a matching stage when writes are permitted, or
+report it in the answer when they are not. Do not commit, stash, reset, or rewrite
+history merely because a DocDoki operation runs; follow the user's Git workflow.
+
+### Evidence and repair direction
+
+Keep three questions separate: what is decided, what exists, and what the
+available checks establish. Read covered code, relevant tests and data; run
+checks appropriate to the claim and permitted by the mode. Git differences help
+locate work, but neither a diff nor its absence proves conformance or approval.
+
+| Finding | In an authorized write operation |
+| :-- | :-- |
+| Implementation violates a valid contract; the correct fix is clear and in scope. | Fix implementation, then check the affected behavior. Keep the contract. |
+| Documents lag an identifiable authorized design change. | Update the documents to that decision; verify relevant implementation claims. |
+| A decided capability is knowingly unfinished. | Keep its contract and distinguish the known gap from a new regression. Implement only what this task authorizes; retain remaining work in a stage. |
+| Evidence or authority cannot settle the difference. | Preserve it and state the missing evidence or decision. Do not pick the more convenient side. |
+
+A local defect can be fixed without reconstructing its whole history. Conversely,
+a plausible story about why the code changed is not authorization to change the
+contract. Never weaken a correct requirement to make wrong code appear compliant.
+
+Match conclusions to evidence. Reading a constant can establish its value;
+a targeted test supports only the exercised behavior under its conditions;
+performance, deployment, remote data, and filesystem claims may need different
+checks. Distinguish **confirmed within stated checks**, **known unmet**, and
+**not checked / inconclusive**. Do not mark an entire spec verified because one
+check passed or its `covers` matched nothing. Keep useful evidence pointers and
+limits in the stage or a note, without a log of every tool call.
 
 ## init
 
-Scaffold a library for a new project: create `docdoki/northstar.md` and
-`spec_abstract.md` from the schemas, plus the public `specs/ stages/
-stages/archive/ notes/` directories and the local
-`private/{specs,stages,stages/archive,notes}/` overlay. If the unit is not
-already inside a git repository, run `git init` first: committed history is the
-recovery trace for public content removed during grooming, so a DocDoki library
-should normally live in one. Add `/docdoki/private/` to the unit's `.gitignore`
-without replacing existing rules, then verify the path is ignored and untracked
-with `scripts/check_privacy.py <unit>`. In a child unit (a parent `docdoki/`
-exists above), write `parent:` into the child northstar and add the child under
-the parent's `## Units`. Then draft `northstar.md` from the user's stated intent
-and offer it for review — it is the only high-threshold document, so the human
-is its source and approver, not its typist. Link the panel script
-(`panel/panel.py` in this skill) into the project's agent-tooling directory so it
-is discoverable from the project root, and record the run command in a public
-note under `notes/` — the script stays the single authority; only the link and
-the note live in the project.
+Use when the user wants a new library. Read the stated intent and existing project
+instructions, inspect any existing library and nearest parent unit, then use
+[Document schemas](schemas.md). Reuse existing files rather than overwrite them.
+
+Create `docdoki/northstar.md` and `spec_abstract.md` with known intent, a useful
+initial map, and explicit questions where important intent is missing. A draft
+inference is not settled merely because you wrote it. Ask about those gaps, not
+for ritual approval of already stated decisions. Add specs, stages, and notes
+only when they have content; create directories as needed rather than empty
+placeholder documents.
+
+Use the existing Git repository. For a new project without one, initialize Git
+as part of setup unless the user has excluded it. Read [Privacy](privacy.md),
+append `/docdoki/private/` to the unit's `.gitignore` without replacing rules,
+and run the checker even if the overlay is still empty. If Git setup is not
+permitted, explain that the private boundary has not been established and do
+not store private content under an unprotected directory.
+
+For a child library, add the `parent` and `Contribution` navigation and the
+parent's `Units` link, within the requested setup scope. Finish by identifying
+the main reading paths and any unresolved intent. No panel, database, or cold
+research report is required. Do not install or link the optional panel unless
+the user asks for that integration.
 
 ## adopt
 
-Generate a library for a project that already has code. Read the code deeply —
-entrypoints, data flow, public contracts, tests — and read any existing private
-overlay. Route portable claims to public documents and durable local-only
-context to `docdoki/private/`, then write:
+Use when the user wants a library for an existing project. Read entrypoints,
+public interfaces, important data flow, tests, existing requirements and design
+records, and any relevant local overlay. Bound a large adoption to a coherent
+area if necessary and state what was not examined; do not claim complete
+coverage from a sample.
 
-1. `northstar.md` — mission, success criteria, hard constraints. Offer it for
-   review before treating it as settled.
-2. `spec_abstract.md` — the design map across areas and the cross-spec
-   direction.
-3. `specs/*.md` — one per coherent code/data area: a unit a contract can be
-   stated and audited about on its own (a public module, a pipeline step, a data
-   area), not one per file. Give each `covers` globs; optionally set `after`
-   (pipeline order) where the code makes it clear. A spec holds the standing
-   contract only, never the live position of the work — the standing-contract
-   rule is in `references/schemas.md` (specs/*.md).
-4. `notes/*.md` — reusable methods and gotchas you found, with source pointers.
-5. a stage for any work in flight.
+Apply `init` setup to the missing parts. Draft intent from authorized sources;
+when only behavior is known, call it an observation or a proposed reconstruction,
+not an approved goal. Write specs for coherent areas from decided requirements,
+including those not implemented yet. Where adoption delegates design judgment,
+record in-scope decisions as agent decisions rather than attributing them to
+the human. Keep unresolved design questions in stages or notes.
 
-Do not invent contracts the code does not have; where unsure, write the claim
-and flag it as not yet checked.
+Associate specs with actual or explicitly planned code targets. Explain observed
+conformance and gaps separately, route reusable discoveries to notes, and create
+a stage for work that will continue. The overview should orient the human to
+both the design and the limits of this adoption. Do not manufacture a contract
+for every file or call all existing behavior correct.
 
 ## ask
 
-Read-only project Q&A. Answer from public and private documents plus read-only
-code checks, keeping distinct what a document *claims*, what the code actually
-*does*, where they *disagree*, and what you *could not verify*. Do not expose
-private context in an answer intended for a public artifact. Change no project
-meaning. If the question reveals drift worth fixing, say so and point to
-`challenge`.
+Use for questions about the project or its progress. Read the main documents,
+relevant specs and active stages; inspect code or other sources as needed using
+read-only methods. Avoid routinely reading archives or the entire library.
+
+Answer the question, distinguishing decided design, recorded status, freshly
+checked facts, differences, and unknowns. If the overview is stale, say so rather
+than treating it as authoritative evidence. A question does not authorize
+polishing or repairing the library. Respect the intended audience; do not put
+private context into an answer intended for publication.
 
 ## follow
 
-The human edited one or more documents. Find the edits with `git diff` and the
-working tree.
+Use for human design input: a spoken instruction, a document edit, an identified
+commit, or an ordinary document write-back from an optional editor. Locate the
+actual input before interpreting it. For Git work, useful views from the unit are:
 
-- **review:** report whether each edit is reasonable, its impact on other
-  documents and on the code, and any open questions. No changes.
-- **write:** for a clear, reasonable edit, understand it, polish the wording,
-  and propagate the intent into the affected documents and the implementation.
-  For an unclear or risky edit, record the mismatch in a stage and ask rather
-  than guess.
+```sh
+git status --short
+git diff -- <requested-paths>
+git diff --cached -- <requested-paths>
+git show <specified-commit> -- <requested-paths>
+git diff <specified-base>..<specified-head> -- <requested-paths>
+```
 
-A human edit to `spec_abstract.md` is the common case: propagate the design
-direction into concrete specs and code, or record an explicit open mismatch.
-Treat the human's text as rough intent, not final wording — re-understand it
-into the written result, and flag what you propagate as not yet checked against
-the code until you have audited it. A private edit stays private unless the
-human also settled a portable claim that independently belongs in the public
-library; write that claim without making it depend on the private source.
+Choose the comparison from the user's identified change, not an arbitrary recent
+commit. A clean worktree does not exclude a committed human amendment. Mixed
+staged, unstaged, and prior-agent changes are not all approved new design.
+If attribution affects the outcome and cannot be resolved from the request and
+records, ask for the change range; continue clearly scoped independent work.
+Without Git, use the supplied old/new text and current files.
 
-A panel write-back (`panel/`) is one of these human document edits — it writes
-straight to the file, so you find and follow it exactly the same way. If the
-panel's copy-prompt fallback is used instead, treat that prompt as spoken
-intent.
+Read the changed documents and affected contracts and implementation. Preserve
+the input's actual conditions and strength when improving wording. In review,
+report meaning, impact, conflicts, and suggested changes only. In write mode:
+
+1. Put the decided design in the appropriate contracts and align linked summaries.
+2. Implement the authorized scope, using **Evidence and repair direction** above.
+3. Check the changed behavior and update meaningful work state. Leave remaining
+   gaps explicit, rather than weakening the design or silently expanding scope.
+
+If the user requests documentation-only propagation, update documents only and
+record the implementation gap. An explicit change in a human-edited summary
+can authorize a new contract; an unexplained conflicting file cannot. Private
+input stays private unless a disclosure decision permits a public, independently
+supported claim. See [Privacy](privacy.md).
 
 ## challenge
 
-Reconcile the documents with the implementation. This is the anti-rot pass.
+Use to assess conformance or repair drift in a named spec, area, or library.
+State the selected scope if the user leaves it open. Reconcile touched contracts
+during ordinary implementation too; that does not initiate a whole-library audit.
 
-It runs on a scope you are given or choose: a public or private spec, a module
-or area, or the whole library. (It also rides along whenever you work in code a
-spec covers — reconcile what you touched.) For each spec in scope, read the code
-under its `covers`, compare it to the claims, and reconcile. git is there to focus you —
-`git diff` or `git log` over `covers` shows what moved recently — but it only
-points; the judgment is yours, reading the code.
+Read in-scope specs, their actual `covers` matches, relevant dependencies, and
+stages that explain known gaps. Check targets outside `covers` when the claims
+depend on them; report or repair the association within mode. For missing targets,
+determine whether the association is planned, broken, or unknown. No matches is
+not a successful check.
 
-- **review:** report drift only. No changes.
-- **write:** repair it. For each claim, decide whether the code matches, then
-  act by cause, not convenience: a legitimate code change the spec lags → fix
-  the spec (you may, for clear cases); code that violates a correct spec → fix
-  the code, or raise a stage when the fix is out of scope; a genuine tie → the
-  human decides. When you confirm a claim by reading the code, drop any "not yet
-  checked" flag on it — the confidence is earned by that reading, never assumed.
+Compare the obligations with appropriate evidence and apply **Evidence and repair
+direction**. In review, leave every project file unchanged and report findings,
+evidence, consequences, recommended actions, and limits. In write mode, make the
+reliably determined in-scope repairs, check them, and update affected records and
+summaries. Do not turn an acknowledged roadmap gap into a demand to implement
+everything now. End with what was checked, fixed, remains unmet, or needs a decision.
 
 ## groom
 
-Keep the library high-quality on its own, so the human rarely has to. Grooming
-runs two ways: it **rides along** with every `follow` and `challenge` (groom
-what you just touched), and it runs as a **deliberate whole-library pass** when
-invoked or when a document has visibly drifted from its purpose.
+Use for deliberate library cleanup; during authorized write work, apply the same
+judgment only to touched content. Read before editing, including pending human
+input and relevant sources. Choose by future value:
 
-For each piece of content, decide one of:
+- **Leave** useful content that is already clear.
+- **Polish** wording or format without changing meaning.
+- **Route or consolidate** misplaced detail into its proper home, or synthesize
+  several observations into one supported lesson. Update links and summaries.
+- **Forget** obsolete or low-value material whose removal loses no active
+  obligation, important reason, or hard-to-recover knowledge.
 
-- **leave** — it still earns its place; do nothing.
-- **polish** — same meaning, clearer or denser wording; rewrite toward the
-  document's purpose.
-- **promote** — detail has accumulated until it has become a point in its own
-  right (quantity becoming quality). Synthesize it into structure: a recurring
-  gotcha across stages becomes a `note`; a settled, repeated decision becomes a
-  line in a spec or in `spec_abstract.md`; the raw detail then recedes beneath
-  that structure or is dropped.
-- **forget** — low-value churn, process residue that was never durable, or a
-  fact the code or current documents now make cheap to re-derive. The test is
-  load-bearing, not attention: if re-encountering the fact could change a later
-  decision, promote or keep it, never forget it; what fails the test is removed,
-  so the document reads as if it had always said the current thing. Route
-  durable lessons before deleting — a commit body may explain the cleanup but is
-  not where lessons live — and only committed text has a recovery trace, so be
-  surer before dropping uncommitted text.
+Remove chronology, duplicate raw output, and inconsequential preference wavering.
+Keep a reason that may change a future decision, including a rejected option
+that was never implemented. For example, “we tried blue at 09:12” can go;
+“remote conversion was rejected because rows must remain local” should stay.
+Stable constraints can still belong on the human's main reading surface.
 
-The two failure modes grooming exists to prevent: something important buried in
-detail, and the human's review surface (`northstar`, `spec_abstract`) filling
-with trivia or with facts that are fixed and no longer in play. Promote the first
-up; forget or sink the second. A third leak runs the other way: transient status
-that settled into a timeless document, forbidden by the standing-contract rule
-(`references/schemas.md`, specs/*.md). Judge by what the content is, not the
-heading it hides under: a measurement table titled `## Compute budget` is the
-same leak as a `## Status` block. Route it to the
-stage that owns the work — keeping only a durable constraint or the rationale for
-a settled choice — so the spec and the map read as the standing surfaces they
-are.
+Do not drop requirements because implementation is absent, hide unfinished work
+in notes, or erase an unpropagated edit as “noise.” Route durable content before
+deleting its old home. Git can recover committed text, but not uncommitted text
+or private material absent from that repository. Commit messages and external
+agent memory are not the retained lesson's home.
 
-Grooming also carries a formatting pass, since malformed text is a defect like
-any other: a heading with nothing under it, display code left outside a fence, a
-`purpose` that only echoes its H1 title, a heading not in sentence case, a list
-whose items are not parallel. Fix these in place as `polish` — they never need
-permission and never block. Formatting conventions are in `references/schemas.md`.
+Grooming does not authorize code changes or new design/disclosure decisions.
+Record such findings instead. Do not undertake unrelated audits, create churn
+for a cleanup quota, or block independent work on a minor formatting question.
+A pass that finds nothing worth changing is complete.
 
-Restraint is the default. Most content should be left alone; grooming is not a
-quota. Don't manufacture cleanup — if nothing crosses the threshold of being
-worth a change, the pass is already done. The aim is a library that reads as
-though it had always been this clean, not a library in constant churn.
+## Work stages
 
-Grooming never blocks and never asks permission for ordinary cleanup. It never
-moves a document across the public/private boundary without explicit human
-intent; that is a disclosure decision, not ordinary cleanup. It also does not
-rewrite `northstar.md`'s intent or weaken `spec_abstract.md`'s direction on its
-own — those carry the human's design, so propose the change and let the human
-decide.
+### Select or create
 
-## handoff
+Use the active public and private stage sets together; exclude `stages/archive/`
+from routine selection. Choose an existing stage by:
 
-Run this only when the user asks to hand off — "compact", "wrap up", "save
-context", "summarize session" — so the work can continue in another session or
-with another agent or person. Within one live session the context carries forward
-and there is nothing to hand off; never write a handoff unasked. Capture the
-current state into the matching stage (stage selection: `references/stages.md`)
-so a fresh agent can continue without the transcript. In one motion:
+1. explicit user identification;
+2. a unique match of objective and `scope` to the work;
+3. the only active stage, **if its objective fits**;
+4. otherwise ask which existing stream the work belongs to when that choice matters.
 
-1. scan the conversation and current files for the objective and goal, current
-   state (working / broken / modified files), next actions, decisions worth
-   keeping, and dead ends not to retry;
-2. rewrite the stage toward current state (never append a transcript), omitting
-   any section that would be empty;
-3. emit a short, copy-pasteable **kickoff prompt** for the next agent: the
-   stage's path plus "continue from `## Next actions`".
+Multiple active stages are normal. Overlapping paths signal coordination, not
+an error: identify the intended stage explicitly instead of assigning state to
+whichever file is found first. Read current edits before writing shared state.
+Do not commandeer a single unrelated stage.
 
-handoff writes its stage and nothing else. It does not route durable content
-into specs, the abstract, or notes, and does not reconcile against code — that
-promotion is the work of `follow`, `challenge`, `groom`, and stage close, not of
-a handoff capture. Durable content noticed here is recorded in the stage
-(`Decisions`, `Dead ends`) and promoted later by those passes.
+Reuse a stage for the same objective. Create one when a distinct stream needs
+persistent state, not for every small edit or every session. Populate `scope`,
+including intended paths where necessary, and use the shape in
+[Document schemas — Stages](schemas.md#stagesmd). A new meaningful public stream
+should be discoverable from the overview during ordinary write work. Public
+work must remain resumable without a private-only stage; separate any private
+context without making public records depend on it.
 
-Keep it scannable and minimal: orientation in under 30 seconds, concrete next
-actions, dead ends recorded so they are not retried, and no line that exists
-only because it happened chronologically.
+### Maintain during work
 
-## Maintenance that rides along
+Update the selected stage when a milestone, blocker, decision, check result, or
+next action materially changes what the next reader should do. Rewrite current
+state; do not append a diary. Route durable decisions and knowledge during the
+authorized work and refresh affected overview summaries. If nothing relevant
+changed, no documentation write is needed. None of this requires ending the
+session or producing a kickoff prompt.
 
-These are not separate protocols; they happen inside the ones above.
+### handoff
 
-- **status** — when you need the current picture, read the library: active
-  stages, which specs look behind (read their `covers`, or `git diff`/`git log`
-  over it, to check), and what needs attention. It is a reading, not a stored
-  artifact.
-- **route** — move content to its right layer during `follow`, `challenge`,
-  `groom`, and stage close while preserving visibility: durable content out of
-  a stage or note where it is buried, and — the reverse — transient status back
-  to the stage when it has crept into a spec or the abstract's design map.
-- **stage close** — when a stage's objective is done, abandoned, or superseded,
-  route its durable content, then archive it (`references/stages.md`).
+Use when the user wants work to continue in another session or with another
+executor. “Compact,” “wrap up,” or “save context” can express that intent; a
+summary for an email does not. Do not initiate a full handoff merely because a
+session is long, and do not treat a read-only summary as permission to write.
 
-## When not to use DocDoki
+Select or create the matching stage. Read current files and available work
+context, then rewrite objective, present state, next actions, decisions, and dead
+ends needed for a cold start. Recheck changed-file state where useful, but do not
+start a fresh conformance audit or implement pending work. If context or evidence
+is missing, state the gap rather than reconstructing it as fact.
 
-- Pure code questions that do not touch the documentation library.
-- A project's ordinary `docs/` directory — outside DocDoki's scope.
-- Repos with no `docdoki/` and no intent to adopt one (offer `init` / `adopt`,
-  then stop if declined).
+A standalone handoff writes only the selected stage (or corresponding public
+and private stages when necessary). It does not groom the whole library or
+promote content into other documents. Capture a durable item noticed here in
+`Decisions` or `Dead ends` for later routing. Preserve private boundaries even
+in the response. Finish with a short kickoff prompt naming the stage and asking
+the next executor to read the relevant contracts and continue from
+`## Next actions`. It must not rely on access to this chat.
+
+### Close
+
+Close a stage when its objective is completed, abandoned, superseded, split, or
+merged, within the authorized work. Before archiving:
+
+1. Route still-valid design into specs and reusable reasons/evidence into notes.
+2. Move unfinished obligations to an appropriate active stage, or record an
+   authorized cancellation or supersession. Do not silently cancel requirements
+   to make a stage look complete.
+3. Rewrite a compact final snapshot with the outcome and any continuation link;
+   move it to `stages/archive/` in the same visibility scope.
+4. Update current-work summaries and affected relative links, then run the
+   [privacy check](privacy.md#establish-and-check-the-boundary) for changed document
+   paths/references. Leave `progress` display fields alone unless their change
+   was explicitly requested.
+
+Do not close work whose remaining obligations have no owner or disposition.
+Closure needs no special seal commit. Archives preserve context but are not
+routine status or challenge inputs; consult them when explicitly requested or
+when current records lack necessary context, then restore useful missing
+knowledge to its active home when writing is authorized.

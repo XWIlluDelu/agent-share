@@ -6,9 +6,9 @@ Pure hand-written CSS + vanilla JS, one self-contained offline page served by a
 small local tool, no external fonts or libraries.
 
 The chosen visual language is **dell-1996**: a catalog-era reinterpretation of
-Dell.com's 1996 home page. The source spec is cold-backed at
-`design/dell-1996.DESIGN.md` (verbatim, from `npx getdesign@latest add
-dell-1996`); this file is the active contract that adapts it to a dense,
+Dell.com's 1996 home page. The source spec is
+[dell-1996.DESIGN.md](references/dell-1996.DESIGN.md) (verbatim, from
+`npx getdesign@latest add dell-1996`); this file is the active contract that adapts it to a dense,
 editable canvas, where legibility and density take precedence over literal
 fidelity. A black page frame, flat color-block "ribbon cards", Arial Black
 display over Times Roman body, hard borders, zero radius, and GIF-sticker
