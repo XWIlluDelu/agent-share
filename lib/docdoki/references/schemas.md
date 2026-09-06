@@ -211,10 +211,11 @@ sparse and consistent with the design map.
 `progress` remains an optional, explicitly edited display marker for the
 existing panel, with values `not-started`, `in-progress`, and `done`. Preserve
 it; core maintenance does not infer or set it from code, tests, or stage closure.
-An explicit human edit may change it through `follow`. The panel renders an
-absent value as `not-started`; that default is **not evidence** of implementation
-state. Use stage evidence and the overview for factual progress, not this marker
-as a verification result. No field migration is needed for this distinction.
+An explicit human edit may change it through `follow`. The panel labels it as
+manual planning and shows an absent value as **not recorded**, without inferring
+whether work has started. Use stage evidence and the overview for factual
+progress, not this marker as a verification result. No field migration is needed
+for this distinction.
 
 ## stages/*.md
 

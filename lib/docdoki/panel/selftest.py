@@ -1,321 +1,327 @@
 #!/usr/bin/env python3
-"""Self-test for panel write-back and graph seams.
-
-Standard library only; leaves nothing behind.
-"""
-
+"""Backend regressions in temporary libraries. --serve supplies the browser test."""
 from __future__ import annotations
 
 import json
-import shutil
+import signal
 import sys
 import tempfile
 import threading
+import time
+import unittest
 import urllib.error
 import urllib.request
 from pathlib import Path
+from unittest.mock import patch
 
-HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
+import documents
+import graph
+import panel
+import storage
 
-import panel  # noqa: E402
-
-VERBOSE = "-v" in sys.argv
-_fail = 0
-_pass = 0
-
-
-def check(cond: bool, label: str) -> None:
-    global _fail, _pass
-    if cond:
-        _pass += 1
-        if VERBOSE:
-            print(f"  ok   {label}")
-    else:
-        _fail += 1
-        print(f"  FAIL {label}")
+A = "docdoki/specs/a.md"
+B = "docdoki/specs/b.md"
 
 
-def write(path: Path, text: str) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
-    return path
+def write(root, path, text):
+    target = root / path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", encoding="utf-8", newline="") as stream:
+        stream.write(text)
+    return target
 
 
-def main() -> int:
-    tmp = Path(tempfile.mkdtemp(prefix="docdoki-panel-test-"))
-    try:
-        run(tmp)
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-    print(f"\n{_pass} passed, {_fail} failed")
-    return 1 if _fail else 0
+def fixture(root):
+    write(root, "docdoki/northstar.md", "# Northstar\n\nIntroduction before sections.\n\n## Mission\nKeep exports local.\n")
+    write(root, "docdoki/spec_abstract.md", """# Project overview
 
+Introduction before headings remains visible.
 
-def run(tmp: Path) -> None:
-    root = tmp / "unit"
-    spec = write(root / "docdoki/specs/a.md", """---
-purpose: old
-progress: not-started
-after:
-  - old-a
-covers: [old-c]
+## Design map
+
+| Contract | Design |
+| --- | --- |
+| [[a]] | Local export only |
+| [[b]] | Validate before delivery |
+
+## Capabilities and gaps
+
+CSV output exists. Atomic publication is not implemented yet.
+
+## Current work
+
+[[follow-export]] holds the current work and checks. See [[evidence]] for details.
+
+## Human decisions
+
+Decide whether to support network filesystems.
+""")
+    write(root, A, """---
+purpose: Local export without network delivery.
+covers: ['src/{a,b}/**', 'tests/**']
 ---
-# Alpha
+# Export
+
+An introduction that is not a section.
 
 ## Goal
 
-- first
-- duplicate
-- duplicate
+- Do not send rows
+  to any remote service.
 
-## Notes
+## Example
 
-- duplicate
-""")
-    private_spec = write(root / "docdoki/private/specs/local.md", """---
-purpose: private purpose
-progress: not-started
-after: [a]
-covers: [local/**]
----
-# Local
-
+````md
 ## Goal
+- This is code, not a contract.
+````
 
-- private claim
+## Checks
+
+| Case | Expected |
+| --- | --- |
+| Failure | Destination unchanged |
+
+## Non-goals
+
+Never upload data. See [[evidence#Details]] and [validation](b.md).
+
+## Repeated
+
+First section.
+
+## Repeated
+
+Second section.
 """)
-    write(root / "docdoki/private/stages/handoff-local-2026-07-12.md", """---
-scope:
-  - local/**
----
-# Local stage
+    write(root, B, "---\npurpose: Validate local rows.\nafter: ['a']\nprogress: done\n---\n# Validation\n\n## Goal\n\n- Validate types.\n")
+    write(root, "docdoki/stages/follow-export.md", "# Atomic export\n\n## Current state\n\nAtomic publication is not implemented in [[a]].\n\n## Next actions\n\n- [ ] Add failure checks.\n")
+    write(root, "docdoki/notes/evidence.md", "# Evidence\n\n## Details\n\nA useful observation with a [spec link](../specs/a.md).\n")
+    write(root, "docdoki/stages/archive/follow-old.md", "# Previous work\n\nArchived knowledge remains reachable.\n")
+    write(root, "docdoki/private/specs/local.md", "---\npurpose: Private calibration.\nafter: [a]\n---\n# Local\n\n## Goal\n\n- Keep calibration local.\n")
+    write(root, "docdoki/private/stages/follow-local.md", "# Local work\n\n## Current state\nPrivate inspection of [[local]].\n")
 
-## Objective
 
-Keep local work resumable.
-""")
+class PanelTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="docdoki-panel-test-")
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        fixture(self.root)
 
-    print("frontmatter write-back")
-    crlf = "---\r\npurpose: old\r\nprogress: not-started\r\n---\r\n# Title\r\n"
-    updated = panel.set_fm_scalar(crlf, "purpose", "new\nline")
-    check(updated.count("---") == 2, "CRLF frontmatter is updated, not duplicated")
-    check('purpose: "new line"' in updated, "scalar frontmatter values stay inline and YAML-safe")
-    check("progress: not-started" in updated, "unrelated frontmatter survives")
-    fm, body = panel.split_frontmatter_raw("---\na: b\n---x\n# Body\n")
-    check(fm is None and body.startswith("---\na: b"), "frontmatter delimiter must be a line by itself")
+    def source(self, path=A):
+        return documents.read_source(self.root / path)
 
-    print("path containment")
-    outside = write(tmp / "unit-extra/hack.md", "---\nprogress: not-started\n---\n# Hack\n")
-    ok, msg = panel.apply_edit(root, {"path": "../unit-extra/hack.md", "field": "progress", "from": "not-started", "to": "done"})
-    check(not ok and "bad path" in msg, "sibling prefix path is rejected")
-    check("done" not in outside.read_text(encoding="utf-8"), "rejected path is not written")
+    def edit(self, path=A, old=None, new=None):
+        before = self.source(path) if old is None else old
+        return {"path": path, "field": "source", "from": before, "to": new if new is not None else before + "\nA new constraint.\n"}
 
-    print("field patches")
-    ok, _ = panel.apply_edit(root, {"path": "docdoki/specs/a.md", "field": "content", "from": "old", "to": "one\ntwo"})
-    text = spec.read_text(encoding="utf-8")
-    check(ok and 'purpose: "one two"' in text, "content writes an inline YAML-safe purpose")
+    def test_yaml_lists_and_scalars(self):
+        for source, expected in [("after: ['a', 'b']", ["a", "b"]),
+                                 ('after: ["a", "b"]', ["a", "b"]),
+                                 ("after:\n- a\n- 'b'", ["a", "b"]),
+                                 ("after:\n  - a\n  - 'b'", ["a", "b"])]:
+            self.assertEqual(documents.parse_frontmatter(source)["after"], expected)
+        self.assertEqual(documents.parse_frontmatter("purpose: 'It''s local' # comment")["purpose"], "It's local")
+        self.assertEqual(documents.parse_frontmatter('covers: ["src/{a,b}/**", "tests/**"]')["covers"], ["src/{a,b}/**", "tests/**"])
+        for value in ("Auth: token #1", "true", "123", "say \"hello\""):
+            self.assertEqual(documents.parse_frontmatter("purpose: " + json.dumps(value))["purpose"], value)
 
-    ok, _ = panel.apply_edit(root, {"path": "docdoki/specs/a.md", "field": "after", "from": "old-a", "to": "b, c"})
-    text = spec.read_text(encoding="utf-8")
-    check(ok and 'after: ["b", "c"]' in text and "  - old-a" not in text, "list fields replace old block lists")
+    def test_unsupported_yaml_is_explicit(self):
+        for source in ("purpose: >\n  folded", "after: [a,,b]", "after: [a", "after: [a]\nafter: [b]", "mapping:\n  nested: value"):
+            with self.subTest(source=source), self.assertRaises(documents.FormatError):
+                documents.parse_frontmatter(source)
+        write(self.root, A, "---\npurpose: >\n  folded\n---\n# Still readable\n")
+        model = graph.build_graph(self.root / "docdoki")
+        self.assertIn("# Still readable", model["documents"][A]["source"])
+        self.assertTrue(any(d["code"] == "format" for d in model["diagnostics"]))
 
-    ok, _ = panel.apply_edit(root, {"path": "docdoki/specs/a.md", "field": "covers", "from": "old-c", "to": "src/{a,b}/**, tests/**"})
-    text = spec.read_text(encoding="utf-8")
-    check(ok and 'covers: ["src/{a,b}/**", "tests/**"]' in text, "brace-glob covers are quoted as valid YAML")
-    g = panel.build_graph(root / "docdoki")
-    check(g["nodes"][0]["covers"] == ["src/{a,b}/**", "tests/**"], "brace-glob covers parse without splitting braces")
+    def test_full_source_preserves_markdown_structure(self):
+        old = self.source()
+        new = old.replace("Do not send rows\n  to any remote service.", "Never transmit records\n  outside this machine.").replace("Second section.", "Second section revised.")
+        result = storage.apply_edits(self.root, [self.edit(new=new)])
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(self.source(), new)
+        self.assertIn("## Goal\n- This is code, not a contract.\n````", self.source())
+        self.assertIn("First section.", self.source())
+        self.assertEqual(result["documents"][A]["source"], self.source())
+        self.assertEqual(result["receipt"][0]["from"], old)
+        self.assertTrue(storage.apply_edits(self.root, [self.edit()])["ok"])
 
-    ok, _ = panel.apply_edit(root, {"path": "docdoki/specs/a.md", "field": "claim", "i": 2, "from": "duplicate", "to": "third"})
-    lines = spec.read_text(encoding="utf-8").splitlines()
-    check(ok, "claim edit succeeds by index")
-    check(lines.count("- duplicate") == 2 and "- third" in lines, "claim edit changes the indexed Goal bullet only")
-    notes_i = lines.index("## Notes")
-    check(lines[notes_i + 2] == "- duplicate", "claim edit does not touch non-Goal bullets")
+    def test_fragments_are_rejected(self):
+        for field in ("claim", "section", "content", "title"):
+            before = self.source()
+            result = storage.apply_edits(self.root, [{**self.edit(), "field": field}])
+            self.assertFalse(result["ok"])
+            self.assertEqual(self.source(), before)
 
-    before = spec.read_text(encoding="utf-8")
-    ok, msg = panel.apply_edit(root, {"path": "docdoki/specs/a.md", "field": "section", "section": "Missing", "from": "", "to": "x"})
-    check(not ok and msg == "section not found", "missing section is reported")
-    check(spec.read_text(encoding="utf-8") == before, "missing section does not rewrite file")
+    def test_crlf_and_after_patch(self):
+        original = "---\r\npurpose: local\r\nafter:\r\n  - a\r\n# keep this comment\r\n  - b\r\ncovers: ['src/**']\r\n---\r\n\r\n# Title\r\n\r\nBody.\r\n"
+        result = documents.set_after(original, ["c"])
+        self.assertEqual(documents.split_frontmatter(result)[0]["after"], ["c"])
+        self.assertIn("# keep this comment\r\n", result)
+        self.assertTrue(result.endswith("---\r\n\r\n# Title\r\n\r\nBody.\r\n"))
+        self.assertIn("covers: ['src/**']", result)
+        self.assertEqual(documents.h1("```md\n# Fake\n```\n# Real\n"), "Real")
 
-    batch_before = spec.read_text(encoding="utf-8")
-    results = panel.apply_edits(root, [
-        {"path": "docdoki/specs/a.md", "field": "progress", "from": "not-started", "to": "done"},
-        {"path": "docdoki/specs/a.md", "field": "section", "section": "Missing", "from": "", "to": "x"},
-    ])
-    check(results == [(False, "not written: batch failed"), (False, "section not found")], "failed batches report no writes")
-    check(spec.read_text(encoding="utf-8") == batch_before, "failed batches are atomic")
+    def test_stale_and_failed_batches_preserve_files(self):
+        before = self.source()
+        stale = storage.apply_edits(self.root, [self.edit(old="old snapshot")])
+        self.assertFalse(stale["ok"])
+        self.assertIn("conflict", stale["error"])
+        failed = storage.apply_edits(self.root, [self.edit(), self.edit(B, old="stale")])
+        self.assertFalse(failed["ok"])
+        self.assertEqual(self.source(), before)
 
-    other = spec.with_name("b.md")
-    other.write_text("---\npurpose: old\nprogress: not-started\n---\n# B\n", encoding="utf-8")
-    originals = {spec: spec.read_text(encoding="utf-8"), other: other.read_text(encoding="utf-8")}
-    real_atomic_write = panel.atomic_write
-    writes = 0
+    def test_write_failure_rolls_back(self):
+        before = {path: self.source(path) for path in (A, B)}
+        real = storage.atomic_write
+        count = 0
+        def fail_second(path, text):
+            nonlocal count
+            count += 1
+            if count == 2:
+                raise OSError("injected failure")
+            real(path, text)
+        with patch.object(storage, "atomic_write", fail_second):
+            result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
+        self.assertFalse(result["ok"])
+        self.assertIn("rollback completed", result["error"])
+        self.assertEqual(before, {path: self.source(path) for path in (A, B)})
+        self.assertEqual(len(result["recovery"]), 2)
 
-    def fail_second_write(path, text):
-        nonlocal writes
-        writes += 1
-        if writes == 2:
-            raise OSError("injected replacement failure")
-        real_atomic_write(path, text)
+    def test_mid_save_external_write_survives(self):
+        old_a, old_b = self.source(A), self.source(B)
+        external = old_b + "\nExternal obligation.\n"
+        real = storage.atomic_write
+        def modify_other(path, text):
+            real(path, text)
+            if path == self.root / A:
+                write(self.root, B, external)
+        with patch.object(storage, "atomic_write", modify_other):
+            result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
+        self.assertFalse(result["ok"])
+        self.assertEqual(self.source(A), old_a)
+        self.assertEqual(self.source(B), external)
 
-    panel.atomic_write = fail_second_write
-    try:
-        results = panel.apply_edits(root, [
-            {"path": "docdoki/specs/a.md", "field": "progress", "from": "not-started", "to": "done"},
-            {"path": "docdoki/specs/b.md", "field": "content", "from": "old", "to": "new"},
-        ])
-    finally:
-        panel.atomic_write = real_atomic_write
-    check(all(not ok and "rolled back" in msg for ok, msg in results), "write failure reports rollback")
-    check(all(path.read_text(encoding="utf-8") == text for path, text in originals.items()),
-          "write failure rolls back completed replacements")
+    def test_rollback_does_not_overwrite_newer_content(self):
+        real = storage.atomic_write
+        def fail_with_newer(path, text):
+            if path == self.root / B:
+                write(self.root, A, "# External replacement\n")
+                raise OSError("injected failure")
+            real(path, text)
+        with patch.object(storage, "atomic_write", fail_with_newer):
+            result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
+        self.assertFalse(result["ok"])
+        self.assertIn("rollback incomplete", result["error"])
+        self.assertEqual(self.source(), "# External replacement\n")
 
-    external = "---\npurpose: external\nprogress: not-started\n---\n# B\n"
-    changed_other = False
+    def test_path_and_private_boundary(self):
+        outside = write(self.root, "outside.md", "# Outside\n")
+        for raw in ("../outside.md", str(outside), "docdoki/../outside.md", "outside.md"):
+            self.assertFalse(storage.apply_edits(self.root, [self.edit(path=raw, old="", new="x")])["ok"])
+        (self.root / "docdoki/specs/link.md").symlink_to(outside)
+        self.assertFalse(storage.apply_edits(self.root, [self.edit(path="docdoki/specs/link.md")])["ok"])
+        for extra in ("See [[local]].", "See [local](../private/specs/local.md).", "Read `../private/specs/local.md`."):
+            self.assertFalse(storage.apply_edits(self.root, [self.edit(new=self.source() + extra)])["ok"])
+        private = "docdoki/private/specs/local.md"
+        result = storage.apply_edits(self.root, [self.edit(private)])
+        self.assertTrue(result["ok"], result)
+        self.assertTrue(result["receipt"][0]["private"])
+        self.assertTrue(storage.apply_edits(self.root, [self.edit(new=self.source().replace("tests/**", "src/private/**"))])["ok"])
 
-    def change_other_after_first_write(path, text):
-        nonlocal changed_other
-        real_atomic_write(path, text)
-        if path == spec and not changed_other:
-            changed_other = True
-            other.write_text(external, encoding="utf-8")
+    def test_graph_diagnostics_and_cycles(self):
+        for items, code in [(["missing"], "missing-edge"), (["a"], "self-edge"), (["b", "b"], "duplicate-edge"), (["b"], "cycle"), (["local"], "private-edge")]:
+            with self.subTest(items=items):
+                model = graph.build_graph(self.root / "docdoki", {A: documents.set_after(self.source(), items)})
+                self.assertTrue(any(d["code"] == code for d in model["diagnostics"]))
+                result = storage.apply_edits(self.root, [self.edit(new=documents.set_after(self.source(), items))])
+                self.assertFalse(result["ok"])
+        model = graph.build_graph(self.root / "docdoki", {A: self.source().replace("purpose:", "after: a\npurpose:")})
+        self.assertTrue(any(d["code"] == "after-type" for d in model["diagnostics"]))
 
-    panel.atomic_write = change_other_after_first_write
-    try:
-        results = panel.apply_edits(root, [
-            {"path": "docdoki/specs/a.md", "field": "progress", "from": "not-started", "to": "done"},
-            {"path": "docdoki/specs/b.md", "field": "content", "from": "old", "to": "new"},
-        ])
-    finally:
-        panel.atomic_write = real_atomic_write
-    check(all(not ok and "conflict:" in msg for ok, msg in results),
-          "mid-save external change is reported as a conflict")
-    check(spec.read_text(encoding="utf-8") == originals[spec], "mid-save conflict rolls back earlier replacement")
-    check(other.read_text(encoding="utf-8") == external, "mid-save conflict preserves the external change")
+    def test_linear_shared_ancestor_graph(self):
+        nodes = [{"path": str(i), "stem": str(i), "private": False,
+                  "after": [str(j) for j in (i - 1, i - 2) if j >= 0]} for i in range(3000)]
+        start = time.monotonic()
+        self.assertEqual(graph.analyze(nodes), [])
+        self.assertEqual(nodes[-1]["col"], 3000)
+        self.assertLess(time.monotonic() - start, 2)
 
-    print("YAML-safe values and stale writes")
-    for value in ('Auth: token #1', '[literal, text]', 'true', '123', '2026-07-10', 'say "hello"'):
-        encoded = panel.set_fm_scalar("---\npurpose: old\n---\n# A\n", "purpose", value)
-        parsed, _ = panel.split_frontmatter(encoded)
-        check(parsed.get("purpose") == value, f"scalar round-trips: {value}")
-    parsed, _ = panel.split_frontmatter('---\ncovers: ["src/{a,b}/**", "tests/**"]\n---\n# A\n')
-    check(parsed.get("covers") == ["src/{a,b}/**", "tests/**"], "quoted brace-glob list round-trips")
+    def test_reading_payload_and_previews(self):
+        model = graph.build_graph(self.root / "docdoki")
+        self.assertIsNone(next(n for n in model["nodes"] if n["path"] == A)["progress"])
+        self.assertIn("## Non-goals", model["documents"][A]["body"])
+        self.assertTrue(any(d["private"] for d in model["documents"].values()))
+        self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
+        self.assertTrue(any(d["archived"] for d in model["catalog"]))
+        before = self.source(B)
+        preview = storage.preview(self.root, [], {"path": B, "items": []})
+        self.assertEqual(next(n for n in preview["nodes"] if n["path"] == B)["col"], 1)
+        self.assertEqual(self.source(B), before)
 
-    stale_before = spec.read_text(encoding="utf-8")
-    ok, msg = panel.apply_edit(root, {
-        "path": "docdoki/specs/a.md", "field": "content", "from": "old panel value", "to": "stale edit",
-    })
-    check(not ok and msg.startswith("conflict:"), "stale field edit is rejected")
-    check(spec.read_text(encoding="utf-8") == stale_before, "stale edit leaves the file unchanged")
+    def test_preview_uses_client_snapshot_not_mixed_disk_versions(self):
+        base = {A: self.source(A), B: self.source(B)}
+        write(self.root, B, base[B].replace("Validate local rows.", "External rewrite."))
+        model = storage.preview(self.root, [self.edit(A)], base=base)
+        self.assertEqual(model["documents"][B]["source"], base[B])
+        self.assertIn("External rewrite", self.source(B))
 
-    print("save request authentication")
-    token = "secret"
-    origin = "http://127.0.0.1:8765"
-    good_headers = {"Host": "127.0.0.1:8765", "Content-Type": "application/json", "X-DocDoki-Token": token, "Origin": origin}
-    check(panel.save_request_error(good_headers, token, origin) is None, "same-origin tokenized JSON save is accepted")
-    check(panel.save_request_error({"Host": "127.0.0.1:8765", "Content-Type": "text/plain", "X-DocDoki-Token": token}, token, origin)[0] == 415,
-          "simple cross-origin content type is rejected")
-    check(panel.save_request_error({"Host": "127.0.0.1:8765", "Content-Type": "application/json"}, token, origin)[0] == 403,
-          "missing save token is rejected")
-    check(panel.save_request_error({**good_headers, "Host": "evil.example:8765"}, token, origin)[0] == 403,
-          "DNS-rebinding host is rejected")
-    check(panel.save_request_error({**good_headers, "Origin": "https://evil.example"}, token, origin)[0] == 403,
-          "cross-origin save is rejected")
-    check('const SAVE_TOKEN="secret"' in panel.render(root / "docdoki", "secret"), "rendered panel carries the process token")
+    def test_http_security_and_storage_baselines(self):
+        server = panel.make_server(self.root / "docdoki", token="test-token")
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(lambda: (server.shutdown(), server.server_close(), thread.join()))
+        url = f"http://127.0.0.1:{server.server_address[1]}"
+        with urllib.request.urlopen(url) as response:
+            page = response.read().decode()
+            self.assertIn("no-store", response.headers["Cache-Control"])
+            self.assertIn("frame-ancestors 'none'", response.headers["Content-Security-Policy"])
+            self.assertIn('SAVE_TOKEN="test-token"', page)
+        headers = {"Content-Type": "application/json", "X-DocDoki-Token": "test-token", "Origin": url}
+        payload = json.dumps({"edits": [self.edit()]}).encode()
+        for changes, expected in [({"X-DocDoki-Token": ""}, 403), ({"Origin": "https://evil.example"}, 403),
+                                  ({"Host": "evil.example"}, 403), ({"Content-Type": "text/plain"}, 415)]:
+            with self.subTest(changes=changes), self.assertRaises(urllib.error.HTTPError) as raised:
+                urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers={**headers, **changes}))
+            self.assertEqual(raised.exception.code, expected)
+            raised.exception.close()
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            urllib.request.urlopen(url + "/snapshot")
+        raised.exception.close()
+        result = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["documents"][A]["source"], self.source())
+        replay = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
+        self.assertFalse(replay["ok"])
 
-    print("HTTP save integration")
-    panel.Handler.dd = root / "docdoki"
-    panel.Handler.save_token = token
-    server = panel.ThreadingHTTPServer(("127.0.0.1", 0), panel.Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    base = f"http://127.0.0.1:{server.server_address[1]}"
-    payload = json.dumps({"edits": [
-        {"path": "docdoki/specs/a.md", "field": "content", "from": "one two", "to": "saved over HTTP"},
-    ]}).encode()
-    try:
-        page = urllib.request.urlopen(base + "/").read().decode()
-        check('const SAVE_TOKEN="secret"' in page, "GET renders the active save token")
+    def test_script_data_cannot_escape(self):
+        write(self.root, A, self.source() + '\n</script><script>window.injected=true</script>\n')
+        rendered = panel.render(self.root / "docdoki", "token")
+        self.assertNotIn('</script><script>window.injected=true', rendered)
+        self.assertIn('\\u003c/script>', rendered)
+
+
+def serve_fixture():
+    with tempfile.TemporaryDirectory(prefix="docdoki-panel-browser-") as tmp:
+        root = Path(tmp)
+        fixture(root)
+        server = panel.make_server(root / "docdoki")
+        def stop(*_):
+            raise KeyboardInterrupt
+        signal.signal(signal.SIGTERM, stop)
+        print(json.dumps({"url": f"http://127.0.0.1:{server.server_address[1]}", "root": str(root)}), flush=True)
         try:
-            urllib.request.urlopen(urllib.request.Request(
-                base + "/save", data=payload, headers={"Content-Type": "application/json"},
-            ))
-            missing_token_status = 200
-        except urllib.error.HTTPError as ex:
-            missing_token_status = ex.code
-        check(missing_token_status == 403, "HTTP save without token is rejected")
-        request = urllib.request.Request(base + "/save", data=payload, headers={
-            "Content-Type": "application/json", "X-DocDoki-Token": token, "Origin": base,
-        })
-        result = json.loads(urllib.request.urlopen(request).read())
-        check(result["ok"] and panel.split_frontmatter(spec.read_text(encoding="utf-8"))[0]["purpose"] == "saved over HTTP",
-              "tokenized same-origin HTTP save writes the addressed field")
-        stale = json.loads(urllib.request.urlopen(request).read())
-        check(not stale["ok"], "replayed stale HTTP save is rejected")
-    finally:
-        server.shutdown()
-        server.server_close()
-        thread.join()
-
-    print("private documents")
-    graph = panel.build_graph(root / "docdoki")
-    private_nodes = [node for node in graph["nodes"] if node.get("private")]
-    check(len(private_nodes) == 1 and private_nodes[0]["path"] == "docdoki/private/specs/local.md",
-          "graph includes private specs with a derived visibility flag")
-    private_stages = [stage for stage in graph["docs"]["stages"] if stage.get("private")]
-    check(len(private_stages) == 1 and private_stages[0]["title"] == "Local stage",
-          "documents rail includes private active stages")
-    ok, _ = panel.apply_edit(root, {
-        "path": "docdoki/specs/a.md", "field": "covers",
-        "from": "src/{a,b}/**, tests/**", "to": "src/private/**",
-    })
-    check(ok and panel.split_frontmatter(spec.read_text(encoding="utf-8"))[0]["covers"] == ["src/private/**"],
-          "project paths named private remain valid public covers")
-    before_public = spec.read_text(encoding="utf-8")
-    ok, msg = panel.apply_edit(root, {
-        "path": "docdoki/specs/a.md", "field": "after",
-        "from": "b, c", "to": "local",
-    })
-    check(not ok and "cannot reference private" in msg,
-          "write-back rejects a public after dependency on a private spec")
-    check(spec.read_text(encoding="utf-8") == before_public,
-          "rejected private dependency leaves the public spec unchanged")
-    ok, msg = panel.apply_edit(root, {
-        "path": "docdoki/specs/a.md", "field": "section", "section": "Notes",
-        "from": "- duplicate", "to": "See [[local]].",
-    })
-    check(not ok and "cannot reference private" in msg,
-          "write-back rejects a public prose link to a private document")
-    ok, msg = panel.apply_edit(root, {
-        "path": "docdoki/specs/a.md", "field": "section", "section": "Notes",
-        "from": "- duplicate", "to": "Read `../private/notes/local.md`.",
-    })
-    check(not ok and "cannot contain a private path" in msg,
-          "write-back rejects a plain relative path into the private overlay")
-    ok, _ = panel.apply_edit(root, {
-        "path": "docdoki/private/specs/local.md", "field": "content",
-        "from": "private purpose", "to": "private saved",
-    })
-    check(ok and panel.split_frontmatter(private_spec.read_text(encoding="utf-8"))[0]["purpose"] == "private saved",
-          "write-back edits a private spec in place")
-    duplicate = write(root / "docdoki/private/specs/a.md", "---\npurpose: duplicate\n---\n# Duplicate\n")
-    try:
-        panel.build_graph(root / "docdoki")
-        duplicate_rejected = False
-    except ValueError as ex:
-        duplicate_rejected = "duplicate DocDoki document stem" in str(ex)
-    duplicate.unlink()
-    check(duplicate_rejected, "panel rejects duplicate public/private spec stems")
-    rendered = panel.render(root / "docdoki")
-    check('privateLabel:"Private"' in rendered and '"private": true' in rendered,
-          "rendered panel labels private payloads")
-
-    print("graph payload")
-    graph = panel.build_graph(root / "docdoki")
-    check("edges" not in graph, "graph payload has no static edge snapshot")
-    check(all("sclass" not in n for n in graph["nodes"]), "nodes omit dead sclass payload")
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.server_close()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    if "--serve" in sys.argv:
+        serve_fixture()
+    else:
+        unittest.main()

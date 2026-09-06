@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__ · DocDoki</title>
+<style>__CSS__</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">Doc<span>♥</span>Doki</div>
+    <div class="project"><strong id="project-name"></strong><div id="project-path"></div></div>
+    <label class="search"><span class="sr-only" data-en="Search documents" data-zh="搜索文档">Search documents</span><input id="search" type="search" placeholder="Search documents and drafts" autocomplete="off"></label>
+    <button id="language" class="sticker" data-en-label="Switch to Chinese" data-zh-label="切换到英文">中</button>
+    <div class="snapshot" id="snapshot"></div>
+    <nav class="top-actions" data-en-label="Workspace" data-zh-label="工作区">
+      <button id="library-toggle" aria-controls="library" aria-expanded="true" data-en="Documents" data-zh="文档">Documents</button>
+      <button id="refresh" data-en="Refresh" data-zh="刷新">Refresh</button>
+      <button id="changes-toggle" aria-controls="changes" aria-expanded="false"><span data-en="Changes" data-zh="改动">Changes</span> <b id="count">0</b></button>
+    </nav>
+  </header>
+  <aside class="library" id="library" data-en-label="Documents" data-zh-label="文档">
+    <div class="library-heading"><strong data-en="Documents" data-zh="文档">Documents</strong><button id="library-close" data-en-label="Close documents" data-zh-label="关闭文档">×</button></div>
+    <nav class="primary-nav">
+      <button data-nav="overview" data-en="Overview" data-zh="总览">Overview</button>
+      <button data-nav="northstar" data-en="Northstar" data-zh="北极星">Northstar</button>
+      <button data-nav="work" data-en="Current work" data-zh="当前工作">Current work</button>
+      <button data-nav="specs" data-en="Specs" data-zh="规格">Specs</button>
+    </nav>
+    <div id="catalog"></div>
+  </aside>
+  <main class="workspace" id="workspace">
+    <div class="view-heading">
+      <h1 id="view-title"></h1>
+      <div class="view-actions" id="view-actions">
+        <button id="read-mode" data-en="Read" data-zh="阅读">Read</button>
+        <button id="edit-mode" data-en="Edit source" data-zh="编辑源码">Edit source</button>
+        <button id="latest" data-en="Compare latest" data-zh="比较磁盘最新内容">Compare latest</button>
+      </div>
+      <div class="view-actions" id="spec-actions" hidden>
+        <button id="list-view" data-en="List" data-zh="列表">List</button>
+        <button id="graph-view" data-en="Dependencies" data-zh="依赖图">Dependencies</button>
+      </div>
+    </div>
+    <div class="source-bar"><div class="document-path" id="document-path"></div><span id="preview-status" class="preview-status" role="status" hidden></span></div>
+    <div id="diagnostics" class="diagnostics" hidden></div>
+    <div class="reader" id="reader"><article class="markdown" id="reading"></article><div id="related"></div></div>
+    <section class="editor" id="editor" hidden>
+      <p class="notice" data-en="Complete document source, not a contract excerpt. Esc cancels this editing session. Use Read to finish; Enter inserts a newline." data-zh="完整文档源码，不是契约摘录。Esc 取消本次编辑；点击阅读结束编辑，Enter 正常换行。">Complete document source, not a contract excerpt. Esc cancels this editing session. Use Read to finish; Enter inserts a newline.</p>
+      <label for="source" class="sr-only" data-en="Document source" data-zh="文档源码">Document source</label>
+      <textarea id="source" spellcheck="false" wrap="off"></textarea>
+    </section>
+    <section class="comparison" id="comparison" hidden>
+      <h2 data-en="Latest on disk" data-zh="磁盘最新版本">Latest on disk</h2>
+      <p data-en="Merge any external changes into your draft, then accept this version as its new baseline. Nothing is written by this action." data-zh="请先将外部改动合并到你的草稿，再将这个磁盘版本设为新基线。此操作不会写文件。">Merge any external changes into your draft, then accept this version as its new baseline. Nothing is written by this action.</p>
+      <pre id="latest-source"></pre>
+      <button id="rebase" data-en="Accept latest baseline; keep my merged draft" data-zh="接受最新基线，保留已合并的草稿">Accept latest baseline; keep my merged draft</button>
+      <button id="comparison-close" data-en="Close comparison" data-zh="关闭比较">Close comparison</button>
+    </section>
+    <section id="spec-list" class="spec-list" hidden></section>
+    <section id="graph" class="graph" hidden data-en-label="Spec dependencies" data-zh-label="规格依赖">
+      <div class="graph-note" data-en="Design dependencies only — not implementation progress. Read full documents outside the scaled graph." data-zh="仅表示设计依赖，不代表实现进度。完整文档在图外阅读，不随图缩放。">Design dependencies only — not implementation progress. Read full documents outside the scaled graph.</div>
+      <div id="viewport" class="viewport"><svg id="edges" class="edges"><defs><marker id="arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="black"></path></marker></defs><g id="edge-lines"></g></svg><div id="graph-cards"></div></div>
+      <div class="graph-tools"><button id="zoom-out" data-en-label="Zoom out" data-zh-label="缩小">−</button><button id="zoom-label" data-en-label="Lock or unlock zoom" data-zh-label="锁定或解锁缩放" aria-pressed="false">100%</button><button id="zoom-in" data-en-label="Zoom in" data-zh-label="放大">+</button><button id="fit" data-en="Fit" data-zh="适配">Fit</button><button id="reset-layout" data-en="Reset layout" data-zh="重置布局">Reset layout</button></div>
+      <svg id="minimap" class="minimap" role="img" data-en-label="Dependency map; click or drag to pan" data-zh-label="依赖缩略图；点击或拖动平移"><g id="mini-nodes"></g><rect id="mini-view" fill="none" stroke="#e91d2a" stroke-width="2" vector-effect="non-scaling-stroke"></rect></svg>
+      <div class="edge-detail" id="edge-detail" hidden></div>
+    </section>
+  </main>
+  <aside class="changes" id="changes" data-en-label="Pending changes" data-zh-label="待保存修改">
+    <h2><span data-en="Changes" data-zh="改动">Changes</span><button id="changes-close" data-en-label="Close changes" data-zh-label="关闭改动">×</button></h2>
+    <div class="change-actions"><button id="undo" data-en="Undo last edit" data-zh="撤销上次编辑">Undo last edit</button><button id="export" data-en="Export drafts" data-zh="导出草稿">Export drafts</button></div>
+    <div class="change-list" id="change-list"></div>
+    <div class="save-controls">
+      <p class="notice" data-en="Pause other writers to these files while saving. Drafts and receipts stay in this tab only." data-zh="保存时请暂停其他执行者写入这些文件。草稿与回执只保留在当前标签页。">Pause other writers to these files while saving. Drafts and receipts stay in this tab only.</p>
+      <p id="private-warning" class="private-warning" hidden></p>
+      <button id="save" class="primary" data-en="Save documents" data-zh="保存文档">Save documents</button>
+      <button id="copy-drafts" data-en="Copy apply request" data-zh="复制待应用请求">Copy apply request</button>
+      <button id="copy-receipt" data-en="Copy saved-change follow request" data-zh="复制已保存修改的 follow 请求">Copy saved-change follow request</button>
+      <div id="receipt-summary"></div>
+      <label id="prompt-label" hidden for="prompt" data-en="Request text (select and copy manually if needed)" data-zh="请求全文（必要时手动选择复制）">Request text (select and copy manually if needed)</label>
+      <textarea id="prompt" hidden readonly spellcheck="false"></textarea>
+    </div>
+  </aside>
+  <footer id="status" class="status" role="status" aria-live="polite"></footer>
+</div>
+<script nonce="__NONCE__">__VENDOR__</script>
+<script nonce="__NONCE__">__STATE__</script>
+<script nonce="__NONCE__">const INITIAL_GRAPH=__DATA__; const SAVE_TOKEN=__TOKEN__;
+__APP__</script>
+</body>
+</html>

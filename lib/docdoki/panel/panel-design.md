@@ -1,197 +1,147 @@
 # Panel design — dell-1996
 
-The panel (`panel/panel.py`) is a product surface. This is the design contract
-its renderer must satisfy, so the look stays coherent as the renderer evolves.
-Pure hand-written CSS + vanilla JS, one self-contained offline page served by a
-small local tool, no external fonts or libraries.
+The panel is a local document reader and editor, not a generic project-management
+application. [Panel model](panel-model.md) defines its information and write
+boundaries. This contract defines the human-facing interaction and visual language.
 
-The chosen visual language is **dell-1996**: a catalog-era reinterpretation of
-Dell.com's 1996 home page. The source spec is
-[dell-1996.DESIGN.md](references/dell-1996.DESIGN.md) (verbatim, from
-`npx getdesign@latest add dell-1996`); this file is the active contract that adapts it to a dense,
-editable canvas, where legibility and density take precedence over literal
-fidelity. A black page frame, flat color-block "ribbon cards", Arial Black
-display over Times Roman body, hard borders, zero radius, and GIF-sticker
-chrome.
+The source style is [dell-1996.DESIGN.md](references/dell-1996.DESIGN.md), retained
+verbatim. Adapt its black frame, flat ribbon cards, heavy sans-serif headings,
+serif body, hard edges, and restrained sticker accents to readable documents.
+Do not copy the era's small text, inaccessible controls, or fixed-width layout.
 
-## Principles
+## Visual language
 
-- The black page frame is the strongest depth cue; everything lives inside it.
-- Ribbon cards carry the work: a white title bar over a status-tinted body
-  block.
-- Hierarchy from typeface and weight contrast — Arial Black for display-scale
-  (brand, document titles, dispatch header, toolbar symbols), Helvetica Bold for
-  ribbon-card titles and UI/eyebrows, Times Roman for body — not from soft
-  shadows (there are none; depth is borders, frames, and hard offset "sticker"
-  shadows).
-- Saturated color earns its place: one tint per status, the red reserved for the
-  brand heart, the pending-edit shadow, and a lit dependency edge, the yellow
-  for hover, the EN/中 toggle, the dispatch badge, and search hits. The selected
-  state inverts to black (the menu's current item, the active rail tab).
-- View ≠ authority: write-back writes a panel edit straight to the document
-  file; the copy-prompt fallback emits intent for `follow`. The panel does no
-  semantics — propagation and alignment are `follow`'s job, never the panel's.
+- Black page frame and banners, white reading surfaces, square corners, hard
+  borders. Use hard offset shadows sparingly; no gradients or soft SaaS cards.
+- Display: Arial Black/Helvetica at heavy weight. UI: Helvetica/Arial with system
+  CJK sans fallbacks. Body: Times/Times New Roman with CJK serif fallbacks. Code
+  and source: Courier/system monospace. No remote fonts.
+- Reading text stays unscaled at a comfortable size, normally 17px; controls and
+  metadata may be smaller without making essential content depend on them.
+- Dell Red `#e91d2a` marks the heart, pending edits, selected dependencies, and
+  errors. Dell Yellow `#fcc20f` marks hover, search hits, and the EN/中 sticker.
+  Links use Mosaic blue `#0000ee`.
+- Explicit manual planning labels may use the original catalog tints: lime
+  `#c0d4a7` for `done`, periwinkle `#8c9ae0` for `in-progress`, steel `#a5b8c0`
+  for `not-started`. Missing labels use white and say “not recorded.” Always
+  pair a tint with its manual-plan wording; it is not implementation evidence.
+- Private documents carry a compact black Private/私有 label beside their title
+  and source path. Pending drafts have a distinct label or red hard shadow.
 
-## Tokens (current values)
+## Workspace
 
-- Frame & surface: page frame + banners `#000`, canvas `#fff`, faint 34px table
-  grid.
-- Brand color: Dell Red `#e91d2a` (alarm/CTA), Dell Yellow `#fcc20f`
-  (stickers/active tab), Mosaic link `#0000ee`. (Dell Purple `#6a26a4` is
-  spec-restricted to the BUY-a-DELL sticker stripe, which this panel does not
-  render, so it is unused.)
-- Ribbon-card tints — three of the spec's eight catalog colors, one per status,
-  all with legible pure-black text: done `#c0d4a7` (lime) · in-progress
-  `#8c9ae0` (periwinkle) · not-started `#a5b8c0` (steel). The palette is closed
-  by design.
-- Type (system fonts only): display `"Arial Black",Helvetica,…` weight 900;
-  ribbon-card title + UI/eyebrow/button `Helvetica,Arial,…` 700, uppercase,
-  +.04em; body `"Times New Roman",Times,…,"Noto Serif CJK SC","Songti SC",serif`
-  14px/1.4, pure `#000` ink (no warm-near-black softening); code/prompt
-  `"Courier New",monospace`. CJK falls back to a serif/sans CJK face.
-- Spacing 4px base (2/4/6/8/10/12/16/20/24/32/40/48). Radius: 0 everywhere; only
-  round seals (unused) would take 9999px.
-- Borders/elevation: hairline 1px, card 2px solid `#000`, page frame 8px solid
-  `#000`. Hard offset shadows only: hover `3px 3px 0 rgba(0,0,0,.3)`, selected
-  `5px 5px 0 #000`, pending edit `5px 5px 0 var(--red)`, stickers `2px 2px 0
-  #000`.
+The banner identifies the project and snapshot, offers search and language
+selection, and keeps Documents, Refresh, and Changes accessible. The Changes
+count remains visible when its drawer is closed. On wide windows the first new
+draft opens Changes without fitting or resetting the diagram. At overlay widths,
+keep typing unobscured and mark the count instead; opening the drawer is explicit.
 
-## Components
+The document navigation offers Overview, Northstar, Current work, and Specs.
+The default main view reads the overview. Current work links to complete active
+stage records, including private stages. Specs can be read as a list or diagram.
+Notes remain navigable without becoming graph nodes; archives start collapsed.
 
-- Ribbon card (the canvas holds one kind — a spec, so no kind eyebrow):
-  `border:2px solid #000`, 0 radius; white title bar (an editable Helvetica Bold
-  heading-3 title — the card's display title is the spec's `# H1`, not its
-  filename) over a progress-tinted Times body. The tint carries only the short
-  purpose block and the footer status cell — the expanded details (claims,
-  `after`/`covers`) sit on canvas white, because their small grey eyebrows and
-  11px mono values lose contrast on the mid-tone tints; long `covers` paths
-  break anywhere so the value column never overflows the card. A footer row
-  holds the expand toggle on the left and the progress status on the right as
-  matching footer cells: natural width, same padding and height, no independent
-  sticker border; Expand has a `2px` right divider, status has a `2px` left
-  divider, matching the card border weight, and uses the progress tint.
-  A private spec carries a compact black `PRIVATE`/`私有` label in the title bar,
-  derived from its path and never editable. Selection shows a `5px 5px 0 #000`
-  offset shadow, a pending edit a red one. The title itself is the only
-  editable title surface and shrinks to its text width; every other part of the
-  card — title-bar padding, tinted body margins, the expanded details, the footer
-  gap — is a single select/drag surface, and only the live controls (editable
-  fields, the expand toggle, the status cell) opt out.
-- Banner: black bar, Arial Black brand (a red ♥ between Doc and Doki), the
-  search box centered, and the EN/中 toggle in Dell Yellow.
-- Canvas chrome: a black-bordered hard-shadow floating toolbar — zoom −/+, a
-  clickable zoom readout (click to lock/unlock the current zoom), fit, reset of
-  the runtime drag layout, and a connect-mode toggle.
-- Minimap: a black-bordered hard-shadow box top-right of the canvas — every spec
-  as a status-tinted rect, a red rectangle marking the current viewport; click
-  or drag to pan. Its scale comes from the spec-card bounds, not from the
-  artificial canvas size, so the project stays centered in the minimap while the
-  viewport frame moves and clips symmetrically when panned beyond it.
-- Documents rail: a collapsible left column with three tabs (Northstar / Abstract
-  / Active stages; the active tab inverted black, like the menu's current item)
-  over the document title with a clear `10px` gap before the section stack. A
-  toggle anchored to the rail's outer-top corner folds it to a 26px handle (over a
-  vertical label) so the canvas claims the width; the collapsed state is a
-  persisted preference.
-  Sections are `## section` blocks — a Helvetica caps header bar over an
-  editable Times body; a pending edit shows a red offset shadow. Public and
-  private active stages list one such block-stack each, with private stages
-  carrying the same path-derived label as private spec cards.
-- Dispatch panel: black header + yellow count badge; change cards as mini
-  ribbons. Each card carries a field-label sticker tag (content / claim / title
-  / progress / after / section …), the spec or document name (plus the section
-  name or claim index when the field has one), and the change itself:
-  single-line fields as an inline `old → new` (old struck, new bold), multi-line
-  sections as a folded line diff — a removed line struck under a red `−`, an
-  added line bold under `+`, a line edited in place shown under `~` with only
-  the changed words marked (struck-red / bold), unchanged runs collapsed to `⋯`.
-  Prompt in a Courier black-bordered surface; black-fill primary button (red on
-  hover), bordered ghost buttons; a rotated ✎ sticker empty state. Like the
-  documents rail it collapses to a handle, and it starts collapsed — the handle's
-  badge still carries the pending count — springing open when the first edit lands
-  so pending work is never hidden.
+A document view has an explicit source path and Read / Edit source / Compare
+latest actions. Reuse a leading Markdown H1 as the reading title rather than
+printing it twice; keep its inline content and anchors. Source mode has its own
+visible title. Preview activity is a compact source-bar indicator, not a large
+persistent banner. The reader shows complete body content, real tables and lists,
+fenced code, and navigable links. Raw HTML is shown literally and external images
+are references rather than implicit requests. Unresolved links remain visible
+with their targets; related-document links are navigation aids, not inferred facts.
 
-## Interactions
+## Editing and changes
 
-- Pan: drag empty canvas, or plain wheel / trackpad (Shift = horizontal). Zoom:
-  ⌘/Ctrl/Alt + wheel (to cursor), toolbar ±, or `+`/`-`; `0` fits; clicking the
-  zoom readout locks the current zoom (−/+, wheel, `0` all disabled while
-  locked; panning and the minimap stay live).
-- Rails: each rail's toggle sits at its outer-top corner and is pixel-stable
-  across states — collapse and expand never move the cursor — folding the rail to a
-  26px handle so the canvas claims the freed width (floored at 340px). The
-  documents rail's tabs switch Northstar / Abstract / Active stages and its
-  collapsed state persists; the changes rail starts collapsed and springs open on
-  the first edit.
-- Minimap: click or drag inside it to recenter the canvas on that point.
-- Keyboard: `/` focuses search; `Esc` cancels an edit, clears search, closes the
-  menu, exits connect mode, or deselects; ⌘/Ctrl+Z undoes the last change. A card
-  is focusable — Enter/Space selects it, `o` expands it — and the status cell is a
-  focusable control that opens its popover on Enter.
-- Connections: edges derive from each spec's `after` list and are rendered as
-  directed arrows: A→B means A's stem is in B's `after`. The router recalculates
-  after every layout/drag change from geometry only. Card-center direction
-  chooses the facing side pair, with a horizontal bias for left-to-right
-  pipelines; same-row edges keep the center port and stay straight when
-  unobstructed; sibling edges on the same side fan out in far-endpoint order
-  with edge-id tie-breaks. It is deliberately not an obstacle router. There is
-  no render-index jitter and no sticky routing cache. Toggle connect mode with
-  the `⇄` button or `c`; the stage cursor and a yellow hover tell you it's
-  active. In connect mode, click card A then card B to toggle the A→B edge —
-  connect if absent, disconnect if present; the first pick glows yellow, the
-  second commits. Outside connect mode, click an edge to disconnect. All
-  connect/disconnect changes record as `after` edits and land in the frontmatter
-  on save — never silently. Do not model undirected edges by writing reciprocal
-  `after` entries: that creates false dependency cycles.
-- Cards: click selects (lights its links, dims the rest); click empty deselects.
-  Drag a card by any non-interactive part of it — the whole card is the drag
-  surface, only its editable fields, expand toggle, and status cell opt out — for
-  runtime-only displacement atop the auto layout, never persisted; `r` or the
-  reset button clears it.
-- Editing: the title is plain text by default (no persistent input chrome);
-  click the title text to enter edit mode — the editable box spans only the
-  text, so the rest of the title bar stays a select/drag surface. Enter or blur
-  commits, Esc restores and exits; the box and its focus outline exist only
-  while editing. The body, claims, `after`/`covers`, and rail sections edit in
-  place; single-line fields (purpose, title, claim, `after`, `covers`) commit on
-  Enter and stay one line, while rail sections keep newlines; paste is coerced
-  to plain text (newlines kept only for sections). In connect mode canvas text
-  editing is suspended (card contenteditable absorbs no events). On save, title
-  writes to the spec's `# H1`, content to `purpose`, claims to `## Goal`
-  bullets, and `after`/`covers` to frontmatter.
-- Progress: click the right footer status cell for a popover of progress states;
-  no explicit dropdown glyph is shown. Clicking the same status cell again
-  closes the popover (it toggles). The change is recorded and, on save, written
-  to `progress` in the frontmatter.
-- Search: filters the spec cards — matches keep a yellow outline, the rest dim.
-- Feedback: each edit and progress change lands in the dispatch panel and as
-  toasts. «写回文件» writes them straight to the documents (surgical — one fragment
-  each); «复制 PROMPT» emits one consolidated `follow` prompt as the fallback.
-  Write-back uses the page's per-process token, emits valid YAML for the
-  supported frontmatter subset, rejects the whole batch when an addressed field
-  changed since the page loaded, and rechecks each file immediately before its
-  replacement. A later conflict or replacement failure rolls back completed
-  replacements. If restoration itself fails, the save reports
-  the incomplete rollback explicitly.
+Read mode is not editable. Edit source opens a native multiline textarea for the
+whole document, including frontmatter. The editor is outside the scaled graph
+and must retain its DOM, caret, selection, and focus during draft previews.
 
-## Guardrails
+- Enter inserts a newline; typing and paste use native text behavior.
+- Composition events and `isComposing` prevent IME confirmation keys from being
+  mistaken for commands. An editing-session Escape restores its start value,
+  not the original disk value or an earlier committed draft.
+- Blur or Read closes the editing session. A dedicated Undo last edit action
+  traverses operations chronologically across files; native textarea undo remains
+  native while typing. Restore file is a separate, explicitly named action.
+- Save visibly locks editing and repeat submission until its response. Failure
+  or timeout leaves drafts available; success preserves a copyable follow receipt.
+- Compare latest shows disk text without replacing the draft. Accepting it as
+  the baseline is explicit and follows the human's merge, not an automatic
+  conflict resolution.
 
-- Body is Times 14px/1.4 in pure `#000` ink, per spec; never soften the ink or
-  shrink past 14px for the sake of density — legibility outranks the era look.
-- One sticker per card at most; the catalog kitsch must not crowd out
-  scannability.
-- Status tints stay inside the spec's eight catalog colors (here lime /
-  periwinkle / steel); the palette is closed — no custom desaturated variants.
-- Status must always read from both the tint and the pill; color maps to real
-  state.
-- Private labeling comes only from the document path. The panel may display and
-  edit private documents but never changes their visibility or moves them.
-  Write-back rejects public `after` dependencies, wiki-links, or paths that
-  target private documents.
-- Hard offset shadows and the page frame are the only depth; no soft shadows, no
-  gradients, no border-radius on working surfaces.
-- Switching EN/中 must not reflow the layout: buttons whose label changes with
-  language (the EN/中 toggle, the dispatch ghost buttons, the card
-  expand/collapse toggle) hold a fixed width.
-- The rails scroll via a slim grey handle centered on their seam border (native
-  scrollbar hidden), so it sits on the line and never eats content width.
+The Changes drawer groups pending work by source file. A folded line diff marks
+removed/added text and useful word-level changes, and always exposes complete
+before/after sources. Bound the diff calculation and cache unchanged results;
+large changes fall back to complete source views with an explicit budget notice.
+Never truncate the only copy of a condition or negation. Preserve unchanged
+controls and expanded source views while previewing; ending an edit must not
+replace the Restore button under the pointer. Undo, restore, and cancellation
+report the resulting unsaved state, not an obsolete staged-change message.
+
+Copy apply request and Copy saved-change follow request are distinct actions.
+The saved receipt names affected files and retains their changes; it does not
+claim implementation alignment. Clipboard failure leaves selectable request text
+and an error. Invalidate displayed request text when edits, saves, or refreshes
+make that capture stale; delayed clipboard results must not resurrect it.
+Private copy/export content has a visible warning. Unsaved navigation
+away warns, and export is available without browser-storage persistence.
+
+## Dependency view
+
+The diagram presents only recorded `after` dependencies: A → B means A's stem is
+in B's `after`. Specs without dependencies need no invented edges. Directed acyclic
+graph layering is recomputed from the current draft graph. Unknown targets,
+duplicate stems/edges, self-dependencies, invalid types, private-boundary violations,
+and cycles produce visible diagnostics rather than disappearing silently.
+
+Cards show the H1 title, a short purpose summary, the manual planning label, and
+Read full. Opening a card goes to the unscaled document reader, not an expanding
+miniature contract inside the diagram. Cards are keyboard reachable; Enter/Space
+opens the focused card. `/` focuses search. Search uses current draft content;
+matching diagram cards are highlighted and nonmatches dimmed.
+
+Dragging non-control card surfaces changes runtime layout only. Update the moved
+card's transform, its minimap rectangle, and incident edges inside animation
+frames; do not rebuild all cards or editors per pointer event. Reset clears drag
+offsets. Edges route geometrically between facing sides, not through a semantic or
+obstacle-routing engine. Selection highlights related cards and edges.
+
+An edge click opens its description; it does not delete it. An explicit Remove
+dependency action stages removal. The document's advanced dependency control can
+add a genuine upstream spec; both actions validate structure before producing a
+source draft. Ordinary source edits receive diagnostics and save-time validation.
+There is no implicit connect mode competing with text editing.
+
+Pan with the canvas, wheel/trackpad, or minimap. Use Shift-wheel horizontally;
+Ctrl/Meta/Alt-wheel zooms about the pointer. Toolbar ± and keyboard +/− zoom,
+0 fits, and the zoom readout locks/unlocks zoom. Fit is explicit; opening a drawer
+or resizing must not shrink reading text or reset the chosen view. The minimap
+uses card bounds, marks the viewport in red, and supports click/drag panning.
+
+## Responsive and accessible behavior
+
+Wide windows can show navigation, reading content, and Changes together. At
+medium widths Changes becomes an overlay rather than squeezing the reader. On
+narrow screens both side surfaces are drawers, with ordinary controls opening
+one at a time. Drawer bounds follow the actual banner/footer sizes, not fixed
+assumptions about language or line wrapping.
+
+Explicit drawer opening focuses a control inside it. Escape or its close button
+returns focus to the opener; source-edit Escape cancels the edit first. Hidden
+panels and reading content covered by an overlay are not keyboard destinations.
+Navigation focuses the destination heading. Search can expose the document list
+without stealing input focus. Preserve browser-level zoom shortcuts.
+
+Search, drawer toggles, and close controls must remain visibly usable at 1024px
+and narrow phone widths. Check their actual bounds: a clipped zero-width drawer
+can pass a superficial “no page overflow” test. Keep document reading outside
+zoom transforms and permit internal scrolling for tables and source lines.
+
+Use native buttons, inputs, textarea, and scrollbars. Preserve visible keyboard
+focus and a live status region for success, errors, and uncertainty. Provide CJK
+font fallbacks, readable touch targets, and 16px phone form text to avoid implicit
+input zoom. Keep focus and hover contrast on black and accent surfaces. Do not
+reannounce identical status text on every keystroke. Localize UI labels without altering
+source text. Long paths and translated labels may wrap; they must not cover or
+hide other controls. Browser tests complement, not replace, visual inspection and
+real-device/accessibility checks.
