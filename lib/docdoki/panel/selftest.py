@@ -257,7 +257,7 @@ class PanelTest(unittest.TestCase):
         self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
         self.assertTrue(any(d["archived"] for d in model["catalog"]))
         before = self.source(B)
-        preview = storage.preview(self.root, [], {"path": B, "items": []})
+        preview = storage.preview(self.root, [], {"path": B, "op": "remove", "stem": "a"})
         self.assertEqual(next(n for n in preview["nodes"] if n["path"] == B)["col"], 1)
         self.assertEqual(self.source(B), before)
 
@@ -267,6 +267,49 @@ class PanelTest(unittest.TestCase):
         model = storage.preview(self.root, [self.edit(A)], base=base)
         self.assertEqual(model["documents"][B]["source"], base[B])
         self.assertIn("External rewrite", self.source(B))
+
+    def test_dependency_operations_use_current_draft_source(self):
+        c = "docdoki/specs/c.md"
+        write(self.root, c, "# Publication\n")
+        write(self.root, B, documents.set_after(self.source(B), []))
+        base = {A: self.source(A), B: self.source(B), c: self.source(c)}
+        for op, before, expected in [("add", ["b"], ["b", "c"]), ("remove", ["b", "c"], ["b"])]:
+            with self.subTest(op=op):
+                draft = documents.set_after(base[A], before) + "\nKeep this typed requirement.\n"
+                model = storage.preview(self.root, [self.edit(old=base[A], new=draft)],
+                                        {"path": A, "op": op, "stem": "c"}, base=base)
+                proposed = model["documents"][A]["source"]
+                self.assertEqual(model["documents"][A]["fm"]["after"], expected)
+                self.assertEqual(proposed, documents.set_after(draft, expected))
+                self.assertEqual(self.source(A), base[A], "Preview is read-only")
+                result = storage.apply_edits(self.root, [self.edit(old=base[A], new=proposed)])
+                self.assertTrue(result["ok"], result)
+                self.assertEqual(self.source(A), proposed)
+                write(self.root, A, base[A])
+
+    def test_dependency_noops_preserve_source_bytes(self):
+        source = "---\r\npurpose: local\r\nafter: ['a'] # retain formatting\r\n---\r\n# Validation\r\n"
+        write(self.root, B, source)
+        for op, stem in [("add", "a"), ("remove", "missing")]:
+            model = storage.preview(self.root, [], {"path": B, "op": op, "stem": stem})
+            self.assertEqual(model["documents"][B]["source"], source)
+        model = storage.preview(self.root, [], {"path": A, "op": "remove", "stem": "missing"})
+        self.assertEqual(model["documents"][A]["source"], self.source(A))
+
+    def test_dependency_operations_reject_invalid_source_and_requests(self):
+        before = self.source(A)
+        for value in ("false", "0", "''", "b", "[false]", "[null]"):
+            draft = before.replace("purpose:", f"after: {value}\npurpose:")
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "after must be a list"):
+                storage.preview(self.root, [self.edit(new=draft)], {"path": A, "op": "add", "stem": "b"})
+        for action in (["b"], {"items": ["b"]}, {"op": "replace", "stem": "b"},
+                       {"op": "add", "stem": ""}, {"op": "add", "stem": 1}):
+            with self.subTest(action=action), self.assertRaises(ValueError):
+                storage.preview(self.root, [], {"path": A, **action} if isinstance(action, dict) else action)
+        for stem in ("b", "missing", "local", "a"):
+            with self.subTest(stem=stem), self.assertRaises(ValueError):
+                storage.preview(self.root, [], {"path": A, "op": "add", "stem": stem})
+        self.assertEqual(self.source(A), before)
 
     def test_http_security_and_storage_baselines(self):
         server = panel.make_server(self.root / "docdoki", token="test-token")

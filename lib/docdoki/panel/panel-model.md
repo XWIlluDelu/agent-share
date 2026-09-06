@@ -42,13 +42,20 @@ or automate the semantic work of archiving a stage.
 A document's complete source is the editing unit and its full original source is
 its save precondition. There is no claim-index or heading-name patch API: repeated
 headings, fenced examples, and multiline lists must not create ambiguous writes.
-Structured dependency controls produce a source draft through the same pipeline.
+Structured dependency controls send an add/remove operation on one stem. The
+server applies it to the captured current source draft, not a dependency list
+computed from a potentially stale preview, and validates the resulting graph.
+An already-satisfied operation leaves the source unchanged.
 
 The client owns one baseline map, source drafts, chronological edit operations,
 an optional active editing session, an in-flight save flag, and the last successful
 save receipt. Parsed documents and graph layout are disposable views of those
 sources, not another editable copy. Preview uses the client's snapshot plus its
 drafts; it must not mix newly read disk content with old editing baselines.
+A pending dependency edit is bound to both its originating store and source
+version. Refresh invalidates responses from the replaced store; accepting a new
+baseline advances the version even if the merged source is unchanged. Stale
+responses cannot stage edits or replace the current graph.
 
 Save captures a batch and locks edits, undo, restores, and repeat submissions.
 The server validates the batch and preconditions before writing, then returns

@@ -96,13 +96,25 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
             originals.setdefault(path, text)
         pending.update(changed)
     if after is not None:
+        if (not isinstance(after, dict) or after.get("op") not in ("add", "remove")
+                or not isinstance(after.get("stem"), str) or not after["stem"]):
+            raise ValueError("Dependency edit requires an add/remove op and a document stem")
         path = allowed_path(root, after.get("path"))
-        items = after.get("items")
+        disk = read_source(path)
+        original = pending.get(path, disk)
+        originals.setdefault(path, disk)
+        items = split_frontmatter(original)[0].get("after")
+        if items is None:
+            items = []
         if not isinstance(items, list) or any(not isinstance(v, str) for v in items):
             raise ValueError("after must be a list of document stems")
-        original = pending.get(path, read_source(path))
-        originals.setdefault(path, read_source(path))
-        proposed = set_after(original, items)
+        # Apply the operation to canonical source, not the client's parsed view.
+        stem = after["stem"]
+        if after["op"] == "remove":
+            updated = [item for item in items if item != stem]
+        else:
+            updated = items if stem in items else [*items, stem]
+        proposed = set_after(original, updated) if updated != items else original
         error = visibility_error(root, path, proposed)
         if error:
             raise ValueError(error)
