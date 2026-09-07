@@ -116,6 +116,64 @@ class PanelTest(unittest.TestCase):
         before = self.source(path) if old is None else old
         return {"path": path, "field": "source", "from": before, "to": new if new is not None else before + "\nA new constraint.\n"}
 
+    def test_shared_frontmatter_boundaries(self):
+        cases = json.loads((panel.HERE / "frontmatter-cases.json").read_text())
+        for case in cases:
+            with self.subTest(case=case["name"]):
+                if case.get("error"):
+                    with self.assertRaisesRegex(documents.FormatError, "Unclosed"):
+                        documents.split_frontmatter(case["source"])
+                else:
+                    self.assertEqual(documents.split_frontmatter(case["source"])[1], case["body"])
+
+    def test_dependency_comments_survive_add_and_remove(self):
+        for newline in ("\n", "\r\n"):
+            for field in ("after: [auth] # authorization must run first",
+                          "after: # field rationale\n  - auth # authorization must run first\n  # independent reason\n  - cache # caching rationale"):
+                source = ("---\n" + field + "\npurpose: preserved\n---\n# Body\n").replace("\n", newline)
+                updated = documents.set_after(source, ["auth", "cache", "new"])
+                self.assertIn("# authorization must run first" + newline, updated)
+                self.assertEqual(documents.split_frontmatter(updated)[0]["after"], ["auth", "cache", "new"])
+                removed = documents.set_after(updated, ["auth", "new"])
+                self.assertIn("# authorization must run first" + newline, removed)
+                self.assertTrue(removed.endswith(("purpose: preserved\n---\n# Body\n").replace("\n", newline)))
+                if "field rationale" in field:
+                    self.assertIn("after: # field rationale" + newline, removed)
+                    self.assertIn("  # independent reason" + newline, removed)
+                    self.assertIn("  - auth # authorization must run first" + newline, removed)
+                    self.assertNotIn("caching rationale", removed)
+                empty = documents.set_after(updated, [])
+                self.assertEqual(documents.split_frontmatter(empty)[0]["after"], [])
+
+    def test_unloaded_history_reads_titles_without_parsing_bodies(self):
+        note = "docdoki/notes/evidence.md"
+        text = "\ufeff--- \r\npurpose: note\r\n---\t\r\n```md\r\n# Fake\r\n```\r\n# Actual title\r\n" + "history " * 8192
+        write(self.root, note, text)
+        with patch.object(graph, "document", wraps=documents.document) as parsed:
+            model = graph.build_graph(self.root / "docdoki")
+            self.assertEqual(next(d["title"] for d in model["catalog"] if d["path"] == note), "Actual title")
+            self.assertFalse(any(call.args[0] == self.root / note for call in parsed.call_args_list))
+        loaded = graph.build_graph(self.root / "docdoki", extra=[note])
+        self.assertEqual(loaded["documents"][note]["source"], text)
+        for source in ("# First\n# Second\n", "---\nnot closed\n# Fallback\n", "  # Spaced ##\n", "    # Indented\n# Real\n"):
+            write(self.root, note, source)
+            self.assertEqual(documents.document_title(self.root / note), documents.document(self.root / note, self.root)["title"])
+
+    def test_snapshot_references_are_bounded_and_never_adopt_disk(self):
+        from snapshots import SourceSnapshots
+        snapshots = SourceSnapshots(budget=32)
+        def doc(text):
+            return {"source": text, "revision": documents.revision(text)}
+        first = doc("a" * 16)
+        snapshots.remember({A: first})
+        refs = {A: first["revision"]}
+        write(self.root, A, "Changed elsewhere")
+        self.assertEqual(snapshots.resolve(refs)[A], first["source"])
+        snapshots.remember({B: doc("b" * 32)})
+        self.assertLessEqual(snapshots.size, 32)
+        with self.assertRaisesRegex(ValueError, "Captured source expired"):
+            snapshots.resolve(refs)
+
     def test_yaml_lists_and_scalars(self):
         for source, expected in [("after: ['a', 'b']", ["a", "b"]),
                                  ('after: ["a", "b"]', ["a", "b"]),
@@ -389,6 +447,42 @@ class PanelTest(unittest.TestCase):
         self.assertEqual(result["documents"][A]["source"], self.source())
         replay = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
         self.assertFalse(replay["ok"])
+
+    def test_large_library_http_preview_and_capacity_error(self):
+        for i in range(65):
+            write(self.root, f"docdoki/specs/large-{i}.md", f"# Large {i}\n\n" + "content " * 2048)
+        server = panel.make_server(self.root / "docdoki", token="test-token")
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(lambda: (server.shutdown(), server.server_close(), thread.join()))
+        url = f"http://127.0.0.1:{server.server_address[1]}"
+        headers = {"Content-Type": "application/json", "X-DocDoki-Token": "test-token"}
+        def request(route, payload=None):
+            data = None if payload is None else json.dumps(payload).encode()
+            return json.loads(urllib.request.urlopen(urllib.request.Request(url + route, data=data, headers=headers)).read())
+        snapshot = request("/snapshot")
+        self.assertGreater(sum(len(d["source"]) for d in snapshot["documents"].values()), panel.MAX_SAVE_BYTES)
+        refs = {p: d["revision"] for p, d in snapshot["documents"].items()}
+        original = self.source(A)
+        for operation in ({"card": {"path": A, "field": "purpose", "value": "new purpose"}},
+                          {"edits": [self.edit(new=original + "\nNew body\n")]},
+                          {"after": {"path": B, "op": "add", "stem": "large-0"}}):
+            payload = {"edits": [], "baseRefs": refs, **operation}
+            self.assertLess(len(json.dumps(payload).encode()), 20_000)
+            result = request("/preview", payload)
+            self.assertTrue(result["ok"], result)
+        compact = request("/preview", {"edits": [], "baseRefs": refs, "compact": True})["graph"]
+        self.assertFalse(compact["documents"])
+        self.assertEqual(compact["documentRefs"], refs)
+        self.assertLess(len(json.dumps(compact)), 100_000)
+        self.assertEqual(self.source(A), original)
+        write(self.root, B, "# External\n")
+        self.assertEqual(request("/preview", {"edits": [], "baseRefs": refs})["graph"]["documents"][B]["source"], snapshot["documents"][B]["source"])
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            request("/preview", {"edits": [], "padding": "x" * panel.MAX_SAVE_BYTES})
+        self.assertEqual(raised.exception.code, 413)
+        self.assertIn("1 MiB", json.loads(raised.exception.read())["error"])
+        raised.exception.close()
 
     def test_script_data_cannot_escape(self):
         write(self.root, A, self.source() + '\n</script><script>window.injected=true</script>\n')

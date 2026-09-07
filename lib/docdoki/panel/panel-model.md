@@ -39,10 +39,13 @@ project commands, commit, publish, archive stages, or move public/private files.
   `purpose`/`progress` scalar. Other source bytes, comments, and line endings are
   preserved. Unsupported field forms remain editable through the whole source.
 - Wiki/relative links resolve inside the unit; notes and archives load on demand.
+  Unloaded history is scanned only through its first title, without parsing or
+  retaining the full body; headingless files may still require a complete scan.
   Unresolved and out-of-unit links remain explicit. Search includes titles, paths,
   and loaded text, including drafts. No notes are synthesized into spec nodes.
 - The client owns one baseline map, source drafts, chronological edit history, an
-  active editing session, save state, and the last successful receipt. Parsed
+  active editing session, save state, and chronological receipts from all successful
+  saves in the tab. Saved history is separate from each draft's current disk baseline. Parsed
   documents and diagram geometry are disposable views, never another editable copy.
   A local field input is an uncommitted buffer, not a second source authority.
   Blur, Enter (Ctrl/Command+Enter for purpose) or choosing progress transforms its
@@ -54,7 +57,9 @@ project commands, commit, publish, archive stages, or move public/private files.
 - Dependency controls send an add/remove operation on one stem. The server applies
   it to the captured source draft and validates the graph. An already-satisfied
   operation leaves the source unchanged; stale graph previews never supply a full
-  replacement dependency list. Connect always adds, never toggles based on a preview.
+  replacement dependency list. Retain field comments and comments on dependencies
+  that remain; unsupported syntax requires source editing rather than lossy repair.
+  Connect always adds, never toggles based on a preview.
 - Pending modifying responses are bound to their originating store and source
   version. Replacing a snapshot invalidates the old store's requests. Adopting a
   latest source after explicit discard advances the version even for equal text.
@@ -69,7 +74,10 @@ project commands, commit, publish, archive stages, or move public/private files.
 Lezer syntax ranges drive disposable layout decorations, not save addresses.
 CodeMirror owns selection, composition, paste, cross-paragraph editing and local
 undo/redo. Its contenteditable DOM is an input mechanism, not an HTML document to
-serialize. There is no HTML-to-Markdown conversion or fragment write API.
+serialize. There is no HTML-to-Markdown conversion or fragment write API. Cursor-only updates
+reuse normalized text and reference definitions. Decorations still traverse the
+syntax tree; text changes still rebuild raw-offset mapping, so very long documents
+remain a scale-dependent workload rather than a constant-time editing claim.
 
 Each text transaction maps normalized editor offsets back to the captured raw
 source and patches only its changed ranges. Untouched text, comments, metadata,
@@ -78,10 +86,14 @@ the document convention. Full source remains accessible for syntax without a
 special visual treatment. Raw HTML stays text and images are not fetched.
 
 Live presentation hides frontmatter and protects it from body select-all/deletion;
-Source reveals it. Markdown markers remain ordinary source even when decorated or
+Source reveals it. Frontmatter accepts an optional initial BOM, LF/CRLF, and
+spaces/Tabs after opening and closing delimiters. Unclosed metadata is diagnosed
+by the server and protected in full in live presentation until repaired in Source.
+Markdown markers remain ordinary source even when decorated or
 hidden. Tables use editable, aligned cell spans over source ranges, not serialized
 HTML tables. Heading anchors, wiki/relative/reference links and source selection
-remain usable. Link text selection is not navigation.
+remain usable, including literal underscores and empty table cells. Tab-focused
+links activate with Enter; link text selection is not navigation.
 
 Presentation changes retain the same editor and local history, using a source
 position to restore the visible content after layout settles. A newer edit or
@@ -117,7 +129,11 @@ There is no global Refresh command, background autosave, or realtime collaborati
 A document's complete original source is its save precondition. Save captures a
 batch, locks mutations and repeat submissions, and validates the affected disk
 sources before writing. Return actual stored sources as the next baseline.
-Success clears the submitted drafts and retains a copyable follow receipt.
+Success clears the submitted drafts and appends a copyable follow receipt.
+Copy includes all saved history in chronological order and any current unsaved
+edits, in separately labeled sections. Saved versions are context to follow, never
+patches to reapply or unsaved-write preconditions; later saves may supersede them.
+Copy does not acknowledge agent alignment or clear the history.
 
 A conflict is shown with the affected edit, not in a separate comparison workflow.
 Keep the original, human draft, and available external source for the agent request.
@@ -163,7 +179,8 @@ implicitly. This is a local owner-operated tool, not a multi-user network servic
 
 Delivery is one self-contained page, without a build step or runtime network assets.
 `documents.py` handles source I/O and supported metadata; `graph.py` builds the
-catalog and DAG; `storage.py` validates and writes; `panel.py` serves and assembles
+catalog and DAG; `storage.py` validates and writes; `snapshots.py` retains bounded
+captured source references in server memory; `panel.py` serves and assembles
 assets. `state.js` owns staged drafts/history and bounded diffs; `body.js` owns the live
 source editor, exact text-transaction mapping and display decorations. `panel.js`, `panel.html`,
 and `panel.css` implement the views. `favicon.svg` is embedded as a data URL in the
@@ -173,7 +190,15 @@ assembled page. Marked and CodeMirror/Lezer are vendored with their licenses;
 Frontmatter supports flat scalar fields and inline/block scalar lists, including
 quotes and comments. Unsupported nested mappings, aliases, and block scalars produce
 diagnostics, not guesses. Such sources remain inspectable; saving needs a supported
-form or an external editor. Requests are limited to 1 MiB.
+form or an external editor. Requests remain limited to 1 MiB with explicit capacity
+errors. Previews reference captured baseline sources by path and revision, sending
+full from/to sources only for drafts. Unchanged response documents are references
+resolved against the originating client's captured baseline, not newer disk data.
+The server retains at most 32 MiB of UTF-8 source payloads and 4096 source versions,
+with LRU eviction. Expired references or a server restart fail explicitly and keep
+local edits; they never silently substitute current files. Save still sends full
+source preconditions and checks actual disk bytes. Preview graph construction still
+visits the catalog; this is not a database or incremental graph engine.
 
 From the skill directory:
 

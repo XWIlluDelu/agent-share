@@ -19,6 +19,7 @@ from urllib.parse import parse_qs, quote, urlsplit
 from documents import document
 from graph import allowed_path, build_graph
 from storage import apply_edits, preview
+from snapshots import SourceSnapshots
 
 HERE = Path(__file__).resolve().parent
 MAX_SAVE_BYTES = 1_048_576
@@ -33,8 +34,10 @@ def _hjson(data) -> str:
     return json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
 
 
-def render(dd: Path, save_token: str = "") -> str:
+def render(dd: Path, save_token: str = "", snapshots=None) -> str:
     graph = build_graph(dd)
+    if snapshots is not None:
+        snapshots.remember(graph["documents"])
     values = {"TITLE": html.escape(graph["meta"]["title"]), "DATA": _hjson(graph),
               "TOKEN": _hjson(save_token), "NONCE": html.escape(save_token, quote=True),
               "CSS": (HERE / "panel.css").read_text(encoding="utf-8"),
@@ -97,7 +100,7 @@ class Handler(BaseHTTPRequestHandler):
         route = urlsplit(self.path)
         try:
             if route.path in ("/", "/index.html"):
-                self.respond(render(self.dd, self.save_token), "text/html")
+                self.respond(render(self.dd, self.save_token, self.server.snapshots), "text/html")
             elif route.path in ("/snapshot", "/document"):
                 if not secrets.compare_digest(self.headers.get("X-DocDoki-Token", ""), self.save_token):
                     self.send_error(403, "invalid read token")
@@ -107,10 +110,14 @@ class Handler(BaseHTTPRequestHandler):
                     extra = params.get("extra", [])
                     for raw in extra:
                         allowed_path(self.dd.parent, raw)
-                    self.respond(build_graph(self.dd, extra=extra))
+                    graph = build_graph(self.dd, extra=extra)
+                    self.server.snapshots.remember(graph["documents"])
+                    self.respond(graph)
                 else:
                     path = allowed_path(self.dd.parent, params.get("path", [""])[0])
-                    self.respond(document(path, self.dd.parent))
+                    doc = document(path, self.dd.parent)
+                    self.server.snapshots.remember({doc["path"]: doc})
+                    self.respond(doc)
             else:
                 self.send_error(404)
         except (OSError, ValueError, UnicodeError) as exc:
@@ -127,15 +134,24 @@ class Handler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             if length <= 0 or length > MAX_SAVE_BYTES:
-                self.send_error(413 if length > MAX_SAVE_BYTES else 400, "invalid request body size")
+                self.respond({"ok": False, "error": "Request exceeds the 1 MiB capacity limit; reduce this edit batch." if length > MAX_SAVE_BYTES else "Empty request body"}, status=413 if length > MAX_SAVE_BYTES else 400)
                 return
             payload = json.loads(self.rfile.read(length))
             if not isinstance(payload, dict) or not isinstance(payload.get("edits"), list):
                 raise ValueError("request requires an edits list")
             if self.path == "/save":
-                self.respond(apply_edits(self.dd.parent, payload["edits"]))
+                result = apply_edits(self.dd.parent, payload["edits"])
+                if result["ok"]:
+                    self.server.snapshots.remember(result["documents"])
+                self.respond(result)
             else:
-                graph = preview(self.dd.parent, payload["edits"], payload.get("after"), payload.get("extra", []), payload.get("base"), payload.get("card"))
+                base = self.server.snapshots.resolve(payload["baseRefs"]) if "baseRefs" in payload else payload.get("base")
+                graph = preview(self.dd.parent, payload["edits"], payload.get("after"), payload.get("extra", []), base, payload.get("card"))
+                if payload.get("compact") is True and base is not None:
+                    unchanged = {p: d["revision"] for p, d in graph["documents"].items()
+                                 if base.get(p) == d["source"]}
+                    graph["documents"] = {p: d for p, d in graph["documents"].items() if p not in unchanged}
+                    graph["documentRefs"] = unchanged
                 self.respond({"ok": True, "graph": graph})
         except (OSError, ValueError, TypeError, AttributeError) as exc:
             self.respond({"ok": False, "error": str(exc)}, status=400)
@@ -146,7 +162,9 @@ def make_server(dd: Path, port=0, token=None):
         pass
     BoundHandler.dd = dd
     BoundHandler.save_token = token or secrets.token_urlsafe(32)
-    return ThreadingHTTPServer(("127.0.0.1", port), BoundHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), BoundHandler)
+    server.snapshots = SourceSnapshots()
+    return server
 
 
 def main(argv=None):

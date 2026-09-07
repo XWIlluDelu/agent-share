@@ -45,7 +45,7 @@ def visibility_error(root: Path, path: Path, source: str) -> str | None:
     return None
 
 
-def prepare(root: Path, edits: list[dict], check_disk=True) -> tuple[dict, dict]:
+def prepare(root: Path, edits: list[dict], check_disk=True, captured=None) -> tuple[dict, dict]:
     if not isinstance(edits, list) or not edits:
         raise ValueError("save requires a non-empty edits list")
     originals, pending = {}, {}
@@ -57,8 +57,10 @@ def prepare(root: Path, edits: list[dict], check_disk=True) -> tuple[dict, dict]
             raise ValueError("Only one source edit per document is supported")
         if not isinstance(edit.get("from"), str) or not isinstance(edit.get("to"), str):
             raise ValueError("Source edits require string from/to preconditions")
-        original = read_source(path)
-        if check_disk and original != edit["from"]:
+        if not check_disk and captured is not None and path not in captured:
+            raise ValueError("Preview edit is missing its captured source: " + edit["path"])
+        original = captured[path] if not check_disk and captured is not None else read_source(path)
+        if (check_disk or captured is not None) and original != edit["from"]:
             raise ValueError("conflict: " + edit["path"] + " changed since it was loaded; compare latest before retrying")
         proposed = edit["to"]
         split_frontmatter(proposed)
@@ -92,7 +94,7 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
         originals = {allowed_path(root, p): text for p, text in base.items()}
     pending = dict(originals)
     if edits:
-        old, changed = prepare(root, edits, check_disk=False)
+        old, changed = prepare(root, edits, check_disk=False, captured=originals if base is not None else None)
         for path, text in old.items():
             originals.setdefault(path, text)
         pending.update(changed)
@@ -101,9 +103,10 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
                 or not isinstance(after.get("stem"), str) or not after["stem"]):
             raise ValueError("Dependency edit requires an add/remove op and a document stem")
         path = allowed_path(root, after.get("path"))
-        disk = read_source(path)
-        original = pending.get(path, disk)
-        originals.setdefault(path, disk)
+        if base is not None and path not in pending:
+            raise ValueError("Dependency edit is missing its captured source")
+        original = pending[path] if path in pending else read_source(path)
+        originals.setdefault(path, original)
         items = split_frontmatter(original)[0].get("after")
         if items is None:
             items = []

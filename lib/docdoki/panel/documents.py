@@ -26,8 +26,8 @@ def revision(text: str) -> str:
 
 
 def frontmatter_span(text: str):
-    match = re.match(r"\A---[ \t]*\r?\n(.*?)^---[ \t]*(?:\r?\n|\Z)", text, re.S | re.M)
-    if not match and re.match(r"\A---[ \t]*\r?\n", text):
+    match = re.match(r"\A\ufeff?---[ \t]*\r?\n(.*?)^---[ \t]*(?:\r?\n|\Z)", text, re.S | re.M)
+    if not match and re.match(r"\A\ufeff?---[ \t]*\r?\n", text):
         raise FormatError("Unclosed frontmatter delimiter")
     return match
 
@@ -243,8 +243,10 @@ def set_card_field(text: str, field: str, value) -> str:
 
 
 def set_after(text: str, items: list[str]) -> str:
-    """Replace one validated top-level YAML value; preserve all other bytes."""
-    split_frontmatter(text)  # Reject duplicates/unsupported forms before locating.
+    """Preserve field comments and the spelling/comments of retained block items."""
+    fm, _ = split_frontmatter(text)  # Reject unsupported forms before locating.
+    if (fm.get("after") or []) == items:
+        return text
     match = frontmatter_span(text)
     nl = "\r\n" if "\r\n" in text else "\n"
     line = "after: " + json.dumps(items, ensure_ascii=False) + nl
@@ -256,17 +258,73 @@ def set_after(text: str, items: list[str]) -> str:
     if start is None:
         new = raw + line
     else:
-        end = start + 1
-        comments = []
-        while end < len(lines):
-            stripped = lines[end].lstrip()
-            if not stripped.strip() or stripped.startswith("#"):
-                comments.append(lines[end])
-            elif not stripped.startswith(("- ", "-\t")):
-                break
-            end += 1
-        new = "".join(lines[:start]) + line + "".join(comments) + "".join(lines[end:])
+        header = re.fullmatch(r"(after:[ \t]*)(.*?)(\r?\n)", lines[start])
+        if not header:
+            raise FormatError("Use document source for this dependency format")
+        prefix, value, ending = header.groups()
+        uncommented = _uncomment(value)
+        suffix = value[len(uncommented):]
+        if uncommented:
+            # Flow lists have no item-level line comments in the supported grammar.
+            # Keep the field's rationale and exact surrounding lines.
+            lines[start] = prefix + json.dumps(items, ensure_ascii=False) + suffix + ending
+            new = "".join(lines)
+        else:
+            end = start + 1
+            kept, present, indent = [], [], "  "
+            while end < len(lines):
+                entry = lines[end]
+                item = re.fullmatch(r"([ \t]*)-[ \t]+(.*?)(\r?\n)", entry)
+                if item:
+                    indent = item[1]
+                    name = scalar(item[2])
+                    if name in items:
+                        kept.append(entry)
+                        present.append(name)
+                elif not entry.strip() or entry.lstrip().startswith("#"):
+                    kept.append(entry)
+                else:
+                    break
+                end += 1
+            kept.extend(indent + "- " + json.dumps(name, ensure_ascii=False) + ending
+                        for name in items if name not in present)
+            header_text = lines[start]
+            if not items:
+                header_text = prefix + "[]" + (" " if suffix.startswith("#") else "") + suffix + ending
+            new = "".join(lines[:start]) + header_text + "".join(kept) + "".join(lines[end:])
     return text[:match.start(1)] + new + text[match.end(1):]
+
+
+def document_title(path: Path) -> str:
+    """Catalog-only reads stop at H1 instead of reading/parsing historical bodies."""
+    fence = None
+    metadata = False
+    fallback = ""
+    with path.open(encoding="utf-8", newline="") as stream:
+        for number, entry in enumerate(stream):
+            line = entry.rstrip("\r\n")
+            if number == 0 and re.fullmatch(r"\ufeff?---[ \t]*", line):
+                metadata = True
+                continue
+            if metadata and re.fullmatch(r"---[ \t]*", line):
+                metadata = False
+                fallback = ""
+                fence = None
+                continue
+            match = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+            if fence:
+                if match and match[1][0] == fence[0] and len(match[1]) >= len(fence) and not match[2].strip():
+                    fence = None
+            elif match:
+                fence = match[1]
+            else:
+                title = h1(entry)
+                if title:
+                    if not metadata:
+                        return title
+                    if not fallback:
+                        fallback = title
+    return fallback or path.stem
 
 
 def document(path: Path, root: Path, source: str | None = None) -> dict:

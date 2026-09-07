@@ -66,6 +66,8 @@ hint asks for an upstream card, then a dependent card. Highlight the picked orig
 without dimming possible targets. A successful pair adds a dependency; an existing
 pair is a no-op, not an implicit deletion. Pick another pair or press Escape to
 exit. Clicking a line selects it and exposes an explicit Remove dependency action.
+Lines are also keyboard destinations: Enter/Space opens that same action, Escape
+closes it and restores line focus, and removal returns focus to the dependent card.
 Cycles and public/private violations are rejected without changing drafts.
 
 Open the document for longer changes. Reading and writing share a continuous
@@ -114,8 +116,9 @@ before/after sources; large changes use complete sources rather than an unbounde
 diff calculation. Keep existing controls and expansion state stable during typing.
 
 Ordinary pending work has only two bottom actions: **Save** and **Copy to Agent**.
-The copy action chooses the unsaved apply request or the saved follow request;
-that distinction belongs in the request, not in two competing button labels.
+The copy action includes cumulative saved history and current unsaved edits in
+separate follow/apply sections; that distinction belongs in the request, not in
+two competing button labels. Saving or copying never implies agent alignment.
 An empty drawer says No unsaved changes. After saving, show a short saved count
 and keep Copy to Agent available. Do not fill the empty state with disabled tools.
 

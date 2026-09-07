@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter, deque
 from pathlib import Path
 
-from documents import document
+from documents import document, document_title
 
 
 def library_paths(dd: Path) -> list[Path]:
@@ -106,12 +106,14 @@ def build_graph(dd: Path, overrides: dict[str, str] | None = None, extra=()) -> 
             continue
         catalog.append(entry)
         try:
-            doc = document(path, root, overrides.get(relative))
-            entry["title"] = doc["title"]
             if (not archived and kind != "note") or relative in extra:
+                doc = document(path, root, overrides.get(relative))
+                entry["title"] = doc["title"]
                 docs[relative] = doc
                 if doc["error"]:
                     diagnostics.append({"code": "format", "path": relative, "message": doc["error"]})
+            else:
+                entry["title"] = document_title(path)
         except (OSError, UnicodeError) as exc:
             diagnostics.append({"code": "read", "path": relative, "message": str(exc)})
     counts = Counter(item["stem"] for item in catalog)
