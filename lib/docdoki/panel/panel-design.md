@@ -10,7 +10,7 @@ defines the source and save invariants behind this interface.
 - A compact header contains the logo, project name, search, Changes, and language.
   No absolute root, branch, load timestamp, global privacy announcement, or second
   row of global actions. Narrow screens may wrap search.
-- The sidebar has Dashboard, Overview, Northstar, Current work, then grouped spec, stage, and
+- The sidebar has Dashboard, Current work, Northstar, Overview, then grouped spec, stage, and
   note titles. Full-width horizontal rules and lightly filled group headings separate
   navigation, specs, stages, notes, and archives. Archives are collapsed. Paths are not repeated beneath every title;
   show a muted path only to distinguish duplicate titles. The sidebar toggle is a
@@ -51,14 +51,15 @@ keyboard destinations. Clicking the canvas or pressing Escape clears selection.
 Dragging non-field areas adjusts layout and never opens a document. Plain selection
 does not summon an operation panel.
 
-Title and purpose text have a subtle hover/focus edit affordance; progress is a
-compact button. Activate a field to edit it with a native input, textarea, or
-select in the card. The footer temporarily offers Apply and Cancel. Enter applies
-single-line/select edits, Ctrl/Command+Enter applies a purpose, and Escape cancels
-only this field. A purpose textarea keeps native newlines and scrolling. Switching
-to another edit or opening Changes/a document first applies this local buffer;
-if it cannot be applied, retain the input and do not navigate away. These actions
-only stage drafts, never save files. Keep the focused field intact during previews.
+Title and purpose edit in place with native text fields matching their display
+font, position, padding and card tint. No inset box, blue outline or Apply/Cancel
+footer appears. Editing a field does not select/dim the graph as a side effect.
+Leaving a field stages its input; Enter also stages a title, Ctrl/Command+Enter a
+purpose, and choosing a progress value applies it. Escape cancels this field.
+The purpose supports native newlines, selection and scrolling. Retain Open and the
+progress column in their normal positions. One click can switch fields or open a
+document; wait for application without stealing the destination's focus. Failure
+keeps input and stops navigation. These actions stage drafts, never save files.
 
 Connect is a temporary tool, not a global edit permission. Its short in-context
 hint asks for an upstream card, then a dependent card. Highlight the picked origin
@@ -67,30 +68,39 @@ pair is a no-op, not an implicit deletion. Pick another pair or press Escape to
 exit. Clicking a line selects it and exposes an explicit Remove dependency action.
 Cycles and public/private violations are rejected without changing drafts.
 
-Open the document for longer changes. It normally displays rendered Markdown.
-Click, tap or keyboard-focus a block to expose that block's Markdown in place;
-type `##`, `**`, lists or links directly. Touch pans and context-menu presses stay
-in reading; touching down alone does not start an edit. Other blocks stay rendered. There is no rich-text
-formatting toolbar and no Edit / Done / Cancel mode. The local textarea grows with
-its content and width, preserving native selection, paste, multiline input and undo.
-Clicking elsewhere restores the previous block's preview. Links still navigate;
-selecting their text does not open them. Definitions do not produce empty boxes.
+Open the document for longer changes. Reading and writing share a continuous
+Typora-like live Markdown surface: click text to place the caret, keep headings
+and inline emphasis styled, and reveal nearby syntax only where it helps editing.
+There are no per-block inputs, borders or font changes. Select, replace and undo
+across paragraphs. Lists continue naturally on Enter; task checkboxes toggle in
+place. Ctrl/Command+B, I and backtick wrap or unwrap selected Markdown for bold,
+emphasis and inline code, with normal undo. Tables keep aligned cells while typing,
+without switching the entire table to a code block. Keep ordinary
+Markdown spelling available; this is not a general-purpose rich-text toolbar.
+Touch selection, scrolling and context menus use the editor's native behavior.
 
-Switching between blocks carries local input; leaving body editing stages a draft,
-never a file save. Ctrl/Command+Enter can also stage input outside composition.
-Changes provides draft discard. Retain Markdown input when validation fails, without
-converting it to HTML and back. Source remains the secondary whole-document textarea
-for metadata, definitions and documents whose block ranges cannot be mapped safely.
-Switching to it first applies body input; failure stops the switch rather than
-losing text. Late preview completions must not move focus away from newer input
-or navigation. Heading links, including encoded Unicode fragments, stay usable
-after local editing. These document-only editing choices do not affect the board's tools.
+The source icon changes only presentation: reveal complete Markdown and metadata
+in the same centered content column, with soft wrapping and quiet syntax color.
+Preserve the editor, selection, undo history and corresponding visible content;
+never jump to the start or stretch into a full-width console. Layout heights may
+change, so restore a source anchor rather than an identical scroll offset.
 
-Enter and paste retain native multiline behavior. IME composition is not a command.
-Escape cancels the current source-edit session. Native textarea undo stays native;
-the workspace undo shortcut covers completed edits. Do not replace the focused
-textarea or controls during previews. Syntax/graph errors remain visible without
-turning ordinary reading into a permanent explanation of the parser.
+The document ends at its actual text, with only a small caret/append inset: do not
+pad the editor into a tall blank page or impose a minimum document height. Related
+documents are panel navigation, not Markdown. Place them outside the article in a
+compact, lightly filled, bordered auxiliary region with a navigation label. Keep
+this boundary clear in both live and Source presentation, including short documents
+and narrow screens; never hide or rewrite real trailing source lines to tighten it.
+
+Leaving editing stages a draft, never a file save. Ctrl/Command+Enter also stages;
+Ctrl/Command+S requests Save. Escape can cancel the current full-source session.
+IME composition is not a command. Changes provides document discard. Navigation,
+Copy, Save and switching presentation await application; failures keep input and
+stop the action. Late completions must not replace text or move newer focus.
+Heading links, including repeated titles and encoded Unicode fragments, and normal
+links remain usable after edits. Selecting a link's text does not navigate.
+Native editor undo/redo remains local; workspace undo covers staged edits. Keep
+syntax/graph errors visible without turning reading into a parser console.
 
 ## Changes
 
@@ -138,13 +148,16 @@ the percentage uses a fixed, slightly wider cell. Keep action names and shortcut
 in localized tooltips and accessible labels, not visible text buttons. Active
 Connect and locked zoom use inverted colors, without adding glyphs or changing
 button sizes. Align Open and
-progress columns across cards; local Apply / Cancel share equal units. Save / Copy
+progress columns across cards, including during field editing. Save / Copy
 split their row equally, while a sole remaining action fills it. Keep different
 roles distinct rather than making every button equally large. Labels must fit;
 on narrow screens wrap groups, not individual controls into unequal widths.
 
 Reading text is normally 17px and never scaled with the diagram. Use system CJK
-fallbacks, readable code, high-contrast focus/hover states, and 16px phone inputs.
+fallbacks, readable code, and 16px phone inputs. Editing text needs a clear caret,
+not a focus box. Keyboard-operated controls retain a restrained black focus outline;
+removing blue boxes must not make keyboard navigation invisible. Retro styling
+belongs to the visual shell, not to modal or discontinuous editing mechanics.
 Tables and source lines may scroll internally. Paths and translated labels wrap
 without covering controls. Search covers titles, paths, and loaded source drafts.
 

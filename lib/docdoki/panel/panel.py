@@ -39,7 +39,7 @@ def render(dd: Path, save_token: str = "") -> str:
               "TOKEN": _hjson(save_token), "NONCE": html.escape(save_token, quote=True),
               "CSS": (HERE / "panel.css").read_text(encoding="utf-8"),
               "ICON": quote((HERE / "favicon.svg").read_text(encoding="utf-8"), safe=""),
-              "VENDOR": (HERE / "vendor/marked.js").read_text(encoding="utf-8"),
+              "VENDOR": (HERE / "vendor/marked.js").read_text(encoding="utf-8") + "\n" + (HERE / "vendor/codemirror.js").read_text(encoding="utf-8"),
               "STATE": (HERE / "state.js").read_text(encoding="utf-8"),
               "APP": (HERE / "body.js").read_text(encoding="utf-8") + "\n" + (HERE / "panel.js").read_text(encoding="utf-8")}
     return re.sub(r"__(TITLE|DATA|TOKEN|NONCE|CSS|ICON|VENDOR|STATE|APP)__",

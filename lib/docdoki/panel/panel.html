@@ -20,9 +20,9 @@
     <div class="library-heading"><strong data-en="Navigation" data-zh="导航">Navigation</strong><button id="library-close" data-en-label="Close navigation" data-zh-label="关闭导航">×</button></div>
     <nav class="primary-nav">
       <button data-nav="dashboard" data-en="Dashboard" data-zh="看板">Dashboard</button>
-      <button data-nav="overview" data-en="Overview" data-zh="总览">Overview</button>
-      <button data-nav="northstar" data-en="Northstar" data-zh="北极星">Northstar</button>
       <button data-nav="work" data-en="Current work" data-zh="当前工作">Current work</button>
+      <button data-nav="northstar" data-en="Northstar" data-zh="北极星">Northstar</button>
+      <button data-nav="overview" data-en="Overview" data-zh="总览">Overview</button>
     </nav>
     <div id="catalog"></div>
   </aside>
@@ -38,12 +38,8 @@
     <div id="preview-status" class="preview-status" role="status" hidden></div>
     <details id="diagnostics" class="diagnostics" hidden><summary data-en="Document issues" data-zh="文档问题">Document issues</summary><ul id="diagnostic-list"></ul></details>
     <div class="reader" id="reader" hidden>
-      <article class="markdown" id="reading"></article><div id="related"></div>
+      <article class="markdown" id="reading"></article><aside id="related" data-en-label="Document navigation" data-zh-label="文档导航"></aside>
     </div>
-    <section class="editor" id="editor" hidden>
-      <label for="source" class="sr-only" data-en="Document source" data-zh="文档源码">Document source</label>
-      <textarea id="source" spellcheck="false" wrap="off"></textarea>
-    </section>
     <section id="graph" class="graph" data-en-label="Progress and dependencies" data-zh-label="进展与依赖">
       <p id="graph-empty" class="empty" hidden data-en="No specs yet." data-zh="还没有规格。">No specs yet.</p>
       <div id="viewport" class="viewport"><svg id="edges" class="edges"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#000"></path></marker><marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#e91d2a"></path></marker><marker id="arrow-dim" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#cfcfcf"></path></marker></defs><g id="edge-lines"></g></svg><div id="graph-cards"></div></div>

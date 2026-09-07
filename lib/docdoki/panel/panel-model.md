@@ -25,13 +25,13 @@ project commands, commit, publish, archive stages, or move public/private files.
   and progress support local native field editing. Selection and layout remain
   available without an editing mode. Connect is a temporary tool for adding an
   upstream → dependent relation; removal is an explicit action on a selected edge.
-- Documents open as rendered Markdown. Focusing a block exposes its local Markdown
-  source in an auto-sized native textarea, without formatting tools or Edit / Done /
-  Cancel. Other blocks remain rendered. Switching blocks previews the previous input;
-  leaving body editing stages a full-source draft, never a filesystem write. Source
-  remains a document-local full-document textarea, including metadata. Navigation
-  and switching to Source await application; failure retains input and stops the action.
-  Changing presentation does not grant filesystem authority.
+- Documents open in one continuous, source-backed live Markdown editor. Headings,
+  emphasis, lists and tables retain their layout during input; nearby syntax is
+  revealed where useful. Source uses the same editor, paper width, selection and
+  undo history, with all Markdown and frontmatter visible. There are no per-block
+  textareas or editing-mode buttons. Leaving editing stages a full-source draft,
+  never a filesystem write. Navigation and presentation changes await application;
+  failure retains input and stops the action. Presentation grants no write authority.
 - Complete Markdown is readable, including introductions, repeated headings,
   multiline conditions, code, and tables. Source mode includes frontmatter. There
   is no heading-name or claim-index save API. A card preview transforms one bounded
@@ -44,9 +44,11 @@ project commands, commit, publish, archive stages, or move public/private files.
 - The client owns one baseline map, source drafts, chronological edit history, an
   active editing session, save state, and the last successful receipt. Parsed
   documents and diagram geometry are disposable views, never another editable copy.
-  A local field input is an uncommitted buffer, not a second source authority. Apply
-  transforms its captured source and stages one complete-source history entry.
-  Escape cancels the buffer, including a pending application. Navigation, another
+  A local field input is an uncommitted buffer, not a second source authority.
+  Blur, Enter (Ctrl/Command+Enter for purpose) or choosing progress transforms its
+  captured source and stages one complete-source history entry. No confirmation
+  footer is needed. Escape cancels the buffer, including a pending application.
+  Navigation, another
   edit, Changes, Save, and Copy await application; failure keeps the buffer visible
   and stops that action. Leaving with changed field text also warns about unsaved work.
 - Dependency controls send an add/remove operation on one stem. The server applies
@@ -61,42 +63,43 @@ project commands, commit, publish, archive stages, or move public/private files.
   cancelling invalidates them. Previews and disk checks never replace an active
   field input, and a field opens from parsed canonical source, not a stale summary.
 
-## Body editing
+## Document editing
 
-`body.js` maps top-level Markdown tokens to exact ranges in captured full source,
-including a mapping from normalized newlines back to original offsets. Gaps must
-be whitespace or recognized definitions; unprovable mappings require Source editing.
-Headings are not matched by name, and repeated text never supplies a save address.
+`body.js` wraps a vendored CodeMirror editor. Its document is Markdown source;
+Lezer syntax ranges drive disposable layout decorations, not save addresses.
+CodeMirror owns selection, composition, paste, cross-paragraph editing and local
+undo/redo. Its contenteditable DOM is an input mechanism, not an HTML document to
+serialize. There is no HTML-to-Markdown conversion or fragment write API.
 
-One block at a time exposes its captured Markdown, not rendered text. Headings,
-paragraphs, lists, fenced code, tables and reference/wiki-link blocks use the same
-native textarea. Typed Markdown remains Markdown; there are no formatting commands,
-HTML serialization or literal-text escaping. Paste and undo are native textarea
-operations. Definitions stay in the source without empty preview boxes; edit these
-and frontmatter in Source. Reference definitions are supplied before inline lexing.
-No preview fetches external images or permits document HTML.
+Each text transaction maps normalized editor offsets back to the captured raw
+source and patches only its changed ranges. Untouched text, comments, metadata,
+definitions, gaps and mixed line endings retain their bytes. Inserted newlines use
+the document convention. Full source remains accessible for syntax without a
+special visual treatment. Raw HTML stays text and images are not fetched.
 
-Switching blocks retains local source buffers and renders the previous block.
-Leaving body editing patches only changed ranges and stages one complete-source
-history entry through the existing preview API. Untouched blocks, frontmatter,
-definitions and gaps keep their bytes. Local inputs retain Markdown spelling and
-use the document's newline convention; original trailing block separators are
-preserved. Neither headings nor parsed output determine replacement addresses.
-Native undo stays inside the focused text surface; staged body edits participate
-in the shared chronological source history and Changes supports document discard.
-Idle reading surfaces do not block snapshot updates. A focus/typing event activates
-only a surface bound to the current source and version; stale or saving surfaces
-cannot accept input. Normal links still navigate; selecting link text does not.
+Live presentation hides frontmatter and protects it from body select-all/deletion;
+Source reveals it. Markdown markers remain ordinary source even when decorated or
+hidden. Tables use editable, aligned cell spans over source ranges, not serialized
+HTML tables. Heading anchors, wiki/relative/reference links and source selection
+remain usable. Link text selection is not navigation.
 
-Body buffers block snapshot adoption and reading-DOM replacement. Pending application
-requires the same buffer, store, source version and input generation. Continued
-input or refocusing invalidates an older response, even without textual changes.
-Blur waits for pointer dispatch so rendering cannot swallow navigation. Pointer-up
-also releases the wait when replacing a pressed preview node suppresses click.
-Composition is not a command; completed composition can stage input after blur;
-Save, Copy and navigation await successful application. Changed local body text also
-participates in the tab-close warning, even before a source draft has been staged.
-There is no body-fragment write API and no whole-document HTML-to-Markdown conversion.
+Presentation changes retain the same editor and local history, using a source
+position to restore the visible content after layout settles. A newer edit or
+selection invalidates a pending position restoration. Source is softly wrapped in
+the same centered paper, not a full-width boxed console. A clean snapshot adoption
+can rebuild the editor; preserve reading position, but do not carry undo across
+adoption or discard. Staged edits also join the workspace's chronological history.
+
+A focused session holds captured source, DraftStore identity/version and input
+generation. Active buffers block snapshot adoption and DOM replacement. Application
+validates the complete proposed source through `/preview`; only a response for the
+same session, store, version and generation can stage it. Typing or refocusing
+invalidates older responses, including refocus without text changes. Stale/saving
+surfaces cannot accept transactions. Blur waits for pointer dispatch; Save, Copy,
+navigation and presentation changes await application without stealing newer focus.
+Composition is not a command. Local dirty text participates in the badge and
+unload warning before staging. Validation failures retain input, never silently
+switch presentation, save or discard it.
 
 ## Changes, synchronization, and recovery
 
@@ -161,10 +164,11 @@ implicitly. This is a local owner-operated tool, not a multi-user network servic
 Delivery is one self-contained page, without a build step or runtime network assets.
 `documents.py` handles source I/O and supported metadata; `graph.py` builds the
 catalog and DAG; `storage.py` validates and writes; `panel.py` serves and assembles
-assets. `state.js` owns drafts/history and bounded diffs; `body.js` maps and serializes
-bounded body edits. `panel.js`, `panel.html`,
+assets. `state.js` owns staged drafts/history and bounded diffs; `body.js` owns the live
+source editor, exact text-transaction mapping and display decorations. `panel.js`, `panel.html`,
 and `panel.css` implement the views. `favicon.svg` is embedded as a data URL in the
-assembled page. Marked and its license are vendored locally.
+assembled page. Marked and CodeMirror/Lezer are vendored with their licenses;
+[vendor maintenance](vendor/README.md) describes rebuilding the offline editor bundle.
 
 Frontmatter supports flat scalar fields and inline/block scalar lists, including
 quotes and comments. Unsupported nested mappings, aliases, and block scalars produce
