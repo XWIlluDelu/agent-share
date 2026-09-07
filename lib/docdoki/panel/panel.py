@@ -14,7 +14,7 @@ import secrets
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
 
 from documents import document
 from graph import allowed_path, build_graph
@@ -38,10 +38,11 @@ def render(dd: Path, save_token: str = "") -> str:
     values = {"TITLE": html.escape(graph["meta"]["title"]), "DATA": _hjson(graph),
               "TOKEN": _hjson(save_token), "NONCE": html.escape(save_token, quote=True),
               "CSS": (HERE / "panel.css").read_text(encoding="utf-8"),
+              "ICON": quote((HERE / "favicon.svg").read_text(encoding="utf-8"), safe=""),
               "VENDOR": (HERE / "vendor/marked.js").read_text(encoding="utf-8"),
               "STATE": (HERE / "state.js").read_text(encoding="utf-8"),
               "APP": (HERE / "body.js").read_text(encoding="utf-8") + "\n" + (HERE / "panel.js").read_text(encoding="utf-8")}
-    return re.sub(r"__(TITLE|DATA|TOKEN|NONCE|CSS|VENDOR|STATE|APP)__",
+    return re.sub(r"__(TITLE|DATA|TOKEN|NONCE|CSS|ICON|VENDOR|STATE|APP)__",
                   lambda match: values[match[1]], (HERE / "panel.html").read_text(encoding="utf-8"))
 
 

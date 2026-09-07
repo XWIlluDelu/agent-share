@@ -163,7 +163,8 @@ Delivery is one self-contained page, without a build step or runtime network ass
 catalog and DAG; `storage.py` validates and writes; `panel.py` serves and assembles
 assets. `state.js` owns drafts/history and bounded diffs; `body.js` maps and serializes
 bounded body edits. `panel.js`, `panel.html`,
-and `panel.css` implement the views. Marked and its license are vendored locally.
+and `panel.css` implement the views. `favicon.svg` is embedded as a data URL in the
+assembled page. Marked and its license are vendored locally.
 
 Frontmatter supports flat scalar fields and inline/block scalar lists, including
 quotes and comments. Unsupported nested mappings, aliases, and block scalars produce

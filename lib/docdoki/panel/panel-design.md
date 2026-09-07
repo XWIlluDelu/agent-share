@@ -24,12 +24,16 @@ defines the source and save invariants behind this interface.
   outside diagram scaling. Clicking or double-clicking the card itself stays on
   the board. Returning to Dashboard preserves pan, zoom, and dragged positions.
 - A compact content bar identifies the current view or relative document path.
-  No board/document switch appears here. Within documents, one `</>` icon
+  No board/document switch appears here. The document path supports click or
+  Enter/Space to copy, without intercepting text selection. Confirm success only
+  after clipboard completion; failure offers manual copying, and late results
+  cannot label another document. Within documents, one `</>` icon
   immediately follows the path and toggles rendered body / full source. Black fill
   and `aria-pressed` indicate source view; a localized tooltip describes the next
   action. Keep the icon beside the path on narrow screens too, not right-aligned
   or on its own row. There is no workspace-wide reading/editing toggle.
   Reuse the document's Markdown H1 rather than repeating it above the content.
+  The content bar stays visible while reading; anchor targets scroll clear of it.
 
 ## Cards and editing
 
@@ -122,7 +126,9 @@ warn about private content at copy/export, not throughout normal reading.
 The original [dell-1996.DESIGN.md](references/dell-1996.DESIGN.md) stays verbatim.
 Retain black framing, white reading surfaces, flat card colors, strong sans-serif
 headings, serif body text, square corners, and the restrained yellow language
-button, upright rather than rotated. No gradients, soft SaaS cards, or ornamental toolbars. Progress uses the
+button, upright rather than rotated. A black-outlined red pixel heart with stepped
+shading and a small highlight is the tab icon, embedded without network assets.
+No gradients, soft SaaS cards, or ornamental toolbars. Progress uses the
 existing sky, purple, and sage colors with a text label; unknown progress is white.
 
 Give peer controls equal widths within their group, not widths determined by label
