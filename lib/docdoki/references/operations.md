@@ -247,7 +247,9 @@ context without making public records depend on it.
 Update the selected stage when a milestone, blocker, decision, check result, or
 next action materially changes what the next reader should do. Rewrite current
 state; do not append a diary. Route durable decisions and knowledge during the
-authorized work and refresh affected overview summaries. If nothing relevant
+authorized work and refresh affected overview and spec `progress` summaries
+from the available implementation evidence. Keep unknown progress unrecorded;
+reassess completion when the contract changes. If nothing relevant
 changed, no documentation write is needed. None of this requires ending the
 session or producing a kickoff prompt.
 
@@ -285,8 +287,8 @@ merged, within the authorized work. Before archiving:
    move it to `stages/archive/` in the same visibility scope.
 4. Update current-work summaries and affected relative links, then run the
    [privacy check](privacy.md#establish-and-check-the-boundary) for changed document
-   paths/references. Leave `progress` display fields alone unless their change
-   was explicitly requested.
+   paths/references. Reconcile affected `progress` summaries with the actual
+   implementation outcome; closing a stage alone does not establish completion.
 
 Do not close work whose remaining obligations have no owner or disposition.
 Closure needs no special seal commit. Archives preserve context but are not

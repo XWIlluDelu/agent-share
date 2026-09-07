@@ -69,8 +69,8 @@ For “continue implementing this feature” and other substantial covered work:
    confirmed behavior, known unmet requirements, and what was not checked. Do
    not use code reading alone to claim measured performance or deployment success.
 5. Persist meaningful changes: maintain the affected contracts if authorized
-   design changed, update work state and overview summaries, and retain reusable
-   lessons in their proper home. If document paths or references changed, follow
+   design changed, update work state, overview and affected `progress` summaries
+   from implementation evidence, and retain reusable lessons in their proper home. If document paths or references changed, follow
    [Privacy](references/privacy.md) and run the bundled boundary check. Leave
    unrelated documents alone. If nothing relevant changed, no documentation edit
    is necessary. A progress update is not a full handoff and needs no kickoff prompt.

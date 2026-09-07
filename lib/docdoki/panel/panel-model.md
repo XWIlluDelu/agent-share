@@ -2,156 +2,191 @@
 
 ## Purpose and authority
 
-The panel is DocDoki's optional human reading and steering surface. The file
-library remains useful without it. The panel helps a human understand intent,
-contracts, implementation gaps, and current work, then express a change; the
-agent interprets that intent and follows it through authorized work.
+The optional panel helps the human understand project progress and dependencies,
+inspect and edit design, and hand changes to the agent. The file library remains
+useful without it. Dashboard is the default entry and opens only the card diagram;
+Overview separately opens `spec_abstract.md` as a document. Both are sidebar entries,
+not modes of one page. Cards still open their documents through Open. Northstar,
+active work, specs, and notes remain directly reachable.
 
-Presentation is not design authority. The panel computes navigation, layout,
-and structural diagnostics, not new project facts. It does not inspect code to
-infer completion, invent dependencies to improve a diagram, or maintain a
-parallel progress ledger. Decided contracts can remain unimplemented. Progress
-comes from the overview and stages; an explicit `progress` field is only a
-manual planning label. A missing value means **not recorded**, not not-started.
+The panel renders recorded information, not new project facts. `progress` is an
+agent-maintained implementation summary under [the schema](../references/schemas.md#progress-summary),
+with detailed evidence and limitations in the work records. Missing progress is
+Not recorded. Design contracts can remain unimplemented; changing a status does
+not change their obligations. The panel does not inspect code to infer completion.
 
-Saving edits the documents, not their implementation. The saved-change follow
-request gives the agent the affected sources and human changes; it does not
-claim that propagation, verification, or stage closure has happened. The panel
-does not run project commands, publish, commit, move public/private documents,
-or automate the semantic work of archiving a stage.
+Saving edits documents, not implementation. Copy to Agent preserves the distinction
+between unsaved edits to apply and saved changes to follow. The panel does not run
+project commands, commit, publish, archive stages, or move public/private files.
 
-## Reading model
+## Source and interaction model
 
-- Open `spec_abstract.md` first: design, capabilities and gaps, current work, and
-  decisions needing the human. If absent, use the available northstar or state
-  what is missing rather than synthesize an overview.
-- Keep northstar, active stages, and specs directly reachable. Spec lists and
-  dependency diagrams are alternative navigation views, not the whole project.
-- Cards are summaries; the reader exposes the complete Markdown body, including
-  introductions, multiline claims, unknown sections, checks, and non-goals.
-  Source mode exposes the entire file, including frontmatter.
-- Resolve in-unit wiki and relative Markdown links. Load notes and archived
-  stages on demand, with archives collapsed initially. Mark unresolved or
-  out-of-unit links explicitly; do not quietly drop them.
-- Show the project root, available branch, snapshot load time, and whether private
-  documents are included. Search titles, paths, and loaded text, including drafts;
-  disclose that unopened notes and archives are not body-indexed.
+- The board has no global reading/editing permission switch. Card title, purpose,
+  and progress support local native field editing. Selection and layout remain
+  available without an editing mode. Connect is a temporary tool for adding an
+  upstream → dependent relation; removal is an explicit action on a selected edge.
+- Documents open as rendered Markdown. Focusing a block exposes its local Markdown
+  source in an auto-sized native textarea, without formatting tools or Edit / Done /
+  Cancel. Other blocks remain rendered. Switching blocks previews the previous input;
+  leaving body editing stages a full-source draft, never a filesystem write. Source
+  remains a document-local full-document textarea, including metadata. Navigation
+  and switching to Source await application; failure retains input and stops the action.
+  Changing presentation does not grant filesystem authority.
+- Complete Markdown is readable, including introductions, repeated headings,
+  multiline conditions, code, and tables. Source mode includes frontmatter. There
+  is no heading-name or claim-index save API. A card preview transforms one bounded
+  field in the captured full source: the first ATX title outside code, or a flat
+  `purpose`/`progress` scalar. Other source bytes, comments, and line endings are
+  preserved. Unsupported field forms remain editable through the whole source.
+- Wiki/relative links resolve inside the unit; notes and archives load on demand.
+  Unresolved and out-of-unit links remain explicit. Search includes titles, paths,
+  and loaded text, including drafts. No notes are synthesized into spec nodes.
+- The client owns one baseline map, source drafts, chronological edit history, an
+  active editing session, save state, and the last successful receipt. Parsed
+  documents and diagram geometry are disposable views, never another editable copy.
+  A local field input is an uncommitted buffer, not a second source authority. Apply
+  transforms its captured source and stages one complete-source history entry.
+  Escape cancels the buffer, including a pending application. Navigation, another
+  edit, Changes, Save, and Copy await application; failure keeps the buffer visible
+  and stops that action. Leaving with changed field text also warns about unsaved work.
+- Dependency controls send an add/remove operation on one stem. The server applies
+  it to the captured source draft and validates the graph. An already-satisfied
+  operation leaves the source unchanged; stale graph previews never supply a full
+  replacement dependency list. Connect always adds, never toggles based on a preview.
+- Pending modifying responses are bound to their originating store and source
+  version. Replacing a snapshot invalidates the old store's requests. Adopting a
+  latest source after explicit discard advances the version even for equal text.
+  Stale responses cannot stage edits or replace the graph. Field responses also
+  require the same active buffer and input generation; continuing to type or
+  cancelling invalidates them. Previews and disk checks never replace an active
+  field input, and a field opens from parsed canonical source, not a stale summary.
 
-## Draft and save model
+## Body editing
 
-A document's complete source is the editing unit and its full original source is
-its save precondition. There is no claim-index or heading-name patch API: repeated
-headings, fenced examples, and multiline lists must not create ambiguous writes.
-Structured dependency controls send an add/remove operation on one stem. The
-server applies it to the captured current source draft, not a dependency list
-computed from a potentially stale preview, and validates the resulting graph.
-An already-satisfied operation leaves the source unchanged.
+`body.js` maps top-level Markdown tokens to exact ranges in captured full source,
+including a mapping from normalized newlines back to original offsets. Gaps must
+be whitespace or recognized definitions; unprovable mappings require Source editing.
+Headings are not matched by name, and repeated text never supplies a save address.
 
-The client owns one baseline map, source drafts, chronological edit operations,
-an optional active editing session, an in-flight save flag, and the last successful
-save receipt. Parsed documents and graph layout are disposable views of those
-sources, not another editable copy. Preview uses the client's snapshot plus its
-drafts; it must not mix newly read disk content with old editing baselines.
-A pending dependency edit is bound to both its originating store and source
-version. Refresh invalidates responses from the replaced store; accepting a new
-baseline advances the version even if the merged source is unchanged. Stale
-responses cannot stage edits or replace the current graph.
+One block at a time exposes its captured Markdown, not rendered text. Headings,
+paragraphs, lists, fenced code, tables and reference/wiki-link blocks use the same
+native textarea. Typed Markdown remains Markdown; there are no formatting commands,
+HTML serialization or literal-text escaping. Paste and undo are native textarea
+operations. Definitions stay in the source without empty preview boxes; edit these
+and frontmatter in Source. Reference definitions are supplied before inline lexing.
+No preview fetches external images or permits document HTML.
 
-Save captures a batch and locks edits, undo, restores, and repeat submissions.
-The server validates the batch and preconditions before writing, then returns
-actual stored sources as the next baseline. A successful response clears the
-submitted drafts, not unrelated future input. Failures retain drafts; an unknown
-network outcome requires comparing disk before retrying. Refresh must not erase
-edits made while its request was pending.
+Switching blocks retains local source buffers and renders the previous block.
+Leaving body editing patches only changed ranges and stages one complete-source
+history entry through the existing preview API. Untouched blocks, frontmatter,
+definitions and gaps keep their bytes. Local inputs retain Markdown spelling and
+use the document's newline convention; original trailing block separators are
+preserved. Neither headings nor parsed output determine replacement addresses.
+Native undo stays inside the focused text surface; staged body edits participate
+in the shared chronological source history and Changes supports document discard.
+Idle reading surfaces do not block snapshot updates. A focus/typing event activates
+only a surface bound to the current source and version; stale or saving surfaces
+cannot accept input. Normal links still navigate; selecting link text does not.
 
-The Changes surface separates:
+Body buffers block snapshot adoption and reading-DOM replacement. Pending application
+requires the same buffer, store, source version and input generation. Continued
+input or refocusing invalidates an older response, even without textual changes.
+Blur waits for pointer dispatch so rendering cannot swallow navigation. Pointer-up
+also releases the wait when replacing a pressed preview node suppresses click.
+Composition is not a command; completed composition can stage input after blur;
+Save, Copy and navigation await successful application. Changed local body text also
+participates in the tab-close warning, even before a source draft has been staged.
+There is no body-fragment write API and no whole-document HTML-to-Markdown conversion.
 
-- Unsaved edits, their complete before/after sources, chronological undo, and
-  per-file restore.
-- An unsaved apply request, which tells the agent to check baselines before
-  applying the draft.
-- A saved-change follow request, backed by the last successful receipt and
-  explicitly not asking the agent to apply the edits again.
+## Changes, synchronization, and recovery
 
-Receipts survive the in-app Refresh action but not a page reload or tab closure.
-Drafts and receipts stay in memory, not browser storage. Warn before leaving with
-unsaved drafts and offer explicit export. Copy failures leave the complete request
-selectable and must not report success.
+Changes is closed initially, with only an unsaved-count badge after editing. It
+contains per-document review/discard and two normal actions: Save and Copy to Agent.
+Complete diffs are available on demand; an empty drawer is not a disabled console.
+
+On focus or visibility return, check disk state. With no drafts, adopt fresh content
+while preserving navigation, reading position, document presentation, and diagram layout. Do not
+replace content if editing continued while the request was pending or a local
+field buffer is active. With drafts,
+retain their sources and preconditions, and record external differences in Changes.
+There is no global Refresh command, background autosave, or realtime collaboration.
+
+A document's complete original source is its save precondition. Save captures a
+batch, locks mutations and repeat submissions, and validates the affected disk
+sources before writing. Return actual stored sources as the next baseline.
+Success clears the submitted drafts and retains a copyable follow receipt.
+
+A conflict is shown with the affected edit, not in a separate comparison workflow.
+Keep the original, human draft, and available external source for the agent request.
+Discarding an edit reads the latest source before dropping the draft and checks that
+no intervening edit occurred. If the file was deleted, explicit discard can remove
+it from the client too. Never accept an old draft against a newer baseline through
+an overwrite/rebase button. Complex merging belongs to the agent.
+
+Failures retain drafts and expose recovery export. An unknown save outcome remains
+explicit in the request: some writes may already have happened, so the agent must
+check actual files before applying anything. Clipboard failures leave the complete
+request selectable. Copy never executes a request or clears edits. Receipts survive
+in-app synchronization, not page reload or tab closure. Drafts, conflicts, and
+receipts stay in memory, not browser storage; warn before leaving with unsaved work.
 
 ## Write and privacy boundaries
 
-Run locally and **pause other writers to the same files while saving**. The
-process lock serializes this server's saves; it does not coordinate independent
-agents or editors. Full-source comparisons, rechecks, and atomic replacement
-reduce risks but cannot close the final check-to-replace race with an
-uncoordinated writer.
+Run locally and **pause other writers to the same files while saving**. The process
+lock serializes this server's saves, not independent editors. Full-source checks
+and atomic replacement reduce risks but cannot close an uncoordinated final
+check-to-replace race. This coordination rule belongs in operating guidance and
+the agent request, not a permanent banner interrupting normal reading.
 
-A failed multi-file save attempts rollback. Restoration checks for newer content
-and reports incomplete rollback rather than deliberately overwriting it. This is
-best-effort recovery, not a transaction, crash-durability guarantee, or unconditional
-concurrency safety. Export retains the panel's baseline and draft, not an external
-writer's bytes lost during an uncoordinated replacement window. Compare latest
-and explicitly accept a baseline only after merging the required external intent.
+A failed multi-file save attempts rollback. It checks for newer content and reports
+incomplete restoration rather than deliberately overwriting it. This is best-effort
+recovery, not a filesystem transaction, crash-durability guarantee, or unconditional
+concurrency safety. Export cannot recover an external writer's bytes lost during
+an uncoordinated replacement window.
 
-Private labels come from `docdoki/private/`, never editable metadata. Reads and
-writes stay inside this unit's existing document paths; symlink and traversal
-writes are rejected. Public writes reject recognized private dependencies and
-references. These structural checks do not detect arbitrary secrets or authorize
-publication; [the core privacy rules](../references/privacy.md) still apply.
-Private copy/export content must be labelled and sent only to a trusted destination.
+Private identity comes from `docdoki/private/`, never metadata. Reads/writes stay
+inside the unit's existing document paths; traversal and symlink writes are rejected.
+Shared writes reject recognized private dependencies/references. These checks do
+not detect arbitrary secrets or authorize publication; [core privacy rules](../references/privacy.md)
+apply. Mark individual private documents quietly; label private request content and
+warn at copy/export to a trusted destination.
 
-The service binds to loopback, checks Host and write Origin, and requires its
-process token for data requests. Responses are non-cacheable, script data is
-escaped, framing is blocked, and document HTML is rendered as text. External
-images are not fetched implicitly. This is a local owner-operated tool, not a
-multi-user service; do not expose it through a network proxy.
+The service binds to loopback, checks Host and write Origin, and requires its token
+for data requests. Responses are non-cacheable; scripts are escaped and framing is
+blocked. Document HTML is rendered as text; external images are not fetched
+implicitly. This is a local owner-operated tool, not a multi-user network service.
 
 ## Implementation and operation
 
-The delivery remains one self-contained browser page with no build step or
-runtime network assets. Source responsibilities are separate:
+Delivery is one self-contained page, without a build step or runtime network assets.
+`documents.py` handles source I/O and supported metadata; `graph.py` builds the
+catalog and DAG; `storage.py` validates and writes; `panel.py` serves and assembles
+assets. `state.js` owns drafts/history and bounded diffs; `body.js` maps and serializes
+bounded body edits. `panel.js`, `panel.html`,
+and `panel.css` implement the views. Marked and its license are vendored locally.
 
-| Source | Responsibility |
-| :-- | :-- |
-| `documents.py` | Source-preserving reads, explicit YAML subset, document metadata, `after` patching. |
-| `graph.py` | Library snapshot/catalog, structural diagnostics, linear-time DAG layering. |
-| `storage.py` | Write validation, full-source preconditions, replacement and recovery. |
-| `panel.py` | Local HTTP service and page assembly. |
-| `state.js` | Source drafts, edit history, save state, bounded diffs. |
-| `panel.js`, `panel.html`, `panel.css` | Navigation, Markdown reading, native editing, geometry and presentation. |
-| `vendor/marked.js` | Bundled Markdown rendering; attribution in `vendor/marked.LICENSE`. |
-
-Frontmatter supports a strict subset: flat scalar fields and inline or block
-lists of scalars, including single/double quotes and comments. Unsupported forms
-such as nested mappings, aliases, and folded/block scalars produce diagnostics,
-not guessed values. Such sources remain inspectable; saving requires a supported
-form or an external editor. The service accepts request bodies up to 1 MiB.
+Frontmatter supports flat scalar fields and inline/block scalar lists, including
+quotes and comments. Unsupported nested mappings, aliases, and block scalars produce
+diagnostics, not guesses. Such sources remain inspectable; saving needs a supported
+form or an external editor. Requests are limited to 1 MiB.
 
 From the skill directory:
 
 ```sh
-python3 panel/panel.py /path/to/project
 python3 panel/panel.py /path/to/project --port 0 --no-open
-```
-
-The backend uses only Python's standard library. The visual contract is
-[Panel design](panel-design.md). Lightweight checks use temporary document
-libraries, never a real project as a writable fixture:
-
-```sh
 python3 -B panel/selftest.py
 node panel/selftest.mjs
 node panel/selftest.mjs --browser
 ```
 
-The browser option needs an available Playwright package and browser binary. It
-defaults to Chromium; set `PANEL_BROWSER=firefox` or `PANEL_BROWSER=webkit` to run
-the same checks on another installed engine. If normal module resolution cannot
-find Playwright, set `PLAYWRIGHT_MODULE` to its absolute `index.mjs` path.
+The backend uses only Python's standard library. See [Panel design](panel-design.md)
+for interaction and visual requirements. Tests use temporary libraries, not real
+projects. The browser option needs Playwright and a browser binary. It defaults to
+Chromium; `PANEL_BROWSER=firefox` or `webkit` selects another installed engine.
+`PLAYWRIGHT_MODULE` can name an absolute `index.mjs` when module resolution needs it.
 
-Browser checks exercise the actual local HTTP service, DOM, editing, and save
-flow; pure Node checks are not browser evidence. Each run covers only its selected
-engine and scenarios. Emulated taps and synthetic composition events do not
-establish real-device touch, assistive-technology, or operating-system IME
-conformance; Playwright WebKit is not shipping Safari. Fixtures and optional
-screenshots are temporary, not skill assets.
+Browser checks exercise the real HTTP service, DOM, editing, and saving. Each run
+covers only its selected engine and scenarios. Emulated touch/composition events do
+not establish real-device, operating-system IME, or assistive-technology conformance;
+Playwright WebKit is not shipping Safari. Fixtures and screenshots are temporary,
+not skill assets.

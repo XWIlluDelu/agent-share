@@ -13,7 +13,7 @@ import threading
 from pathlib import Path
 from urllib.parse import unquote
 
-from documents import document, read_source, set_after, split_frontmatter
+from documents import document, read_source, set_after, set_card_field, split_frontmatter
 from graph import allowed_path, build_graph, library_paths
 
 WRITE_LOCK = threading.Lock()
@@ -81,9 +81,10 @@ def validate_graph(dd: Path, originals: dict, pending: dict) -> dict:
     return graph
 
 
-def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), base=None) -> dict:
-    # Render the client's snapshot plus drafts, not a mixture of newly read disk
-    # content and old edit preconditions. Refresh/Compare latest are explicit.
+def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), base=None, card=None) -> dict:
+    # Render the client's captured sources, not a mixture of disk and old drafts.
+    if after is not None and card is not None:
+        raise ValueError("Apply one structured operation at a time")
     originals = {}
     if base is not None:
         if not isinstance(base, dict) or any(not isinstance(v, str) for v in base.values()):
@@ -115,6 +116,20 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
         else:
             updated = items if stem in items else [*items, stem]
         proposed = set_after(original, updated) if updated != items else original
+        error = visibility_error(root, path, proposed)
+        if error:
+            raise ValueError(error)
+        pending[path] = proposed
+        graph = validate_graph(root / "docdoki", originals, pending)
+    elif card is not None:
+        if not isinstance(card, dict) or "value" not in card:
+            raise ValueError("Card edit requires a field and an explicit value")
+        path = allowed_path(root, card.get("path"))
+        if "specs" not in path.relative_to(root / "docdoki").parts:
+            raise ValueError("Card fields belong to specs")
+        if path not in pending:
+            raise ValueError("Card edits require captured source in base or drafts")
+        proposed = set_card_field(pending[path], card.get("field"), card["value"])
         error = visibility_error(root, path, proposed)
         if error:
             raise ValueError(error)

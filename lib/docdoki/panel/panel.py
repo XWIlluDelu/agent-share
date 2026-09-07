@@ -40,7 +40,7 @@ def render(dd: Path, save_token: str = "") -> str:
               "CSS": (HERE / "panel.css").read_text(encoding="utf-8"),
               "VENDOR": (HERE / "vendor/marked.js").read_text(encoding="utf-8"),
               "STATE": (HERE / "state.js").read_text(encoding="utf-8"),
-              "APP": (HERE / "panel.js").read_text(encoding="utf-8")}
+              "APP": (HERE / "body.js").read_text(encoding="utf-8") + "\n" + (HERE / "panel.js").read_text(encoding="utf-8")}
     return re.sub(r"__(TITLE|DATA|TOKEN|NONCE|CSS|VENDOR|STATE|APP)__",
                   lambda match: values[match[1]], (HERE / "panel.html").read_text(encoding="utf-8"))
 
@@ -134,7 +134,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/save":
                 self.respond(apply_edits(self.dd.parent, payload["edits"]))
             else:
-                graph = preview(self.dd.parent, payload["edits"], payload.get("after"), payload.get("extra", []), payload.get("base"))
+                graph = preview(self.dd.parent, payload["edits"], payload.get("after"), payload.get("extra", []), payload.get("base"), payload.get("card"))
                 self.respond({"ok": True, "graph": graph})
         except (OSError, ValueError, TypeError, AttributeError) as exc:
             self.respond({"ok": False, "error": str(exc)}, status=400)

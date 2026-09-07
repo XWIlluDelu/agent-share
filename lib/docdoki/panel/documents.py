@@ -162,10 +162,12 @@ def split_frontmatter(text: str):
     return (parse_frontmatter(raw) if raw is not None else {}), body
 
 
-def h1(body: str) -> str:
-    """Title summary only; never used to locate a write."""
+def title_span(body: str):
+    """Locate the first ATX H1 outside fenced/indented code, not by its name."""
     fence = None
-    for line in body.splitlines():
+    offset = 0
+    for entry in body.splitlines(keepends=True):
+        line = entry.rstrip("\r\n")
         match = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
         if fence:
             if match and match[1][0] == fence[0] and len(match[1]) >= len(fence) and not match[2].strip():
@@ -175,8 +177,69 @@ def h1(body: str) -> str:
         else:
             title = re.match(r"^ {0,3}#[ \t]+(.+?)(?:[ \t]+#+[ \t]*)?$", line)
             if title:
-                return title[1]
-    return ""
+                return offset + title.start(1), offset + title.end(1)
+        offset += len(entry)
+    return None
+
+
+def h1(body: str) -> str:
+    span = title_span(body)
+    return body[slice(*span)] if span else ""
+
+
+def set_card_field(text: str, field: str, value) -> str:
+    """Transform one small field in a complete source; do not write to disk."""
+    fm, body = split_frontmatter(text)
+    nl = "\r\n" if "\r\n" in text else "\n"
+    if field == "title":
+        if not isinstance(value, str) or not value.strip() or any(c in value for c in "\r\n\0"):
+            raise FormatError("A title must be non-empty, single-line text")
+        value = value.strip()
+        span = title_span(body)
+        # Avoid silently interpreting title text as a closing ATX marker.
+        if h1("# " + value) != value:
+            raise FormatError("Use document source for this heading syntax")
+        if span:
+            if re.search(r"(?m)^ {0,3}<[A-Za-z/!?]", body[:span[0]]):
+                raise FormatError("Use document source for titles following HTML blocks")
+            start, end = len(text) - len(body) + span[0], len(text) - len(body) + span[1]
+            return text[:start] + value + text[end:]
+        return text[:len(text) - len(body)] + "# " + value + nl + nl + body
+    if field == "purpose":
+        if not isinstance(value, str) or "\0" in value:
+            raise FormatError("Purpose must be text")
+    elif field == "progress":
+        if value not in (None, "not-started", "in-progress", "done"):
+            raise FormatError("Unknown progress value")
+    else:
+        raise FormatError("Only title, purpose and progress are card fields")
+    if field in fm and isinstance(fm[field], (list, dict)):
+        raise FormatError("Use document source to replace a structured field")
+    if fm.get(field) == value:
+        return text
+    match = frontmatter_span(text)
+    encoded = json.dumps(value, ensure_ascii=False)
+    if not match:
+        return ("---" + nl + field + ": " + encoded + nl + "---" + nl + text) if value is not None else text
+    lines = match[1].splitlines(keepends=True)
+    for i, entry in enumerate(lines):
+        found = re.match(rf"({field}:[ \t]*)(.*?)(\r?\n)$", entry)
+        if not found:
+            continue
+        prefix, previous, ending = found.groups()
+        # Keep inline comments and trailing whitespace outside the changed value.
+        suffix = previous[len(_uncomment(previous)):]
+        if value is None:
+            lines[i] = suffix.lstrip() + ending if suffix.lstrip().startswith("#") else ""
+        else:
+            if suffix.startswith("#"):
+                suffix = " " + suffix
+            lines[i] = prefix + encoded + suffix + ending
+        break
+    else:
+        if value is not None:
+            lines.append(field + ": " + encoded + nl)
+    return text[:match.start(1)] + "".join(lines) + text[match.end(1):]
 
 
 def set_after(text: str, items: list[str]) -> str:

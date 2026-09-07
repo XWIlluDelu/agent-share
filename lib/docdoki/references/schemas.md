@@ -206,16 +206,27 @@ and access needed in prose. Do not invent a matching path or a verification.
 `after: [preprocess]`. It describes design order, not audit status. Keep it
 sparse and consistent with the design map.
 
-### Existing progress field
+### Progress summary
 
-`progress` remains an optional, explicitly edited display marker for the
-existing panel, with values `not-started`, `in-progress`, and `done`. Preserve
-it; core maintenance does not infer or set it from code, tests, or stage closure.
-An explicit human edit may change it through `follow`. The panel labels it as
-manual planning and shows an absent value as **not recorded**, without inferring
-whether work has started. Use stage evidence and the overview for factual
-progress, not this marker as a verification result. No field migration is needed
-for this distinction.
+`progress` is an optional concise implementation-progress summary maintained by
+the agent during authorized work. Keep the existing values:
+
+- `not-started`: the relevant implementation work is known not to have begun.
+- `in-progress`: work has begun but the current contract is not yet met, or
+  required verification remains outstanding.
+- `done`: the current contract is implemented and supported by the relevant checks.
+
+Keep detailed evidence, limitations, blockers, and next actions in the stage or
+an evidence note, with a useful link from the spec. The field summarizes that
+record; it does not replace it. Missing or unreliable information means **not
+recorded**, not not-started. Do not infer completion from a filename, a matching
+`covers` glob, one passing check, or closing an unrelated stage.
+
+Maintain affected summaries alongside meaningful work-state updates. Recheck
+completion after a substantive design change, and re-evaluate older markers
+when adopting a library rather than treating their presence as proof. Preserve
+valid contracts when implementation is incomplete. Read-only operations do not
+change progress fields.
 
 ## stages/*.md
 

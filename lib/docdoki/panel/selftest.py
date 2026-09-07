@@ -164,6 +164,53 @@ class PanelTest(unittest.TestCase):
         self.assertIn("covers: ['src/**']", result)
         self.assertEqual(documents.h1("```md\n# Fake\n```\n# Real\n"), "Real")
 
+    def test_card_fields_preserve_other_source_bytes(self):
+        original = "---\r\npurpose: 'Old # text'   # keep rationale\r\nprogress: done # keep evidence reminder\r\nafter: ['b']\r\ncovers: ['src/**']\r\n---\r\nIntro.\r\n```md\r\n# Fake\r\n```\r\n   # Real ##  \r\n\r\n# Real\r\nDo not drop this second heading.\r\n"
+        title = documents.set_card_field(original, "title", "New title")
+        self.assertEqual(title, original.replace("   # Real ##", "   # New title ##"))
+        purpose = 'Quoted: "value" # literal\nNever remove this condition.'
+        updated = documents.set_card_field(title, "purpose", purpose)
+        self.assertEqual(updated, title.replace("'Old # text'", json.dumps(purpose, ensure_ascii=False)))
+        cleared = documents.set_card_field(updated, "progress", None)
+        self.assertEqual(cleared, updated.replace("progress: done # keep evidence reminder", "# keep evidence reminder"))
+        self.assertEqual(documents.set_card_field(cleared, "progress", None), cleared)
+        plain = "Introduction.\n\n```\n# Example\n```\n"
+        self.assertEqual(documents.set_card_field(plain, "title", "Title"), "# Title\n\n" + plain)
+        self.assertEqual(documents.set_card_field(plain, "purpose", "Text"), '---\npurpose: "Text"\n---\n' + plain)
+
+    def test_card_preview_uses_captured_draft_and_full_source_save(self):
+        original = self.source()
+        draft = original.replace("Second section.", "Keep a newly typed condition.")
+        base = {p: d["source"] for p, d in graph.build_graph(self.root / "docdoki")["documents"].items()}
+        for field, value in [("title", "Renamed export"), ("purpose", "New summary: preserve all details."), ("progress", "in-progress")]:
+            result = storage.preview(self.root, [self.edit(old=original, new=draft)], base=base,
+                                     card={"path": A, "field": field, "value": value})
+            draft = result["documents"][A]["source"]
+            self.assertEqual(self.source(), original, "A field preview must not write")
+        self.assertIn("Keep a newly typed condition.", draft)
+        self.assertIn("to any remote service.", draft)
+        self.assertTrue(storage.apply_edits(self.root, [self.edit(new=draft)])["ok"])
+        self.assertEqual(self.source(), draft)
+        self.assertEqual(documents.document(self.root / A, self.root)["title"], "Renamed export")
+
+    def test_card_edits_reject_unsupported_or_private_content(self):
+        for field, value in [("title", ""), ("title", "A\nB"), ("progress", "finished"), ("after", ["b"]), ("purpose", ["not text"])]:
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                documents.set_card_field(self.source(), field, value)
+        for raw in ["purpose: >\n  folded", "purpose: first\npurpose: second", "purpose: [a, b]"]:
+            with self.assertRaises(ValueError):
+                documents.set_card_field("---\n" + raw + "\n---\n# Title\n", "purpose", "New")
+        with self.assertRaises(ValueError):
+            documents.set_card_field("<pre>\n# Not a document title\n</pre>\n# Title\n", "title", "New")
+        base = {A: self.source()}
+        with self.assertRaises(ValueError):
+            storage.preview(self.root, [], base=base, card={"path": A, "field": "purpose", "value": "See [[local]]"})
+        with self.assertRaises(ValueError):
+            storage.preview(self.root, [], card={"path": A, "field": "title", "value": "No captured source"})
+        with self.assertRaises(ValueError):
+            storage.preview(self.root, [], base=base, card={"path": A, "field": "progress"})
+        self.assertEqual(self.source(), base[A])
+
     def test_stale_and_failed_batches_preserve_files(self):
         before = self.source()
         stale = storage.apply_edits(self.root, [self.edit(old="old snapshot")])
@@ -255,6 +302,10 @@ class PanelTest(unittest.TestCase):
         self.assertIn("## Non-goals", model["documents"][A]["body"])
         self.assertTrue(any(d["private"] for d in model["documents"].values()))
         self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
+        note = next(d for d in model["catalog"] if d["path"] == "docdoki/notes/evidence.md")
+        self.assertEqual(note["title"], "Evidence")
+        self.assertEqual(set(model["meta"]), {"title", "root"})
+        self.assertEqual(next(n for n in model["nodes"] if n["path"] == B)["progress"], "done")
         self.assertTrue(any(d["archived"] for d in model["catalog"]))
         before = self.source(B)
         preview = storage.preview(self.root, [], {"path": B, "op": "remove", "stem": "a"})

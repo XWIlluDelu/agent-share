@@ -1,9 +1,7 @@
 """Document catalog and linear-time dependency analysis; no implementation inference."""
 from __future__ import annotations
 
-import subprocess
 from collections import Counter, deque
-from datetime import datetime, timezone
 from pathlib import Path
 
 from documents import document
@@ -107,15 +105,15 @@ def build_graph(dd: Path, overrides: dict[str, str] | None = None, extra=()) -> 
             diagnostics.append({"code": "symlink", "path": relative, "message": "Symlink document omitted"})
             continue
         catalog.append(entry)
-        if (not archived and kind != "note") or relative in extra:
-            try:
-                doc = document(path, root, overrides.get(relative))
+        try:
+            doc = document(path, root, overrides.get(relative))
+            entry["title"] = doc["title"]
+            if (not archived and kind != "note") or relative in extra:
                 docs[relative] = doc
-                entry["title"] = doc["title"]
                 if doc["error"]:
                     diagnostics.append({"code": "format", "path": relative, "message": doc["error"]})
-            except (OSError, UnicodeError) as exc:
-                diagnostics.append({"code": "read", "path": relative, "message": str(exc)})
+        except (OSError, UnicodeError) as exc:
+            diagnostics.append({"code": "read", "path": relative, "message": str(exc)})
     counts = Counter(item["stem"] for item in catalog)
     for item in catalog:
         if counts[item["stem"]] > 1:
@@ -137,12 +135,5 @@ def build_graph(dd: Path, overrides: dict[str, str] | None = None, extra=()) -> 
                       "progress": progress if isinstance(progress, str) else None,
                       "after": fm.get("after"), "covers": covers, "private": doc["private"]})
     diagnostics.extend(analyze(nodes))
-    try:
-        branch = subprocess.run(["git", "-C", str(root), "branch", "--show-current"],
-                                capture_output=True, text=True, timeout=2).stdout.strip()
-    except (OSError, subprocess.TimeoutExpired):
-        branch = ""
     return {"nodes": nodes, "documents": docs, "catalog": catalog, "diagnostics": diagnostics,
-            "meta": {"title": root.name, "root": str(root), "branch": branch,
-                     "loadedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                     "includesPrivate": any(d["private"] for d in catalog)}}
+            "meta": {"title": root.name, "root": str(root)}}
