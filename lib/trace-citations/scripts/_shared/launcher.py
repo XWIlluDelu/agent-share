@@ -80,6 +80,13 @@ def _serialize(value: Any) -> Any:
     return value
 
 
+def _public_arguments(arguments: dict[str, Any]) -> dict[str, Any]:
+    serialized = _serialize(arguments)
+    if serialized.get("api_key_override"):
+        serialized["api_key_override"] = "[REDACTED]"
+    return serialized
+
+
 def _runtime_payload(mode: str, module: Any | None) -> dict[str, Any]:
     return {
         "mode": mode,
@@ -122,7 +129,7 @@ def _error_payload(
         "workflow": workflow,
         "status": "error",
         "runtime": _runtime_payload(runtime_mode, runtime_module),
-        "arguments": _serialize(arguments),
+        "arguments": _public_arguments(arguments),
         "error": error,
     }
 
@@ -161,7 +168,7 @@ def success_payload(
         "workflow": workflow,
         "status": "ok",
         "runtime": _runtime_payload(runtime_mode, runtime_module),
-        "arguments": _serialize(arguments),
+        "arguments": _public_arguments(arguments),
         "result": _serialize(result),
     }
 

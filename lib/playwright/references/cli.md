@@ -2,13 +2,14 @@
 
 Use the wrapper script unless the CLI is already installed globally:
 
+Resolve `<skill-dir>` to the absolute directory containing this skill's
+`SKILL.md`, following installation symlinks, as described in `SKILL.md`.
+
 ```bash
-export PLAYWRIGHT_SKILL_DIR="${PLAYWRIGHT_SKILL_DIR:-./.agent/skills/playwright}"
+export PLAYWRIGHT_SKILL_DIR="<skill-dir>"
 export PWCLI="$PLAYWRIGHT_SKILL_DIR/scripts/playwright_cli.sh"
 "$PWCLI" --help
 ```
-
-Set `PLAYWRIGHT_SKILL_DIR` to the installed skill directory; project-local `.agent/skills/playwright` is the default.
 
 Optional convenience alias:
 

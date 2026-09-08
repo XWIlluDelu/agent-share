@@ -1,12 +1,8 @@
 ---
 name: trace-citations
-description: Trace the citation neighborhood around one focal paper into foundations, descendants, bridges, weak edges, and optional second-hop links
-context: fork
-agent: Explore
+description: On explicit user request, trace the citation neighborhood around one focal paper into foundations, descendants, bridges, weak edges, and optional second-hop links.
 disable-model-invocation: true
-user-invocable: true
 allowed-tools: Bash, Read
-argument-hint: "<focal-query> [--depth 1|2] [--max-references <n>] [--max-citations <n>] [--second-hop-limit <n>]"
 ---
 
 # Trace Citations
@@ -23,7 +19,13 @@ Use this when the human wants lineage, influence, and strong versus weak citatio
 
 ## Workflow
 
-1. Run `python scripts/run.py ...`.
+Use this workflow only when the user explicitly requests citation tracing. Run
+it in the current agent; no platform-specific worker or fork is required.
+Resolve `<skill-dir>` from this `SKILL.md`, following installation symlinks.
+The runner uses the Semantic Scholar API; prefer `SEMANTIC_SCHOLAR_API_KEY`
+in the environment over a command-line credential.
+
+1. Run `python3 "<skill-dir>/scripts/run.py" ...`.
 2. Read `result.foundations` for strong references behind the focal paper.
 3. Read `result.direct_descendants` for strong citing descendants.
 4. Read `result.bridge_nodes` for medium-confidence connectors with rich context or intent signal.

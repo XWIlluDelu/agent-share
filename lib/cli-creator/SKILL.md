@@ -143,7 +143,7 @@ Add a `Makefile` target such as `make install-local` that installs the command o
 
 ## Companion Skill
 
-After the CLI works, create or update a small skill for it. Use `$skill-creator` when it is available. Use `./.agent/skills/<tool-name>/SKILL.md` for a personal companion skill unless the user names a project-local `.agent/skills/...` path or another skill repo.
+After the CLI works, create or update a small skill for it. Use `skill-creator` when it is available. Default to the target project's `.agents/skills/<tool-name>/SKILL.md`, unless the user names another skill library or install scope. Use `project-setup` for platform discovery bridges; do not install globally unless requested.
 
 Write the companion skill in the order a future agent session should use the CLI, not as a tour of every feature. Explain:
 

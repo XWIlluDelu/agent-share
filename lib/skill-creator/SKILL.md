@@ -75,7 +75,10 @@ evidence when they are not.
    Treat that bundled check as basic validation: also confirm `name` and
    `description` are non-empty and the skill name matches its folder, as the
    portable Agent Skills contract requires. Do not patch the bundled creator to
-   change its policy; enforce wrapper-level requirements here.
+   change its policy; enforce wrapper-level requirements here. In managed
+   libraries, use the `skill-manager` audit for supported invocation extensions
+   such as `disable-model-invocation`; retain native controls rather than
+   deleting them to satisfy the basic checker's narrower field list.
 6. **Evaluate.** Follow `anthropic-skill-creator/SKILL.md` "Running and
    evaluating test cases": write `evals/evals.json`, spawn with-skill and
    baseline runs in the same turn when independent runs are available, and

@@ -1,12 +1,8 @@
 ---
 name: paper-triage
-description: Triage an ambiguous paper query into likely interpretations, a ranked shortlist, and recommended follow-up workflows
-context: fork
-agent: Explore
+description: On explicit user request, triage an ambiguous paper query into likely interpretations, a ranked shortlist, and recommended follow-up workflows.
 disable-model-invocation: true
-user-invocable: true
 allowed-tools: Bash, Read
-argument-hint: "<query> [--shortlist-size <n>] [--relevance-limit <n>] [--bulk-candidate-limit <n>] [--snippet-candidate-limit <n>] [--snippet-limit-per-paper <n>]"
 ---
 
 # Paper Triage
@@ -25,7 +21,13 @@ Use this when the human starts with a fuzzy title fragment, overloaded term, or 
 
 ## Workflow
 
-1. Run `python scripts/run.py ...`.
+Use this workflow only when the user explicitly requests paper triage. Run it
+in the current agent; no platform-specific worker or fork is required. Resolve
+`<skill-dir>` from this `SKILL.md`, following installation symlinks. The runner
+uses the Semantic Scholar API; prefer `SEMANTIC_SCHOLAR_API_KEY` in the
+environment over a command-line credential.
+
+1. Run `python3 "<skill-dir>/scripts/run.py" ...`.
 2. Read `result.possible_interpretations` to see how the query was resolved.
 3. Read `result.shortlist` for the ranked candidate papers.
 4. Read `result.follow_up_actions` to know which workflow to run next once the right paper is identified.

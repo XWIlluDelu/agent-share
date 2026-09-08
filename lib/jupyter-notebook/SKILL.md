@@ -26,12 +26,13 @@ Prefer the bundled templates and the helper script for consistent structure and 
 
 ## Skill path (set once)
 
+Resolve `<skill-dir>` to the absolute directory containing this `SKILL.md`,
+following installation symlinks. Do not infer it from the working directory.
+
 ```bash
-export JUPYTER_NOTEBOOK_SKILL_DIR="${JUPYTER_NOTEBOOK_SKILL_DIR:-./.agent/skills/jupyter-notebook}"
+export JUPYTER_NOTEBOOK_SKILL_DIR="<skill-dir>"
 export JUPYTER_NOTEBOOK_CLI="$JUPYTER_NOTEBOOK_SKILL_DIR/scripts/new_notebook.py"
 ```
-
-Set `JUPYTER_NOTEBOOK_SKILL_DIR` to the project-local installed skill directory.
 
 ## Workflow
 1. Lock the intent.
@@ -79,7 +80,7 @@ Use the final pass checklist in `references/quality-checklist.md`.
 - The helper script loads a template, updates the title cell, and writes a notebook.
 
 Script path:
-- `$JUPYTER_NOTEBOOK_CLI` (default: `./.agent/skills/jupyter-notebook/scripts/new_notebook.py`)
+- `$JUPYTER_NOTEBOOK_CLI`, resolved from this skill's directory above.
 
 ## Temp and output conventions
 - Use `tmp/jupyter-notebook/` for intermediate files; delete when done.
