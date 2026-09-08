@@ -117,7 +117,9 @@ switch presentation, save or discard it.
 
 Changes is closed initially, with only an unsaved-count badge after editing. It
 contains per-document review/discard and two normal actions: Save and Copy to Agent.
-Complete diffs are available on demand; an empty drawer is not a disabled console.
+Complete diffs are computed when a document's review is expanded, then cached by
+its before/after sources. Collapsed edits do not allocate diff HTML. An empty
+drawer is not a disabled console.
 
 On focus or visibility return, check disk state. With no drafts, adopt fresh content
 while preserving navigation, reading position, document presentation, and diagram layout. Do not
@@ -178,21 +180,39 @@ implicitly. This is a local owner-operated tool, not a multi-user network servic
 ## Implementation and operation
 
 Delivery is one self-contained page, without a build step or runtime network assets.
-`documents.py` handles source I/O and supported metadata; `graph.py` builds the
-catalog and DAG; `storage.py` validates and writes; `snapshots.py` retains bounded
-captured source references in server memory; `panel.py` serves and assembles
-assets. `state.js` owns staged drafts/history and bounded diffs; `body.js` owns the live
-source editor, exact text-transaction mapping and display decorations. `panel.js`, `panel.html`,
-and `panel.css` implement the views. `favicon.svg` is embedded as a data URL in the
-assembled page. Marked and CodeMirror/Lezer are vendored with their licenses;
-[vendor maintenance](vendor/README.md) describes rebuilding the offline editor bundle.
+`documents.py` owns source I/O, supported metadata and catalog identity; `graph.py`
+builds the catalog and DAG; `storage.py` validates and writes; `snapshots.py`
+retains bounded captured source references; `panel.py` serves and assembles assets.
+Document payloads carry one complete `source`, not a second body copy.
+
+The browser files separate responsibilities without introducing a framework:
+
+| File | Responsibility |
+| :-- | :-- |
+| `state.js` | Baselines, staged drafts, history, saved receipts and bounded diffs. |
+| `body.js` | CodeMirror source mapping, decorations, selection and local history. |
+| `editing.js` | Captured body sessions and native card buffers; validation before staging. |
+| `board.js` | Cards, dependencies, selection, drag, camera and minimap geometry. |
+| `changes.js` | Review, save, handoff, discard and disk synchronization. |
+| `panel.js` | Navigation, localization, preview transport and startup coordination. |
+| `panel.html` | Static page structure. |
+| `panel.css`, `board.css`, `editor.css` | Shell, board and document presentation. |
+
+`panel.py` assembles these scripts into one lexical scope, with startup last;
+these are responsibility boundaries, not independently mounted components.
+A validated edit reuses its returned graph instead of issuing an identical preview.
+`favicon.svg` is embedded as a data URL. Marked supplies reference definitions to
+the editor; CodeMirror/Lezer supplies source editing and syntax ranges. Both are
+vendored with their licenses. [Vendor maintenance](vendor/README.md) describes
+rebuilding the offline editor bundle.
 
 Frontmatter supports flat scalar fields and inline/block scalar lists, including
 quotes and comments. Unsupported nested mappings, aliases, and block scalars produce
 diagnostics, not guesses. Such sources remain inspectable; saving needs a supported
 form or an external editor. Requests remain limited to 1 MiB with explicit capacity
-errors. Previews reference captured baseline sources by path and revision, sending
-full from/to sources only for drafts. Unchanged response documents are references
+errors. `/preview` requires `baseRefs`, mapping captured paths to revisions;
+full from/to sources are sent only for drafts. It has no disk-fallback or legacy
+full-base transport. Unchanged response documents always use `documentRefs`,
 resolved against the originating client's captured baseline, not newer disk data.
 The server retains at most 32 MiB of UTF-8 source payloads and 4096 source versions,
 with LRU eviction. Expired references or a server restart fail explicitly and keep
@@ -210,8 +230,11 @@ node panel/selftest.mjs --browser
 ```
 
 The backend uses only Python's standard library. See [Panel design](panel-design.md)
-for interaction and visual requirements. Tests use temporary libraries, not real
-projects. The browser option needs Playwright and a browser binary. It defaults to
+for interaction and visual requirements. `selftest.py` covers backend invariants;
+`selftest.mjs` runs state checks and optionally `tests/browser.mjs`. Browser scenarios
+are grouped under `tests/{board,editor,changes,layout}.mjs`, with shared temporary
+service and input helpers in the browser entrypoint. They use temporary libraries,
+not real projects. The browser option needs Playwright and a browser binary. It defaults to
 Chromium; `PANEL_BROWSER=firefox` or `webkit` selects another installed engine.
 `PLAYWRIGHT_MODULE` can name an absolute `index.mjs` when module resolution needs it.
 

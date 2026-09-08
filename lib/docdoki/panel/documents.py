@@ -327,6 +327,14 @@ def document_title(path: Path) -> str:
     return fallback or path.stem
 
 
+def catalog_entry(path: Path, root: Path) -> dict:
+    relative = path.relative_to(root).as_posix()
+    parts = Path(relative).parts
+    kind = next((k[:-1] for k in ("specs", "stages", "notes") if k in parts), "overview")
+    return {"path": relative, "stem": path.stem, "title": path.stem, "kind": kind,
+            "private": parts[:2] == ("docdoki", "private"), "archived": "archive" in parts}
+
+
 def document(path: Path, root: Path, source: str | None = None) -> dict:
     source = read_source(path) if source is None else source
     error = None
@@ -339,10 +347,5 @@ def document(path: Path, root: Path, source: str | None = None) -> dict:
             _, body = split_frontmatter_raw(source)
         except FormatError:
             body = source
-    relative = path.relative_to(root).as_posix()
-    parts = Path(relative).parts
-    kind = next((k[:-1] for k in ("specs", "stages", "notes") if k in parts), "overview")
-    return {"id": relative, "path": relative, "stem": path.stem, "kind": kind,
-            "title": h1(body) or path.stem, "body": body, "source": source,
-            "revision": revision(source), "fm": fm, "error": error,
-            "private": parts[:2] == ("docdoki", "private"), "archived": "archive" in parts}
+    return {**catalog_entry(path, root), "title": h1(body) or path.stem,
+            "source": source, "revision": revision(source), "fm": fm, "error": error}

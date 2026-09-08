@@ -22,7 +22,13 @@ from storage import apply_edits, preview
 from snapshots import SourceSnapshots
 
 HERE = Path(__file__).resolve().parent
-MAX_SAVE_BYTES = 1_048_576
+MAX_REQUEST_BYTES = 1_048_576
+# One offline page and lexical scope, with startup in panel.js after definitions.
+APP_ASSETS = ("body.js", "editing.js", "board.js", "changes.js", "panel.js")
+
+
+def assets(paths) -> str:
+    return "\n".join((HERE / path).read_text(encoding="utf-8") for path in paths)
 
 
 def find_docdoki(start: Path) -> Path | None:
@@ -40,11 +46,11 @@ def render(dd: Path, save_token: str = "", snapshots=None) -> str:
         snapshots.remember(graph["documents"])
     values = {"TITLE": html.escape(graph["meta"]["title"]), "DATA": _hjson(graph),
               "TOKEN": _hjson(save_token), "NONCE": html.escape(save_token, quote=True),
-              "CSS": (HERE / "panel.css").read_text(encoding="utf-8"),
+              "CSS": assets(("panel.css", "board.css", "editor.css")),
               "ICON": quote((HERE / "favicon.svg").read_text(encoding="utf-8"), safe=""),
-              "VENDOR": (HERE / "vendor/marked.js").read_text(encoding="utf-8") + "\n" + (HERE / "vendor/codemirror.js").read_text(encoding="utf-8"),
+              "VENDOR": assets(("vendor/marked.js", "vendor/codemirror.js")),
               "STATE": (HERE / "state.js").read_text(encoding="utf-8"),
-              "APP": (HERE / "body.js").read_text(encoding="utf-8") + "\n" + (HERE / "panel.js").read_text(encoding="utf-8")}
+              "APP": assets(APP_ASSETS)}
     return re.sub(r"__(TITLE|DATA|TOKEN|NONCE|CSS|ICON|VENDOR|STATE|APP)__",
                   lambda match: values[match[1]], (HERE / "panel.html").read_text(encoding="utf-8"))
 
@@ -53,17 +59,17 @@ def request_host_error(headers, expected_host: str):
     return None if headers.get("Host") == expected_host else (403, "invalid request host")
 
 
-def save_request_error(headers, token: str, expected_origin: str):
+def data_request_error(headers, token: str, expected_origin: str):
     host_error = request_host_error(headers, urlsplit(expected_origin).netloc)
     if host_error:
         return host_error
     if headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
-        return 415, "save requires application/json"
+        return 415, "request requires application/json"
     supplied = headers.get("X-DocDoki-Token", "")
     if not supplied or not secrets.compare_digest(supplied, token):
-        return 403, "invalid save token"
+        return 403, "invalid request token"
     if headers.get("Origin") not in (None, expected_origin):
-        return 403, "invalid save origin"
+        return 403, "invalid request origin"
     return None
 
 
@@ -107,10 +113,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 params = parse_qs(route.query)
                 if route.path == "/snapshot":
-                    extra = params.get("extra", [])
-                    for raw in extra:
-                        allowed_path(self.dd.parent, raw)
-                    graph = build_graph(self.dd, extra=extra)
+                    graph = build_graph(self.dd)
                     self.server.snapshots.remember(graph["documents"])
                     self.respond(graph)
                 else:
@@ -127,15 +130,17 @@ class Handler(BaseHTTPRequestHandler):
         if self.path not in ("/save", "/preview"):
             self.send_error(404)
             return
-        error = save_request_error(self.headers, self.save_token, f"http://127.0.0.1:{self.server.server_address[1]}")
+        error = data_request_error(self.headers, self.save_token, f"http://127.0.0.1:{self.server.server_address[1]}")
         if error:
             self.send_error(*error)
             return
         try:
             length = int(self.headers.get("Content-Length", 0))
-            if length <= 0 or length > MAX_SAVE_BYTES:
-                self.respond({"ok": False, "error": "Request exceeds the 1 MiB capacity limit; reduce this edit batch." if length > MAX_SAVE_BYTES else "Empty request body"}, status=413 if length > MAX_SAVE_BYTES else 400)
+            if length > MAX_REQUEST_BYTES:
+                self.respond({"ok": False, "error": "Request exceeds the 1 MiB capacity limit; reduce this edit batch."}, status=413)
                 return
+            if length <= 0:
+                raise ValueError("Empty request body")
             payload = json.loads(self.rfile.read(length))
             if not isinstance(payload, dict) or not isinstance(payload.get("edits"), list):
                 raise ValueError("request requires an edits list")
@@ -145,15 +150,15 @@ class Handler(BaseHTTPRequestHandler):
                     self.server.snapshots.remember(result["documents"])
                 self.respond(result)
             else:
-                base = self.server.snapshots.resolve(payload["baseRefs"]) if "baseRefs" in payload else payload.get("base")
-                graph = preview(self.dd.parent, payload["edits"], payload.get("after"), payload.get("extra", []), base, payload.get("card"))
-                if payload.get("compact") is True and base is not None:
-                    unchanged = {p: d["revision"] for p, d in graph["documents"].items()
-                                 if base.get(p) == d["source"]}
-                    graph["documents"] = {p: d for p, d in graph["documents"].items() if p not in unchanged}
-                    graph["documentRefs"] = unchanged
+                base = self.server.snapshots.resolve(payload.get("baseRefs"))
+                graph = preview(self.dd.parent, payload["edits"], base=base,
+                                after=payload.get("after"), card=payload.get("card"))
+                unchanged = {p: d["revision"] for p, d in graph["documents"].items()
+                             if base.get(p) == d["source"]}
+                graph["documents"] = {p: d for p, d in graph["documents"].items() if p not in unchanged}
+                graph["documentRefs"] = unchanged
                 self.respond({"ok": True, "graph": graph})
-        except (OSError, ValueError, TypeError, AttributeError) as exc:
+        except (OSError, ValueError) as exc:
             self.respond({"ok": False, "error": str(exc)}, status=400)
 
 

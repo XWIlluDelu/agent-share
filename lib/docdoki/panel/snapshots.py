@@ -1,6 +1,6 @@
 """Bounded, memory-only source references; a miss never adopts newer disk bytes."""
 from collections import OrderedDict
-from threading import RLock
+from threading import Lock
 
 
 class SourceSnapshots:
@@ -9,7 +9,7 @@ class SourceSnapshots:
         self.max_entries = max_entries
         self.size = 0
         self.sources = OrderedDict()
-        self.lock = RLock()
+        self.lock = Lock()
 
     def remember(self, documents):
         with self.lock:

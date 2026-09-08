@@ -45,7 +45,7 @@ def visibility_error(root: Path, path: Path, source: str) -> str | None:
     return None
 
 
-def prepare(root: Path, edits: list[dict], check_disk=True, captured=None) -> tuple[dict, dict]:
+def prepare(root: Path, edits: list[dict], captured=None) -> tuple[dict, dict]:
     if not isinstance(edits, list) or not edits:
         raise ValueError("save requires a non-empty edits list")
     originals, pending = {}, {}
@@ -57,10 +57,10 @@ def prepare(root: Path, edits: list[dict], check_disk=True, captured=None) -> tu
             raise ValueError("Only one source edit per document is supported")
         if not isinstance(edit.get("from"), str) or not isinstance(edit.get("to"), str):
             raise ValueError("Source edits require string from/to preconditions")
-        if not check_disk and captured is not None and path not in captured:
+        if captured is not None and path not in captured:
             raise ValueError("Preview edit is missing its captured source: " + edit["path"])
-        original = captured[path] if not check_disk and captured is not None else read_source(path)
-        if (check_disk or captured is not None) and original != edit["from"]:
+        original = read_source(path) if captured is None else captured[path]
+        if original != edit["from"]:
             raise ValueError("conflict: " + edit["path"] + " changed since it was loaded; compare latest before retrying")
         proposed = edit["to"]
         split_frontmatter(proposed)
@@ -83,30 +83,26 @@ def validate_graph(dd: Path, originals: dict, pending: dict) -> dict:
     return graph
 
 
-def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), base=None, card=None) -> dict:
-    # Render the client's captured sources, not a mixture of disk and old drafts.
+def preview(root: Path, edits: list[dict], *, base: dict[str, str], after=None, card=None) -> dict:
+    # Every edited source must belong to the client's captured baseline. There is
+    # no fallback that could quietly use newer disk content as preview authority.
     if after is not None and card is not None:
         raise ValueError("Apply one structured operation at a time")
-    originals = {}
-    if base is not None:
-        if not isinstance(base, dict) or any(not isinstance(v, str) for v in base.values()):
-            raise ValueError("preview base must map document paths to sources")
-        originals = {allowed_path(root, p): text for p, text in base.items()}
+    if not isinstance(base, dict) or any(not isinstance(v, str) for v in base.values()):
+        raise ValueError("preview base must map document paths to sources")
+    originals = {allowed_path(root, p): text for p, text in base.items()}
     pending = dict(originals)
     if edits:
-        old, changed = prepare(root, edits, check_disk=False, captured=originals if base is not None else None)
-        for path, text in old.items():
-            originals.setdefault(path, text)
+        _, changed = prepare(root, edits, captured=originals)
         pending.update(changed)
     if after is not None:
         if (not isinstance(after, dict) or after.get("op") not in ("add", "remove")
                 or not isinstance(after.get("stem"), str) or not after["stem"]):
             raise ValueError("Dependency edit requires an add/remove op and a document stem")
         path = allowed_path(root, after.get("path"))
-        if base is not None and path not in pending:
+        if path not in pending:
             raise ValueError("Dependency edit is missing its captured source")
-        original = pending[path] if path in pending else read_source(path)
-        originals.setdefault(path, original)
+        original = pending[path]
         items = split_frontmatter(original)[0].get("after")
         if items is None:
             items = []
@@ -119,11 +115,6 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
         else:
             updated = items if stem in items else [*items, stem]
         proposed = set_after(original, updated) if updated != items else original
-        error = visibility_error(root, path, proposed)
-        if error:
-            raise ValueError(error)
-        pending[path] = proposed
-        graph = validate_graph(root / "docdoki", originals, pending)
     elif card is not None:
         if not isinstance(card, dict) or "value" not in card:
             raise ValueError("Card edit requires a field and an explicit value")
@@ -133,14 +124,13 @@ def preview(root: Path, edits: list[dict], after: dict | None = None, extra=(), 
         if path not in pending:
             raise ValueError("Card edits require captured source in base or drafts")
         proposed = set_card_field(pending[path], card.get("field"), card["value"])
-        error = visibility_error(root, path, proposed)
-        if error:
-            raise ValueError(error)
-        pending[path] = proposed
-        graph = validate_graph(root / "docdoki", originals, pending)
     else:
-        graph = build_graph(root / "docdoki", {p.relative_to(root).as_posix(): s for p, s in pending.items()}, extra)
-    return graph
+        return build_graph(root / "docdoki", {p.relative_to(root).as_posix(): s for p, s in pending.items()})
+    error = visibility_error(root, path, proposed)
+    if error:
+        raise ValueError(error)
+    pending[path] = proposed
+    return validate_graph(root / "docdoki", originals, pending)
 
 
 def atomic_write(path: Path, text: str) -> None:
@@ -193,8 +183,5 @@ def apply_edits(root: Path, edits: list[dict]) -> dict:
             message = str(exc)
             if written:
                 message += "; best-effort rollback " + ("incomplete: " + "; ".join(rollback_errors) if rollback_errors else "completed")
-            # Memory-only recovery material. It cannot recover an uncoordinated
-            # writer's bytes replaced in the final check-to-replace window.
-            return {"ok": False, "error": message,
-                    "recovery": [{"path": p.relative_to(root).as_posix(), "from": originals[p], "to": s}
-                                 for p, s in pending.items()]}
+            # The client retains the submitted sources for recovery export.
+            return {"ok": False, "error": message}

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter, deque
 from pathlib import Path
 
-from documents import document, document_title
+from documents import catalog_entry, document, document_title
 
 
 def library_paths(dd: Path) -> list[Path]:
@@ -94,19 +94,14 @@ def build_graph(dd: Path, overrides: dict[str, str] | None = None, extra=()) -> 
     extra = set(extra) | overrides.keys()
     catalog, docs, diagnostics = [], {}, []
     for path in library_paths(dd):
-        relative = path.relative_to(root).as_posix()
-        parts = path.relative_to(dd).parts
-        private = parts[0] == "private"
-        archived = "archive" in parts
-        kind = next((k[:-1] for k in ("specs", "stages", "notes") if k in parts), "overview")
-        entry = {"path": relative, "stem": path.stem, "title": path.stem,
-                 "kind": kind, "private": private, "archived": archived}
+        entry = catalog_entry(path, root)
+        relative = entry["path"]
         if any(p.is_symlink() for p in (path, *path.parents) if p != root.parent):
             diagnostics.append({"code": "symlink", "path": relative, "message": "Symlink document omitted"})
             continue
         catalog.append(entry)
         try:
-            if (not archived and kind != "note") or relative in extra:
+            if (not entry["archived"] and entry["kind"] != "note") or relative in extra:
                 doc = document(path, root, overrides.get(relative))
                 entry["title"] = doc["title"]
                 docs[relative] = doc
@@ -132,10 +127,10 @@ def build_graph(dd: Path, overrides: dict[str, str] | None = None, extra=()) -> 
                              ("covers", isinstance(covers, list) and all(isinstance(v, str) for v in covers))):
             if not valid:
                 diagnostics.append({"code": "field", "path": doc["path"], "message": "Invalid " + field + " value"})
-        nodes.append({"id": doc["path"], "path": doc["path"], "stem": doc["stem"],
+        nodes.append({"path": doc["path"], "stem": doc["stem"],
                       "title": doc["title"], "content": purpose if isinstance(purpose, str) else "",
                       "progress": progress if isinstance(progress, str) else None,
-                      "after": fm.get("after"), "covers": covers, "private": doc["private"]})
+                      "after": fm.get("after"), "private": doc["private"]})
     diagnostics.extend(analyze(nodes))
     return {"nodes": nodes, "documents": docs, "catalog": catalog, "diagnostics": diagnostics,
             "meta": {"title": root.name, "root": str(root)}}

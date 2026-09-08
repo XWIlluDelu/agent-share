@@ -116,6 +116,11 @@ class PanelTest(unittest.TestCase):
         before = self.source(path) if old is None else old
         return {"path": path, "field": "source", "from": before, "to": new if new is not None else before + "\nA new constraint.\n"}
 
+    def preview(self, edits=(), *, base=None, after=None, card=None):
+        if base is None:
+            base = {p: d["source"] for p, d in graph.build_graph(self.root / "docdoki")["documents"].items()}
+        return storage.preview(self.root, list(edits), base=base, after=after, card=card)
+
     def test_shared_frontmatter_boundaries(self):
         cases = json.loads((panel.HERE / "frontmatter-cases.json").read_text())
         for case in cases:
@@ -241,7 +246,7 @@ class PanelTest(unittest.TestCase):
         draft = original.replace("Second section.", "Keep a newly typed condition.")
         base = {p: d["source"] for p, d in graph.build_graph(self.root / "docdoki")["documents"].items()}
         for field, value in [("title", "Renamed export"), ("purpose", "New summary: preserve all details."), ("progress", "in-progress")]:
-            result = storage.preview(self.root, [self.edit(old=original, new=draft)], base=base,
+            result = self.preview([self.edit(old=original, new=draft)], base=base,
                                      card={"path": A, "field": field, "value": value})
             draft = result["documents"][A]["source"]
             self.assertEqual(self.source(), original, "A field preview must not write")
@@ -262,11 +267,11 @@ class PanelTest(unittest.TestCase):
             documents.set_card_field("<pre>\n# Not a document title\n</pre>\n# Title\n", "title", "New")
         base = {A: self.source()}
         with self.assertRaises(ValueError):
-            storage.preview(self.root, [], base=base, card={"path": A, "field": "purpose", "value": "See [[local]]"})
+            self.preview(base=base, card={"path": A, "field": "purpose", "value": "See [[local]]"})
         with self.assertRaises(ValueError):
-            storage.preview(self.root, [], card={"path": A, "field": "title", "value": "No captured source"})
+            self.preview(base={}, card={"path": A, "field": "title", "value": "No captured source"})
         with self.assertRaises(ValueError):
-            storage.preview(self.root, [], base=base, card={"path": A, "field": "progress"})
+            self.preview(base=base, card={"path": A, "field": "progress"})
         self.assertEqual(self.source(), base[A])
 
     def test_stale_and_failed_batches_preserve_files(self):
@@ -293,7 +298,6 @@ class PanelTest(unittest.TestCase):
         self.assertFalse(result["ok"])
         self.assertIn("rollback completed", result["error"])
         self.assertEqual(before, {path: self.source(path) for path in (A, B)})
-        self.assertEqual(len(result["recovery"]), 2)
 
     def test_mid_save_external_write_survives(self):
         old_a, old_b = self.source(A), self.source(B)
@@ -357,7 +361,9 @@ class PanelTest(unittest.TestCase):
     def test_reading_payload_and_previews(self):
         model = graph.build_graph(self.root / "docdoki")
         self.assertIsNone(next(n for n in model["nodes"] if n["path"] == A)["progress"])
-        self.assertIn("## Non-goals", model["documents"][A]["body"])
+        self.assertIn("## Non-goals", model["documents"][A]["source"])
+        self.assertNotIn("body", model["documents"][A])
+        self.assertNotIn("id", model["documents"][A])
         self.assertTrue(any(d["private"] for d in model["documents"].values()))
         self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
         note = next(d for d in model["catalog"] if d["path"] == "docdoki/notes/evidence.md")
@@ -366,14 +372,14 @@ class PanelTest(unittest.TestCase):
         self.assertEqual(next(n for n in model["nodes"] if n["path"] == B)["progress"], "done")
         self.assertTrue(any(d["archived"] for d in model["catalog"]))
         before = self.source(B)
-        preview = storage.preview(self.root, [], {"path": B, "op": "remove", "stem": "a"})
+        preview = self.preview(after={"path": B, "op": "remove", "stem": "a"})
         self.assertEqual(next(n for n in preview["nodes"] if n["path"] == B)["col"], 1)
         self.assertEqual(self.source(B), before)
 
     def test_preview_uses_client_snapshot_not_mixed_disk_versions(self):
         base = {A: self.source(A), B: self.source(B)}
         write(self.root, B, base[B].replace("Validate local rows.", "External rewrite."))
-        model = storage.preview(self.root, [self.edit(A)], base=base)
+        model = self.preview([self.edit(A)], base=base)
         self.assertEqual(model["documents"][B]["source"], base[B])
         self.assertIn("External rewrite", self.source(B))
 
@@ -385,8 +391,8 @@ class PanelTest(unittest.TestCase):
         for op, before, expected in [("add", ["b"], ["b", "c"]), ("remove", ["b", "c"], ["b"])]:
             with self.subTest(op=op):
                 draft = documents.set_after(base[A], before) + "\nKeep this typed requirement.\n"
-                model = storage.preview(self.root, [self.edit(old=base[A], new=draft)],
-                                        {"path": A, "op": op, "stem": "c"}, base=base)
+                model = self.preview([self.edit(old=base[A], new=draft)], base=base,
+                                     after={"path": A, "op": op, "stem": "c"})
                 proposed = model["documents"][A]["source"]
                 self.assertEqual(model["documents"][A]["fm"]["after"], expected)
                 self.assertEqual(proposed, documents.set_after(draft, expected))
@@ -400,9 +406,9 @@ class PanelTest(unittest.TestCase):
         source = "---\r\npurpose: local\r\nafter: ['a'] # retain formatting\r\n---\r\n# Validation\r\n"
         write(self.root, B, source)
         for op, stem in [("add", "a"), ("remove", "missing")]:
-            model = storage.preview(self.root, [], {"path": B, "op": op, "stem": stem})
+            model = self.preview(after={"path": B, "op": op, "stem": stem})
             self.assertEqual(model["documents"][B]["source"], source)
-        model = storage.preview(self.root, [], {"path": A, "op": "remove", "stem": "missing"})
+        model = self.preview(after={"path": A, "op": "remove", "stem": "missing"})
         self.assertEqual(model["documents"][A]["source"], self.source(A))
 
     def test_dependency_operations_reject_invalid_source_and_requests(self):
@@ -410,14 +416,14 @@ class PanelTest(unittest.TestCase):
         for value in ("false", "0", "''", "b", "[false]", "[null]"):
             draft = before.replace("purpose:", f"after: {value}\npurpose:")
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "after must be a list"):
-                storage.preview(self.root, [self.edit(new=draft)], {"path": A, "op": "add", "stem": "b"})
+                self.preview([self.edit(new=draft)], after={"path": A, "op": "add", "stem": "b"})
         for action in (["b"], {"items": ["b"]}, {"op": "replace", "stem": "b"},
                        {"op": "add", "stem": ""}, {"op": "add", "stem": 1}):
             with self.subTest(action=action), self.assertRaises(ValueError):
-                storage.preview(self.root, [], {"path": A, **action} if isinstance(action, dict) else action)
+                self.preview(after={"path": A, **action} if isinstance(action, dict) else action)
         for stem in ("b", "missing", "local", "a"):
             with self.subTest(stem=stem), self.assertRaises(ValueError):
-                storage.preview(self.root, [], {"path": A, "op": "add", "stem": stem})
+                self.preview(after={"path": A, "op": "add", "stem": stem})
         self.assertEqual(self.source(A), before)
 
     def test_http_security_and_storage_baselines(self):
@@ -447,6 +453,16 @@ class PanelTest(unittest.TestCase):
         self.assertEqual(result["documents"][A]["source"], self.source())
         replay = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
         self.assertFalse(replay["ok"])
+        malformed = [None, [], {"edits": None}, {"edits": [], "baseRefs": []},
+                     {"edits": [{}], "baseRefs": {}},
+                     {"edits": [], "baseRefs": {}, "after": []},
+                     {"edits": [], "baseRefs": {}, "card": []},
+                     {"edits": [], "baseRefs": {}, "card": {"path": [], "field": "title", "value": "x"}}]
+        for body in malformed:
+            with self.subTest(body=body), self.assertRaises(urllib.error.HTTPError) as raised:
+                urllib.request.urlopen(urllib.request.Request(url + "/preview", data=json.dumps(body).encode(), headers=headers))
+            self.assertEqual(raised.exception.code, 400)
+            raised.exception.close()
 
     def test_large_library_http_preview_and_capacity_error(self):
         for i in range(65):
@@ -461,7 +477,7 @@ class PanelTest(unittest.TestCase):
             data = None if payload is None else json.dumps(payload).encode()
             return json.loads(urllib.request.urlopen(urllib.request.Request(url + route, data=data, headers=headers)).read())
         snapshot = request("/snapshot")
-        self.assertGreater(sum(len(d["source"]) for d in snapshot["documents"].values()), panel.MAX_SAVE_BYTES)
+        self.assertGreater(sum(len(d["source"]) for d in snapshot["documents"].values()), panel.MAX_REQUEST_BYTES)
         refs = {p: d["revision"] for p, d in snapshot["documents"].items()}
         original = self.source(A)
         for operation in ({"card": {"path": A, "field": "purpose", "value": "new purpose"}},
@@ -471,15 +487,27 @@ class PanelTest(unittest.TestCase):
             self.assertLess(len(json.dumps(payload).encode()), 20_000)
             result = request("/preview", payload)
             self.assertTrue(result["ok"], result)
-        compact = request("/preview", {"edits": [], "baseRefs": refs, "compact": True})["graph"]
+        compact = request("/preview", {"edits": [], "baseRefs": refs})["graph"]
         self.assertFalse(compact["documents"])
         self.assertEqual(compact["documentRefs"], refs)
         self.assertLess(len(json.dumps(compact)), 100_000)
         self.assertEqual(self.source(A), original)
         write(self.root, B, "# External\n")
-        self.assertEqual(request("/preview", {"edits": [], "baseRefs": refs})["graph"]["documents"][B]["source"], snapshot["documents"][B]["source"])
+        self.assertEqual(request("/preview", {"edits": [], "baseRefs": refs})["graph"]["documentRefs"][B], refs[B])
+        for payload in ({"edits": []}, {"edits": [], "base": {A: original}},
+                        {"edits": [self.edit()], "baseRefs": {}},
+                        {"edits": [], "baseRefs": {}, "after": {"path": B, "op": "remove", "stem": "a"}}):
+            with self.subTest(payload=payload), self.assertRaises(urllib.error.HTTPError) as raised:
+                request("/preview", payload)
+            self.assertEqual(raised.exception.code, 400)
+            raised.exception.close()
+        server.snapshots.sources.clear()
         with self.assertRaises(urllib.error.HTTPError) as raised:
-            request("/preview", {"edits": [], "padding": "x" * panel.MAX_SAVE_BYTES})
+            request("/preview", {"edits": [], "baseRefs": refs})
+        self.assertIn("Captured source expired", json.loads(raised.exception.read())["error"])
+        raised.exception.close()
+        with self.assertRaises(urllib.error.HTTPError) as raised:
+            request("/preview", {"edits": [], "padding": "x" * panel.MAX_REQUEST_BYTES})
         self.assertEqual(raised.exception.code, 413)
         self.assertIn("1 MiB", json.loads(raised.exception.read())["error"])
         raised.exception.close()
