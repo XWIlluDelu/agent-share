@@ -1,3 +1,5 @@
+# source_commit pins each maintained skill's accepted upstream baseline.
+# notes describes its intentional local delta; sources/ HEAD is only a cache.
 source_repos:
   anthropic:
     url: "https://github.com/anthropics/skills.git"
@@ -37,96 +39,115 @@ skills:
     pack: agent-dev
     source_repo: anthropic
     source_path: "skills/skill-creator"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
     notes: "Local normalization: skill name changed to anthropic-skill-creator to avoid collision; validator uses stdlib frontmatter parsing instead of pyyaml; upstream vendor-specific wording retained as reference material."
   - name: pdf
     pack: documents
     source_repo: anthropic
     source_path: "skills/pdf"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
   - name: docx
     pack: documents
     source_repo: anthropic
     source_path: "skills/docx"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
     notes: "Claude author wording in tracked changes is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: pptx
     pack: documents
     source_repo: anthropic
     source_path: "skills/pptx"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
     notes: "Claude author default in Office scripts is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: xlsx
     pack: documents
     source_repo: anthropic
     source_path: "skills/xlsx"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
     notes: "Claude author default in Office scripts is accepted; ignore for portability audit. Local normalization strips imported Python trailing whitespace."
   - name: frontend-design
     pack: frontend
     source_repo: anthropic
     source_path: "skills/frontend-design"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
   - name: ui-ux-pro-max
     pack: frontend
     source_repo: ui_ux_pro_max
     source_path: ".claude/skills/ui-ux-pro-max"
-    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, normalize imported text line endings and trailing whitespace, and omit repository-only refresh/evaluator tests whose required scripts live outside the selected skill path. Only ui-ux-pro-max is selected from this repository."
+    source_commit: "4aad0584d92131626b16d4ff4d77f0455385013c"
+    notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, normalize imported text line endings and trailing whitespace, and omit repository-only tests whose required scripts or sibling skill trees are outside this skill (test_catalog_refresh.py, test_relevance_evaluator.py, test_catalog_summary_line_endings.py, test_skill_script_paths.py). Keep standalone runtime tests. Only ui-ux-pro-max is selected from this repository."
   - name: webapp-testing
     pack: web-testing
     source_repo: anthropic
     source_path: "skills/webapp-testing"
+    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
   # OpenAI official / curated
   - name: openai-skill-creator
     pack: agent-dev
     source_repo: openai
     source_path: "skills/.system/skill-creator"
+    source_commit: "49f948faa9258a0c61caceaf225e179651397431"
     notes: "Local normalization: skill name changed to openai-skill-creator to avoid collision; scripts use stdlib frontmatter parsing instead of pyyaml; agents/openai.yaml is generated only when explicitly requested; upstream vendor-specific wording retained as reference material."
   - name: cli-creator
     pack: agent-dev
     source_repo: openai
     source_path: "skills/.curated/cli-creator"
-    notes: "Local normalization: agent-neutral wording; shared install discouraged unless explicitly needed."
+    source_commit: "49f948faa9258a0c61caceaf225e179651397431"
+    notes: "Local normalization: agent-neutral wording in the skill, UI metadata, and CLI reference; default companion skills to project .agents/skills, with project-setup handling platform bridges; global install only when requested."
   - name: jupyter-notebook
     pack: scientific-tools
     source_repo: openai
     source_path: "skills/.curated/jupyter-notebook"
-    notes: "Local normalization: replace CODEX_HOME-specific skill path with project-local skill installation guidance."
+    source_commit: "49f948faa9258a0c61caceaf225e179651397431"
+    notes: "Local normalization: replace CODEX_HOME-specific paths in SKILL.md and notebook references with the absolute canonical skill directory, following installation symlinks rather than assuming a discovery root. scripts/new_notebook.py defaults output to the caller's project (or cwd outside Git), not the shared skill repository."
   - name: playwright
     pack: web-testing
     source_repo: openai
     source_path: "skills/.curated/playwright"
-    notes: "Local normalization: replace CODEX_HOME/PWCLI-specific skill paths with project-local skill installation guidance."
+    source_commit: "49f948faa9258a0c61caceaf225e179651397431"
+    notes: "Local normalization: resolve PWCLI from the absolute canonical skill directory in SKILL.md and the CLI reference, following installation symlinks instead of CODEX_HOME or the caller's working directory."
 
   # K-Dense / claude-scientific-skills
   - name: scientific-brainstorming
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/scientific-brainstorming"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata."
   - name: hypothesis-generation
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/hypothesis-generation"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata."
   - name: scientific-critical-thinking
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/scientific-critical-thinking"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata and provider-specific schematic generation guidance."
   - name: citation-management
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/citation-management"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author/platform metadata, provider-specific schematic guidance, and imported trailing whitespace; keep only NCBI environment hints."
   - name: peer-review
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/peer-review"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata."
   - name: exploratory-data-analysis
     pack: scientific-tools
     source_repo: k_dense
     source_path: "skills/exploratory-data-analysis"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata."
   - name: statistical-analysis
     pack: scientific-tools
     source_repo: k_dense
     source_path: "skills/statistical-analysis"
+    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
     notes: "Local normalization: remove upstream author metadata."
 
   # AcademicForge / Claude Science
@@ -134,26 +155,31 @@ skills:
     pack: paper-discovery
     source_repo: academic_forge
     source_path: "skills/claude-science/literature-review"
+    source_commit: "01b6d90c5b50ba0aa48b6564e45ee4a0ade9487c"
     notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
   - name: pdf-explore
     pack: documents
     source_repo: academic_forge
     source_path: "skills/claude-science/pdf-explore"
+    source_commit: "01b6d90c5b50ba0aa48b6564e45ee4a0ade9487c"
     notes: "Scope: PDF reading, navigation, and extraction. Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
   - name: figure-style
     pack: scientific-tools
     source_repo: academic_forge
     source_path: "skills/claude-science/figure-style"
+    source_commit: "01b6d90c5b50ba0aa48b6564e45ee4a0ade9487c"
     notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
   - name: figure-composer
     pack: scientific-tools
     source_repo: academic_forge
     source_path: "skills/claude-science/figure-composer"
+    source_commit: "01b6d90c5b50ba0aa48b6564e45ee4a0ade9487c"
     notes: "Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
   - name: paper-narrative
     pack: paper-writing
     source_repo: academic_forge
     source_path: "skills/claude-science/paper-narrative"
+    source_commit: "01b6d90c5b50ba0aa48b6564e45ee4a0ade9487c"
     notes: "Scope: figure-deck story and paper arc. Local normalization: portable setup instructions, vendor-neutral wording, and no upstream .catalog_stamp file."
 
   # scicraft
@@ -161,45 +187,54 @@ skills:
     pack: paper-discovery
     source_repo: scicraft
     source_path: "skills/scientific-writing/openalex-database"
+    source_commit: "fe505cae14d20b6c33be2e49666425be98f005bb"
   - name: sympy-symbolic-math
     pack: scientific-tools
     source_repo: scicraft
     source_path: "skills/scientific-computing/sympy-symbolic-math"
+    source_commit: "fe505cae14d20b6c33be2e49666425be98f005bb"
 
   # kepano / obsidian-skills (defuddle only)
   - name: defuddle
     pack: documents
     source_repo: obsidian
     source_path: "skills/defuddle"
+    source_commit: "a1dc48e68138490d522c04cbf5822214c6eb1202"
 
   # Other public sources
   - name: research-paper-writing
     pack: paper-writing
     source_repo: research_skills
     source_path: "skills/research-paper-writing"
+    source_commit: "efde49a5ca7bfd887d35a6e924928e540b647a26"
   - name: review-revision
     pack: paper-writing
     source_repo: paper_lifecycle
     source_path: "review-revision"
+    source_commit: "da8a231892963b37fbb6d09e49ad5c3f7db22958"
     notes: "Local normalization narrows the skill to manuscript review/revision and routes formal rebuttal drafting to rebuttal-response."
   - name: rebuttal-response
     pack: paper-writing
     source_repo: paper_lifecycle
     source_path: "rebuttal-response"
+    source_commit: "da8a231892963b37fbb6d09e49ad5c3f7db22958"
     notes: "Local normalization clarifies that actual reviews, AC comments, and rebuttal rules should use this skill rather than review-revision."
   - name: youtube-transcript
     pack: media-ingest
     source_repo: tapestry
     source_path: "youtube-transcript"
+    source_commit: "80e1dc56df74d1cb849ad649c7ead9756e7929bb"
   - name: grilling
     pack: productivity
     source_repo: mattpocock_skills
     source_path: "skills/productivity/grilling"
+    source_commit: "3cca18b368ae95cdbdebbff572ccafa662551015"
   # Factory engineering skills
   - name: simplify
     pack: software-dev
     source_repo: factory_plugins
     source_path: "plugins/core/skills/simplify"
+    source_commit: "8aea3821b5a6ccd0db24299232e7d5a7281ccf50"
     notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
 
   # Custom/local skills
@@ -240,6 +275,7 @@ skills:
     pack: documents
     source_repo: humanizer
     source_path: "."
+    source_commit: "9862685f575c65a8247f90369951df1b3416e3d6"
     notes: "Pack: documents, not always-on. The skill is harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
 
   - name: chaos
@@ -260,11 +296,17 @@ skills:
     pack: paper-discovery
     source_repo: semantic_scholar_skills
     source_path: "skills/paper-triage"
+    source_commit: "218b02375062954a5ac9f62f85cea12eda3b9d4f"
+    notes: "Local normalization: remove platform-only fork/Explore, user-invocable, and argument-hint fields. Preserve disable-model-invocation for supporting hosts and explicit-request prose as a fallback, without assuming worker isolation. Resolve scripts from the canonical skill directory and prefer environment credentials. scripts/_shared/launcher.py redacts API-key overrides from JSON argument summaries."
   - name: expand-references
     pack: paper-discovery
     source_repo: semantic_scholar_skills
     source_path: "skills/expand-references"
+    source_commit: "218b02375062954a5ac9f62f85cea12eda3b9d4f"
+    notes: "Local normalization: remove platform-only fork/Explore, user-invocable, and argument-hint fields. Preserve disable-model-invocation for supporting hosts and explicit-request prose as a fallback, without assuming worker isolation. Resolve scripts from the canonical skill directory and prefer environment credentials. scripts/_shared/launcher.py redacts API-key overrides from JSON argument summaries."
   - name: trace-citations
     pack: paper-discovery
     source_repo: semantic_scholar_skills
     source_path: "skills/trace-citations"
+    source_commit: "218b02375062954a5ac9f62f85cea12eda3b9d4f"
+    notes: "Local normalization: remove platform-only fork/Explore, user-invocable, and argument-hint fields. Preserve disable-model-invocation for supporting hosts and explicit-request prose as a fallback, without assuming worker isolation. Resolve scripts from the canonical skill directory and prefer environment credentials. scripts/_shared/launcher.py redacts API-key overrides from JSON argument summaries."

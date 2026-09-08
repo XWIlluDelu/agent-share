@@ -33,12 +33,13 @@ Once `npx` is present, proceed with the wrapper script. A global install of `pla
 
 ## Skill path (set once)
 
+Resolve `<skill-dir>` to the absolute directory containing this `SKILL.md`,
+following installation symlinks. Do not infer it from the working directory.
+
 ```bash
-export PLAYWRIGHT_SKILL_DIR="${PLAYWRIGHT_SKILL_DIR:-./.agent/skills/playwright}"
+export PLAYWRIGHT_SKILL_DIR="<skill-dir>"
 export PWCLI="$PLAYWRIGHT_SKILL_DIR/scripts/playwright_cli.sh"
 ```
-
-Set `PLAYWRIGHT_SKILL_DIR` to the project-local installed skill directory.
 
 ## Quick start
 
