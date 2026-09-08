@@ -1,12 +1,8 @@
 ---
 name: expand-references
-description: Expand one to three seed papers into nearby, bridge, foundational, methodological, recent, and survey follow-ups
-context: fork
-agent: Explore
+description: On explicit user request, expand one to three seed papers into nearby, bridge, foundational, methodological, recent, and survey follow-ups.
 disable-model-invocation: true
-user-invocable: true
 allowed-tools: Bash, Read
-argument-hint: "<seed-1> [seed-2] [seed-3] [--negative <paper>] [--pool all-cs|recent] [--limit <n>] [--per-bucket-limit <n>]"
 ---
 
 # Expand References
@@ -24,7 +20,13 @@ Use this when the human already has anchor papers and wants the next papers to r
 
 ## Workflow
 
-1. Run `python scripts/run.py ...`.
+Use this workflow only when the user explicitly requests reference expansion.
+Run it in the current agent; no platform-specific worker or fork is required.
+Resolve `<skill-dir>` from this `SKILL.md`, following installation symlinks.
+The runner uses the Semantic Scholar API; prefer `SEMANTIC_SCHOLAR_API_KEY`
+in the environment over a command-line credential.
+
+1. Run `python3 "<skill-dir>/scripts/run.py" ...`.
 2. Read `result.closest_neighbors` for the immediate next reads.
 3. Read `result.bridge_papers` for papers that connect multiple seeds.
 4. Read `result.foundational`, `result.methodological`, `result.recent`, and `result.surveys_or_benchmarks` for curated slices of the neighborhood.

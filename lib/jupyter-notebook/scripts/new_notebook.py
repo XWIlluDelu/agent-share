@@ -107,7 +107,7 @@ def main() -> None:
 
     script_path = Path(__file__).resolve()
     skill_dir = script_path.parents[1]
-    repo_root = find_repo_root(skill_dir)
+    repo_root = find_repo_root(Path.cwd())
 
     notebook = load_template(skill_dir, args.kind)
     update_title(notebook, args.kind, args.title)
