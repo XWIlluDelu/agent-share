@@ -238,6 +238,11 @@ skills:
     notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
 
   # Custom/local skills
+  - name: get-taste
+    pack: scientific-thinking
+    source_repo: custom
+    source_path: "lib/get-taste"
+    notes: "Custom research-literacy workflow: semantic grouping into standalone research prompts, manual report handoff or autonomous research, and selective synthesis into reusable field guides. Includes optional guide examples for editorial calibration and qualitative comparison. On demand, not always-on."
   - name: code-review
     pack: software-dev
     source_repo: custom

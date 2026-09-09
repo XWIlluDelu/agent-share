@@ -1,0 +1,108 @@
+{
+  "skill_name": "get-taste",
+  "qualitative_rubric": [
+    "Does the grouping follow substantive connections rather than equal-sized buckets?",
+    "Does each prompt invite concrete disciplinary knowledge and informed judgment rather than a checklist of generic cautions?",
+    "Does the guide select and connect material instead of preserving each report as a chapter?",
+    "Are explanations and technical terms accurate at the chosen level of detail?",
+    "When examples are used for calibration, does the comparison explain concrete editorial choices without imposing their vocabulary, outline, or domain coverage on the new field?"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "name": "manual-single-field",
+      "prompt": "我希望 agent 熟悉信息论的基础知识、真实论文语言和 research taste，能在不同项目里自然地参与讨论。先给我一份完整、可复制给另一个调研会话的 prompt，之后我会把报告带回来。现在不要直接写报告，也不需要实验计划。",
+      "expected_output": "One self-contained research prompt for information theory, requesting substantive knowledge, sources and reading scope, and a complete returned report.",
+      "files": [],
+      "expectations": [
+        "Delivers exactly one research prompt rather than a completed research report or guide.",
+        "The prompt names information-theory-specific concepts or phenomena and requests explanations or representative examples.",
+        "The prompt asks for traceable sources and actual reading scope.",
+        "The prompt is independently usable and requests a complete returned knowledge report."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "manual-semantic-groups",
+      "prompt": "GET TASTE，手动交接模式。领域是数学认知、物理认知、逻辑推理、语言理解、行为数据分析、神经数据分析。请组织成两份可以独立拿去调研的 prompt。目标是跨项目的基础知识、专业语言和研究判断。请你判断怎样分组，不必平均分配；现在只要两份 prompt。",
+      "expected_output": "Two independently usable research prompts with a brief grouping rationale and clear primary coverage of all six fields.",
+      "files": [],
+      "expectations": [
+        "Delivers exactly two complete research prompts, not six and not a field guide.",
+        "All six requested fields have identifiable primary coverage across the two prompts.",
+        "Each prompt contains its own purpose, scope, substantive directions, and report/source expectations.",
+        "Neither prompt requires an unavailable report or hidden conversation context to be executed."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "auto-live-research",
+      "prompt": "用 Auto 模式直接做 GET TASTE：领域是信息检索的评价，聚焦 precision/recall、average precision 和 nDCG。请自行制定方案、检索并阅读适当材料，再交付可复用的英文 field guide。我不指定 prompt 数量，也不做外部交接。这次范围很窄，正文约 600 词即可，参考文献不计入；精选来源并诚实说明实际阅读范围。最终回复给完整 Markdown，不需要另存文档。",
+      "expected_output": "An English miniature guide based on actual source retrieval, with coherent explanations, a small bibliography, and no request for external report handoff.",
+      "files": [],
+      "expectations": [
+        "Proceeds without asking the user to choose a prompt count or relay reports.",
+        "The execution transcript contains substantive source retrieval rather than only a claim to have researched.",
+        "Delivers an English guide with meaningful explanations of the requested measures and selected source citations.",
+        "Does not claim full-text reading beyond what the execution transcript supports."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "one-prompt-per-field",
+      "prompt": "给群落生态学、种群动力学、系统发育三个领域各出一份 GET TASTE 调研 prompt，共三份，用于形成 agent 的基础知识和专业表达。现在只生成调研方案。",
+      "expected_output": "Three prompts, each with one requested field as its primary scope.",
+      "files": [],
+      "expectations": [
+        "Produces three independently copyable prompts.",
+        "Each requested field has its own prompt rather than being merged with another."
+      ]
+    },
+    {
+      "id": 5,
+      "name": "more-prompts-than-fields",
+      "prompt": "GET TASTE 手动模式。我的领域只有信息论，想要三份分别对应三个领域的调研 prompt。",
+      "expected_output": "A short clarification about prompt count versus field scope, with an option to agree finer subfields before proceeding.",
+      "files": [],
+      "expectations": [
+        "Asks to adjust the count or confirm a finer field scope before generating the prompts.",
+        "Does not silently invent three agreed fields or replace the requested fields with three research stages."
+      ]
+    },
+    {
+      "id": 6,
+      "name": "returned-reports-synthesis",
+      "prompt": "这是两份已经返回的信息论调研笔记。请直接整合成跨项目可用的英文 field guide，正文这次只要约 600 词，不计参考文献。不要再生成调研 prompt，也不要逐份报告照搬目录。无需联网补充，来源阅读范围按输入材料如实说明。最终回复完整 Markdown。",
+      "expected_output": "A concise synthesis connecting the two reports, deduplicating their shared source, and preserving report-versus-primary-source access distinctions.",
+      "files": ["evals/files/information-report.md", "evals/files/coding-report.md"],
+      "expectations": [
+        "Starts from the returned reports rather than asking for fields, mode, or prompt count again.",
+        "Produces one English guide using material from both reports.",
+        "Does not duplicate the shared Shannon reference or claim independent full-text review of the original sources.",
+        "Uses author lists and footnote references consistent with the guide convention."
+      ]
+    },
+    {
+      "id": 7,
+      "name": "budget-approval",
+      "prompt": "我们正在整合关于系统神经科学、数学学习、因果推理和神经数据分析的资料。目前批准的正文预算是 4,000 英文词，不计参考文献。假设你经过选材后仍判断，要保留关键的认知—神经联系至少需要 5,500 词。请告诉我下一步怎么处理，不要现在起草整篇。",
+      "expected_output": "A concrete proposal for a budget increase with content tradeoffs, retaining the current budget until the user approves.",
+      "files": [],
+      "expectations": [
+        "Requests approval for the larger body budget rather than treating it as already authorized.",
+        "Explains the content tradeoff and proposed word budget without counting the bibliography against it."
+      ]
+    },
+    {
+      "id": 8,
+      "name": "auto-access-blocker",
+      "prompt": "用 Auto 模式为一个我还没提供具体文献的新兴研究方向做调研并形成 field guide。当前环境无法检索、无法获取全文，我也没有源材料。请先说明现在能推进到哪里；不要把凭记忆写作描述成完成了文献调研。",
+      "expected_output": "A bounded account of what planning is possible and which field specification or source access is required; no invented research completion.",
+      "files": [],
+      "expectations": [
+        "Identifies the missing field/material or access needed for substantive research.",
+        "Does not claim to have read or verified unavailable sources."
+      ]
+    }
+  ]
+}
