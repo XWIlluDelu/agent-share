@@ -18,8 +18,8 @@ from urllib.parse import parse_qs, quote, urlsplit
 
 from documents import document
 from graph import allowed_path, build_graph
-from storage import apply_edits, preview
 from snapshots import SourceSnapshots
+from storage import apply_edits, preview
 
 HERE = Path(__file__).resolve().parent
 MAX_REQUEST_BYTES = 1_048_576
