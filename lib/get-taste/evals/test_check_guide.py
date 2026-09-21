@@ -8,7 +8,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from check_guide import check_text
+from check_guide import check_text, mask_code
 
 
 class GuideChecks(unittest.TestCase):
@@ -90,10 +90,14 @@ class BundledExamples(unittest.TestCase):
                 self.assertGreater(result["body_words"], 0)
                 self.assertGreater(result["reference_entries"], 0)
 
-    def test_skill_and_example_index_links_are_portable(self):
-        for document in [self.skill / "SKILL.md", self.skill / "examples" / "README.md"]:
-            links = re.findall(r"\]\(([^)]+)\)", document.read_text(encoding="utf-8"))
-            self.assertTrue(links, str(document))
+    def test_skill_reference_and_example_index_links_are_portable(self):
+        entry_points = [self.skill / "SKILL.md", self.skill / "examples" / "README.md"]
+        documents = entry_points + sorted((self.skill / "references").glob("*.md"))
+        for document in documents:
+            text = "\n".join(mask_code(document.read_text(encoding="utf-8").splitlines()))
+            links = re.findall(r"\]\(([^)]+)\)", text)
+            if document in entry_points:
+                self.assertTrue(links, str(document))
             for link in links:
                 if "://" in link or link.startswith("#"):
                     continue
