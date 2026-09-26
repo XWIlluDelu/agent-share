@@ -54,4 +54,4 @@ Build sentences around one main point and paragraphs around related ideas. Let t
 
 Report meaningful progress, changes of direction, and blockers rather than routine operations.
 
-Follow repository conventions for commit messages; otherwise use Conventional Commits.
+Commit changes on your own when they are correct and form a coherent, complete unit of work. Minor incidental edits may remain uncommitted. Prefer a concise, meaningful commit history over preserving every intermediate revision. Follow repository conventions for commit messages; otherwise use Conventional Commits.
