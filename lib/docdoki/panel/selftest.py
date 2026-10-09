@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import signal
+import subprocess
 import sys
 import tempfile
 import threading
@@ -100,6 +102,23 @@ Second section.
     write(root, "docdoki/stages/archive/follow-old.md", "# Previous work\n\nArchived knowledge remains reachable.\n")
     write(root, "docdoki/private/specs/local.md", "---\npurpose: Private calibration.\nafter: [a]\n---\n# Local\n\n## Goal\n\n- Keep calibration local.\n")
     write(root, "docdoki/private/stages/follow-local.md", "# Local work\n\n## Current state\nPrivate inspection of [[local]].\n")
+
+
+class LauncherTest(unittest.TestCase):
+    def test_binds_own_unit_and_forwards_options(self):
+        with tempfile.TemporaryDirectory(prefix="docdoki-launcher-test-") as tmp:
+            home = Path(tmp)
+            write(home, ".agent-share/lib/docdoki/panel/panel.py",
+                  "import json, sys\nprint(json.dumps(sys.argv[1:]))\n")
+            unit = home / "project/child"
+            source = (panel.HERE.parent / "scripts/panel_launcher.py").read_text()
+            launcher = write(unit, "docdoki/panel.py", source)
+            result = subprocess.run(
+                [sys.executable, "-B", str(launcher), "--no-open"],
+                cwd=home, env={**os.environ, "HOME": str(home)},
+                capture_output=True, text=True, check=True, timeout=10,
+            )
+            self.assertEqual(json.loads(result.stdout), [str(unit), "--no-open"])
 
 
 class PanelTest(unittest.TestCase):
