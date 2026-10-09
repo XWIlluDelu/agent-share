@@ -220,6 +220,20 @@ local edits; they never silently substitute current files. Save still sends full
 source preconditions and checks actual disk bytes. Preview graph construction still
 visits the catalog; this is not a database or incremental graph engine.
 
+### Project integration
+
+Copy the bundled launcher into the unit's document library:
+
+```sh
+cp ~/.agent-share/lib/docdoki/scripts/panel_launcher.py /path/to/unit/docdoki/panel.py
+python3 /path/to/unit/docdoki/panel.py
+```
+
+Pass Panel options such as `--port 0` and `--no-open`, not a root argument.
+If the shared skill is installed elsewhere, adjust the launcher's `panel` path.
+
+### Direct operation and checks
+
 From the skill directory:
 
 ```sh

@@ -50,6 +50,13 @@ Read [Document schemas](references/schemas.md) when the library format is
 unfamiliar or before creating, moving, or changing documents. Load relevant
 project detail, not every note and archived stage.
 
+## Optional panel integration
+
+Keep Panel code, assets, and tests in this skill's `panel/` directory.
+When requested, put a thin launcher at `<unit>/docdoki/panel.py`; it opens
+its own unit regardless of the working directory. See
+[Panel setup](panel/panel-model.md#project-integration).
+
 ## Ordinary project work
 
 For “continue implementing this feature” and other substantial covered work:
