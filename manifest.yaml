@@ -65,7 +65,7 @@ skills:
     pack: frontend
     source_repo: ui_ux_pro_max
     source_path: ".claude/skills/ui-ux-pro-max"
-    source_commit: "4aad0584d92131626b16d4ff4d77f0455385013c"
+    source_commit: "56ea9cf174ed86786187daa9de0e6247cb0747e4"
     notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, normalize imported text line endings and trailing whitespace, and omit repository-only tests whose required scripts or sibling skill trees are outside this skill (test_catalog_refresh.py, test_relevance_evaluator.py, test_catalog_summary_line_endings.py, test_skill_script_paths.py). Keep standalone runtime tests. Only ui-ux-pro-max is selected from this repository."
   # OpenAI official / curated
   - name: openai-skill-creator
@@ -98,43 +98,43 @@ skills:
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/scientific-brainstorming"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata."
   - name: hypothesis-generation
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/hypothesis-generation"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata."
   - name: scientific-critical-thinking
     pack: scientific-thinking
     source_repo: k_dense
     source_path: "skills/scientific-critical-thinking"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata and provider-specific schematic generation guidance."
   - name: citation-management
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/citation-management"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
-    notes: "Local normalization: remove upstream author/platform metadata, provider-specific schematic guidance, and imported trailing whitespace; keep only NCBI environment hints."
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
+    notes: "Local normalization: remove upstream author/platform metadata, provider-specific schematic guidance, and the harness-specific tool allow-list; retain portable NCBI/OpenAlex environment hints. SKILL.md and references/core_workflow.md and references/citation_validation.md use available host web tools or bundled APIs, with parallel-cli examples optional rather than requiring parallel-web. Strip imported trailing whitespace in references/search_strategies.md."
   - name: peer-review
     pack: paper-writing
     source_repo: k_dense
     source_path: "skills/peer-review"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata."
   - name: exploratory-data-analysis
     pack: scientific-tools
     source_repo: k_dense
     source_path: "skills/exploratory-data-analysis"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata."
   - name: statistical-analysis
     pack: scientific-tools
     source_repo: k_dense
     source_path: "skills/statistical-analysis"
-    source_commit: "9cf7d9aea7d84754db4c167ab04b299d33c444bc"
+    source_commit: "a1043ef544e3a100c28e70a736b6cf32554d0677"
     notes: "Local normalization: remove upstream author metadata."
 
   # AcademicForge / Claude Science
@@ -243,8 +243,8 @@ skills:
     pack: documents
     source_repo: humanizer
     source_path: "."
-    source_commit: "9862685f575c65a8247f90369951df1b3416e3d6"
-    notes: "Pack: documents, not always-on. The skill is harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content."
+    source_commit: "8c307f367c91bd974002f10f2be2965d642c13df"
+    notes: "Pack: documents, not always-on. The skill is harness-neutral; repo-level packaging (.claude-plugin/, AGENTS.md, README.md) is retained as upstream content. Local normalization strips trailing whitespace in README.md."
 
   - name: chaos
     pack: deliberation
