@@ -36,7 +36,7 @@ For the full UX guideline set with rationale, read `references/quick-reference.m
 
 ## Running the search tool
 
-Resolve `<skill-dir>` as the directory containing this `SKILL.md`. Always invoke the bundled search script by its full path; its live `--help` output is authoritative when examples or bundled data differ:
+Resolve `<skill-dir>` as the absolute directory containing this `SKILL.md`, following installation symlinks. Always invoke the bundled search script by its full path; its live `--help` output is authoritative when examples or bundled data differ:
 
 ```bash
 python "<skill-dir>/scripts/search.py" "<query>" --domain <domain>
