@@ -9,22 +9,14 @@ source_repos:
     url: "https://github.com/K-Dense-AI/claude-scientific-skills.git"
   scicraft:
     url: "https://github.com/jaechang-hits/scicraft.git"
-  obsidian:
-    url: "https://github.com/kepano/obsidian-skills.git"
   research_skills:
     url: "https://github.com/ceasonen/research-skills.git"
-  tapestry:
-    url: "https://github.com/michalparkola/tapestry-skills.git"
-  mattpocock_skills:
-    url: "https://github.com/mattpocock/skills.git"
   semantic_scholar_skills:
     url: "https://github.com/zongmin-yu/semantic-scholar-skills.git"
   humanizer:
     url: "https://github.com/blader/humanizer.git"
   paper_lifecycle:
     url: "https://github.com/M1n-n9/paper-lifecycle.git"
-  factory_plugins:
-    url: "https://github.com/Factory-AI/factory-plugins.git"
   academic_forge:
     url: "https://github.com/HughYau/AcademicForge.git"
   ui_ux_pro_max:
@@ -75,11 +67,6 @@ skills:
     source_path: ".claude/skills/ui-ux-pro-max"
     source_commit: "4aad0584d92131626b16d4ff4d77f0455385013c"
     notes: "Local normalization: replace stale inventory counts with durable capability wording, resolve bundled search commands from the skill directory, treat the live CLI help as authoritative, make the search formatter execution-neutral, normalize imported text line endings and trailing whitespace, and omit repository-only tests whose required scripts or sibling skill trees are outside this skill (test_catalog_refresh.py, test_relevance_evaluator.py, test_catalog_summary_line_endings.py, test_skill_script_paths.py). Keep standalone runtime tests. Only ui-ux-pro-max is selected from this repository."
-  - name: webapp-testing
-    pack: web-testing
-    source_repo: anthropic
-    source_path: "skills/webapp-testing"
-    source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
   # OpenAI official / curated
   - name: openai-skill-creator
     pack: agent-dev
@@ -194,13 +181,6 @@ skills:
     source_path: "skills/scientific-computing/sympy-symbolic-math"
     source_commit: "fe505cae14d20b6c33be2e49666425be98f005bb"
 
-  # kepano / obsidian-skills (defuddle only)
-  - name: defuddle
-    pack: documents
-    source_repo: obsidian
-    source_path: "skills/defuddle"
-    source_commit: "a1dc48e68138490d522c04cbf5822214c6eb1202"
-
   # Other public sources
   - name: research-paper-writing
     pack: paper-writing
@@ -219,23 +199,6 @@ skills:
     source_path: "rebuttal-response"
     source_commit: "da8a231892963b37fbb6d09e49ad5c3f7db22958"
     notes: "Local normalization clarifies that actual reviews, AC comments, and rebuttal rules should use this skill rather than review-revision."
-  - name: youtube-transcript
-    pack: media-ingest
-    source_repo: tapestry
-    source_path: "youtube-transcript"
-    source_commit: "80e1dc56df74d1cb849ad649c7ead9756e7929bb"
-  - name: grilling
-    pack: productivity
-    source_repo: mattpocock_skills
-    source_path: "skills/productivity/grilling"
-    source_commit: "3cca18b368ae95cdbdebbff572ccafa662551015"
-  # Factory engineering skills
-  - name: simplify
-    pack: software-dev
-    source_repo: factory_plugins
-    source_path: "plugins/core/skills/simplify"
-    source_commit: "8aea3821b5a6ccd0db24299232e7d5a7281ccf50"
-    notes: "No LICENSE in factory-plugins; lib/simplify is gitignored and local-only. Fresh clones must sync from sources/factory_plugins before audit."
 
   # Custom/local skills
   - name: get-taste
