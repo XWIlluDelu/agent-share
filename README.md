@@ -71,10 +71,8 @@ in `skill-manager`.
 
 Cloning this repository supplies tracked `lib/` content without needing
 `sources/`. Source comparison and updates require the relevant clones.
-`lib/simplify/` is intentionally ignored and local-only because its upstream
-has no license; materialize it from the recorded commit for local use before
-auditing a fresh clone. Preserve upstream license and attribution files; the
-library does not grant a blanket license over imported assets.
+Preserve upstream license and attribution files; the library does not grant a
+blanket license over imported assets.
 
 ## Read-only checks
 
