@@ -41,7 +41,7 @@ derivation. If the user asks for both exact conversion and analysis, keep
 analysis noncanonical and visibly separate, or ask which output should be
 primary.
 
-Never let a warm/editorial design, margin note, figure card, or generated
+Never let a `key-point` block, evidence note, figure note, or generated
 explanation imply that generated content is source text.
 
 ## Scholarly source inventory
@@ -138,14 +138,13 @@ it as an `Unresolved Derivation Gap` instead of inventing a bridge.
 
 Allowed outside canonical source blocks:
 
-- margin notes;
+- evidence notes (excerpts, citations, commentary) in the right pane;
 - argument-function labels;
-- claim/evidence cards;
+- `key-point` claim blocks;
 - glossary or notation cards;
 - figure/table notes;
 - derivation repairs;
-- questions for the reader;
-- reading guide rails.
+- questions for the reader.
 
 Required: every generated note targets a source id, section id,
 figure/table/equation id, or explicitly states why a precise target is
@@ -185,6 +184,6 @@ Do not bundle or imply built-in support for heavy engines:
 - CSL/BibTeX/Pandoc citation parsing or DOI enrichment;
 - full Obsidian vault graph, Dataview, or backlink resolution;
 - browser visual-regression infrastructure;
-- mandatory MathJax/KaTeX packaging or model-specific rendering apps;
+- math renderers beyond the bundled KaTeX, or model-specific rendering apps;
 - mandatory sentence-level hover translation or bilingual worksheet generation;
 - fixed classroom Wonksheet layouts.

@@ -11,7 +11,7 @@ source ids.
 - [Question/evidence ledger](#questionevidence-ledger)
 - [Translation layer](#translation-layer)
 - [Math rendering policy](#math-rendering-policy)
-- [Figure and asset cards](#figure-and-asset-cards)
+- [Figure and asset records](#figure-and-asset-records)
 - [Citation status](#citation-status)
 - [Not included](#not-included)
 
@@ -78,20 +78,20 @@ Rules:
   more than visual typesetting.
 - `native-mathml` is preferred for simple equations when it can be generated
   deterministically and works without remote assets.
-- `local-katex` or `local-mathjax` requires available local assets.
-- `approved-cdn` requires explicit approval for network dependency.
-- Rendering failure must leave readable source math visible.
-- For technical readers, equation blocks may expose a click-to-copy source
-  affordance using local HTML/JS or a visible `<code>` fallback. Keep it
-  visually quiet: no persistent “click to copy” helper text, no remote clipboard
-  library, no generated derivation mixed into the canonical equation, and
-  preserve exact source text in `data-canonical-text`, `data-math-source`, or
-  equivalent audit metadata.
+- The template bundles KaTeX, so `local-katex` is the default: write TeX
+  between `$…$` or `$$…$$`. The TeX stays in the HTML as the source math,
+  renders offline, and selection copy writes it back as LaTeX.
+- `local-mathjax` requires available local assets; `approved-cdn` requires
+  explicit approval for the network dependency.
+- Rendering failure must leave readable source math visible (KaTeX is run with
+  `throwOnError:false`, which leaves the TeX in place).
+- Do not mix generated derivation steps into a source equation; reconstructed
+  steps are separate blocks with `data-equation-status`.
 
-## Figure and asset cards
+## Figure and asset records
 
-Use cards to keep source assets, captions, generated descriptions, and
-uncertainty visually organized.
+Use the template's figure markup with status attributes to keep source assets,
+captions, generated descriptions, and uncertainty distinct.
 
 Required or recommended fields:
 
@@ -125,7 +125,7 @@ author claims".
 These optional layers are lightweight patterns, never bundled engines. The
 canonical list of excluded engines — PDF/OCR extraction, figure CV,
 CSL/BibTeX/DOI enrichment, Obsidian vault graph, browser visual-regression,
-forced MathJax/KaTeX packaging, mandatory worksheet/hover translation — is owned
+renderers beyond the bundled KaTeX, mandatory worksheet/hover translation — is owned
 by [`scholarly-rigor.md`](scholarly-rigor.md), "Boundary: accepted hooks, not
 bundled engines". Use external adapters and feed their audited outputs back into
 the content contract.

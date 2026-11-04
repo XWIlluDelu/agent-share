@@ -28,7 +28,7 @@ When comparing HTML with source text, ignore:
 - `script` and `style`;
 - elements with `data-canonical="false"`;
 - elements with `data-layout-duplicate="true"`;
-- colophons, rails, generated annotations, and UI indexes when marked
+- colophons, evidence notes, generated annotations, and UI indexes when marked
   noncanonical.
 
 Do not blanket-exclude `<aside>`; canonical source asides must count unless they
@@ -48,7 +48,6 @@ A useful audit report should include:
   "fidelity_tier": "verified-preserve",
   "html_file": "...",
   "sources": [],
-  "design_language": "ibm-carbon",
   "layout_notes": [],
   "source_order_normalized_text_exact_match": true,
   "duplicate_ids": [],
@@ -104,8 +103,8 @@ Recommended lightweight checks:
 - Readable measure/spacing by inspection or documented route; horizontal
   overflow wrappers for wide tables/code/math.
 - Print or print-safe behavior for substantial reading artifacts.
-- Empty decorative apparatus omitted; rails/cards/previews marked noncanonical
-  or duplicate.
+- Empty decorative apparatus omitted; evidence notes and previews marked
+  noncanonical or duplicate.
 - The SKILL.md design smoke check holds for substantial artifacts.
 - Converter residue warnings for high inline-style density, `<font>` tags,
   tool-specific wrapper classes, empty spans/divs, page fields, and GIF-only
@@ -124,7 +123,10 @@ Use `scripts/audit_html.py` for already-rendered HTML. It is a partial
 structural/source audit, not a full accessibility or visual test. It checks
 duplicate ids, missing `<main>` in strict mode, empty canonical text in strict
 mode, broken internal links, local document links, selected reference/evidence
-attributes, local asset references across HTML/CSS/srcset/object surfaces,
+attributes, evidence notes (marker targets, unreferenced notes, missing
+source ties, positional ids, canonical marking), the annotation report id,
+local asset references across HTML/CSS/srcset/object surfaces including linked
+stylesheets and the url() references inside them,
 remote render dependencies, executable links, navigation hazards, external
 source links, minimal accessibility warnings, optional canonical text parity, selected
 readability/design warnings, and emits JSON. `--strict` is a

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="350" viewBox="0 0 1200 350" role="img" aria-labelledby="title">
+<title id="title">Scaled dot-product attention</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#71808c"/></marker></defs>
+<rect width="1200" height="350" fill="white"/>
+<g font-family="Arial,sans-serif" text-anchor="middle" fill="#273442">
+<g stroke="#ccd6df" fill="#f4f7fa"><rect x="35" y="135" width="145" height="86" rx="6"/><rect x="250" y="115" width="230" height="126" rx="6"/></g>
+<rect x="550" y="115" width="210" height="126" rx="6" fill="#f7f5fa" stroke="#d7cfdf"/>
+<rect x="830" y="115" width="245" height="126" rx="6" fill="#f3f8f5" stroke="#c9d9cf"/>
+<text x="107" y="171" font-size="22">Queries, keys</text><svg xmlns="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="65.0" height="29.0" viewBox="-2.0 -2.0 65.0 29.0" version="1.1" x="74.5" y="183.5">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  
+  <g id="text_1">
+   
+   <g style="fill: #273442" transform="translate(0 20) scale(0.28 -0.28)">
+    <defs>
+     <path id="STIXGeneral-Bold-34" d="M 4672 -749  L 4710 -902  Q 4128 -1126 3565 -1126  Q 2669 -1126 2106 -563  Q 1920 -378 1747 -13  Q 1024 205 624 777  Q 224 1350 224 2112  Q 224 3142 861 3782  Q 1498 4422 2490 4422  Q 3488 4422 4121 3782  Q 4755 3142 4755 2093  Q 4755 1286 4332 742  Q 3910 198 3136 -38  Q 3283 -339 3437 -493  Q 3770 -826 4224 -826  Q 4416 -826 4672 -749  z M 3622 2144  Q 3622 3155 3328 3683  Q 3034 4211 2483 4211  Q 1946 4211 1651 3676  Q 1357 3142 1357 2144  Q 1357 1146 1645 618  Q 1933 90 2490 90  Q 3040 90 3331 621  Q 3622 1152 3622 2144  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Regular-f" d="M 531 -902  L 467 -781  Q 998 -422 998 -96  Q 998 -13 909 -13  Q 883 -13 822 -25  Q 762 -38 723 -38  Q 352 -38 352 288  Q 352 454 457 553  Q 563 653 736 653  Q 954 653 1101 496  Q 1248 339 1248 96  Q 1248 -198 1053 -473  Q 858 -749 531 -902  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Bold-2e" d="M 4922 0  L 2784 0  L 2784 160  Q 3085 166 3181 198  Q 3277 230 3277 294  Q 3277 378 3117 582  L 1958 2022  L 1786 1862  L 1786 608  Q 1786 371 1891 288  Q 1997 205 2342 160  L 2342 0  L 192 0  L 192 160  Q 544 192 646 281  Q 749 371 749 646  L 749 3667  Q 749 3962 640 4054  Q 531 4147 192 4166  L 192 4326  L 2349 4326  L 2349 4166  Q 2003 4141 1894 4035  Q 1786 3930 1786 3629  L 1786 2202  L 3142 3578  Q 3296 3731 3347 3801  Q 3398 3872 3398 3949  Q 3398 4045 3331 4089  Q 3264 4134 3091 4147  L 2867 4166  L 2867 4326  L 4717 4326  L 4717 4166  Q 4218 4109 3866 3869  Q 3514 3629 2656 2714  L 4608 294  Q 4710 166 4922 160  L 4922 0  z " transform="scale(0.015625)" />
+    </defs>
+    <use ns1:href="#STIXGeneral-Bold-34" transform="translate(0 0.90625)" />
+    <use ns1:href="#STIXGeneral-Regular-f" transform="translate(77.799927 0.90625)" />
+    <use ns1:href="#STIXGeneral-Bold-2e" transform="translate(139.466896 0.90625)" />
+   </g>
+  </g>
+ </g>
+</svg>
+<text x="365" y="158" font-size="23">Scaled scores</text><svg xmlns="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="135.0" height="43.0" viewBox="-2.0 -2.0 135.0 43.0" version="1.1" x="297.5" y="175.5">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  
+  <g id="text_1">
+   
+   <g style="fill: #273442" transform="translate(0 31) scale(0.3 -0.3)">
+    <defs>
+     <path id="STIXGeneral-Bold-34" d="M 4672 -749  L 4710 -902  Q 4128 -1126 3565 -1126  Q 2669 -1126 2106 -563  Q 1920 -378 1747 -13  Q 1024 205 624 777  Q 224 1350 224 2112  Q 224 3142 861 3782  Q 1498 4422 2490 4422  Q 3488 4422 4121 3782  Q 4755 3142 4755 2093  Q 4755 1286 4332 742  Q 3910 198 3136 -38  Q 3283 -339 3437 -493  Q 3770 -826 4224 -826  Q 4416 -826 4672 -749  z M 3622 2144  Q 3622 3155 3328 3683  Q 3034 4211 2483 4211  Q 1946 4211 1651 3676  Q 1357 3142 1357 2144  Q 1357 1146 1645 618  Q 1933 90 2490 90  Q 3040 90 3331 621  Q 3622 1152 3622 2144  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Bold-2e" d="M 4922 0  L 2784 0  L 2784 160  Q 3085 166 3181 198  Q 3277 230 3277 294  Q 3277 378 3117 582  L 1958 2022  L 1786 1862  L 1786 608  Q 1786 371 1891 288  Q 1997 205 2342 160  L 2342 0  L 192 0  L 192 160  Q 544 192 646 281  Q 749 371 749 646  L 749 3667  Q 749 3962 640 4054  Q 531 4147 192 4166  L 192 4326  L 2349 4326  L 2349 4166  Q 2003 4141 1894 4035  Q 1786 3930 1786 3629  L 1786 2202  L 3142 3578  Q 3296 3731 3347 3801  Q 3398 3872 3398 3949  Q 3398 4045 3331 4089  Q 3264 4134 3091 4147  L 2867 4166  L 2867 4326  L 4717 4326  L 4717 4166  Q 4218 4109 3866 3869  Q 3514 3629 2656 2714  L 4608 294  Q 4710 166 4922 160  L 4922 0  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Italic-3ca" d="M 4787 4237  L 4730 3763  L 3162 3763  L 2221 0  L 1664 0  L 2598 3763  L 1030 3763  L 1216 4237  L 4787 4237  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Regular-12" d="M 1837 4326  L 378 -90  L -58 -90  L 1408 4326  L 1837 4326  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Regular-42d" d="M 6163 6227  L 3104 -1658  L 2899 -1658  L 1606 1734  Q 1466 2112 1210 2112  Q 1011 2112 794 1914  L 717 2042  L 1715 2835  L 1837 2835  L 3142 -595  L 3168 -595  L 5818 6227  L 6163 6227  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Italic-47" d="M 3334 4371  L 3373 4333  L 3123 3360  L 2739 1958  Q 2323 429 2323 384  Q 2323 256 2438 256  Q 2522 256 2614 336  Q 2707 416 2963 710  L 3040 646  Q 2547 -83 2099 -83  Q 1978 -83 1907 -6  Q 1837 70 1837 205  Q 1837 397 1920 774  Q 1645 307 1379 118  Q 1114 -70 781 -70  Q 461 -70 278 125  Q 96 320 96 678  Q 96 1440 713 2131  Q 1331 2822 1965 2822  Q 2163 2822 2256 2732  Q 2349 2643 2381 2451  L 2387 2451  L 2675 3494  Q 2765 3808 2765 3949  Q 2765 4051 2694 4076  Q 2624 4102 2355 4115  L 2355 4224  Q 2848 4269 3334 4371  z M 2278 2310  Q 2278 2477 2185 2576  Q 2093 2675 1978 2675  Q 1677 2675 1395 2381  Q 1075 2042 864 1571  Q 653 1101 653 704  Q 653 486 752 361  Q 851 237 1024 237  Q 1312 237 1606 550  Q 1901 864 2089 1350  Q 2278 1837 2278 2310  z " transform="scale(0.015625)" />
+     <path id="STIXGeneral-Italic-4e" d="M 2950 2739  L 2950 2637  Q 2720 2624 2464 2448  Q 2208 2272 1510 1651  L 1747 1088  Q 2099 262 2266 262  Q 2400 262 2554 531  Q 2586 582 2650 698  L 2746 627  Q 2522 224 2374 77  Q 2227 -70 2035 -70  Q 1894 -70 1782 42  Q 1670 154 1517 454  Q 1325 826 1133 1357  L 877 1152  L 570 0  L 90 0  L 992 3379  Q 1082 3699 1107 3942  Q 1088 4096 781 4096  L 666 4096  L 666 4198  Q 1146 4256 1670 4371  L 1709 4333  L 941 1414  L 1216 1626  Q 2131 2330 2131 2522  Q 2131 2637 1894 2637  L 1805 2637  L 1805 2739  L 2950 2739  z " transform="scale(0.015625)" />
+    </defs>
+    <use ns1:href="#STIXGeneral-Bold-34" transform="translate(0 0.703125)" />
+    <use ns1:href="#STIXGeneral-Bold-2e" transform="translate(77.799927 0.703125)" />
+    <use ns1:href="#STIXGeneral-Italic-3ca" transform="translate(157.174854 42.003125) scale(0.7)" />
+    <use ns1:href="#STIXGeneral-Regular-12" transform="translate(204.234813 0.703125)" />
+    <use ns1:href="#STIXGeneral-Regular-42d" transform="translate(232.034785 0.703125)" />
+    <use ns1:href="#STIXGeneral-Italic-47" transform="translate(337.334697 0.453125)" />
+    <use ns1:href="#STIXGeneral-Italic-4e" transform="translate(387.334651 -14.546875) scale(0.7)" />
+    <path d="M 324.834697 97.75  L 324.834697 104  L 435.414626 104  L 435.414626 97.75  L 324.834697 97.75  z " />
+   </g>
+  </g>
+ </g>
+</svg>
+<text x="655" y="158" font-size="23">Softmax</text><text x="655" y="201" font-size="20" fill="#53616d">Attention weights</text>
+<text x="952" y="158" font-size="23">Weighted sum</text><text x="952" y="201" font-size="20" fill="#53616d">Combine value vectors</text>
+<text x="941" y="55" font-size="22">Values</text><svg xmlns="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="22.0" height="22.0" viewBox="-2.0 -2.0 22.0 22.0" version="1.1" x="979.0" y="37.0">
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  
+  <g id="text_1">
+   
+   <g style="fill: #273442" transform="translate(0 17) scale(0.24 -0.24)">
+    <defs>
+     <path id="STIXGeneral-Bold-39" d="M 4486 4326  L 4486 4166  Q 4237 4134 4131 4038  Q 4026 3942 3910 3642  L 2451 -115  L 2278 -115  L 640 3718  Q 525 3987 435 4060  Q 346 4134 102 4166  L 102 4326  L 2253 4326  L 2253 4166  L 2042 4154  Q 1702 4134 1702 3923  Q 1702 3814 1850 3462  L 2733 1325  L 3546 3430  Q 3674 3763 3674 3885  Q 3674 4038 3571 4089  Q 3469 4141 3123 4166  L 3123 4326  L 4486 4326  z " transform="scale(0.015625)" />
+    </defs>
+    <use ns1:href="#STIXGeneral-Bold-39" transform="translate(0 0.40625)" />
+   </g>
+  </g>
+ </g>
+</svg>
+<g fill="none" stroke="#71808c" stroke-width="2" marker-end="url(#arrow)"><path d="M180 178H240"/><path d="M480 178H540"/><path d="M760 178H820"/><path d="M1075 178H1145"/><path d="M952 70V105"/></g>
+<text x="365" y="287" font-size="19" fill="#53616d">Compare queries with keys</text>
+<text x="655" y="287" font-size="19" fill="#53616d">Normalize across keys</text>
+<text x="952" y="287" font-size="19" fill="#53616d">One output per query</text>
+</g></svg>

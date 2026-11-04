@@ -2,15 +2,13 @@
 
 The skill exposes three public modes (`preserve`, `annotate-synthesize`,
 `audit`) in SKILL.md. The router below resolves a finer subtype inside that
-public mode — it is internal routing, not a parallel taxonomy. The chosen
-subtype is rendered as `data-mode-subtype="…"` on the article root (e.g. `<main
-data-mode-subtype="close-read">`) so subtype-gated CSS can scope reliably
-without enlarging the public configuration surface.
+public mode — it is internal routing, not a parallel taxonomy. Record the chosen
+subtype in the audit report.
 
 | Subtype | Public mode | Charter |
 |---|---|---|
 | `conversion-preserve` | `preserve` | exact conversion / source-preserving relayout |
-| `close-read` | `annotate-synthesize` | annotated paper, margin notes, reading guide |
+| `close-read` | `annotate-synthesize` | annotated paper, evidence notes, reading guide |
 | `derivation-math` | `annotate-synthesize` | formula reconstruction, notation table |
 | `notes-wiki` | `preserve` (Obsidian / Markdown notes) | wikilink + frontmatter panel preservation |
 | `synthesis-report` | `annotate-synthesize` | report, brief, executive summary, recommendations |
@@ -28,10 +26,10 @@ without enlarging the public configuration surface.
 
 | User signal | Select | Ask first when |
 |---|---|---|
-| “100% preserve”, “exact conversion”, “do not add/delete/change”, “只转换”, “不要总结” | `conversion-preserve` | The user also asks for explanation, translation, or recommendations. |
-| “排版更好”, “更好读”, “整理成HTML”, “make this more readable”, “reformat for reading” | `conversion-preserve` as source-preserving relayout | The user also wants summaries, commentary, or structure beyond relayout. |
-| “精读”, “close reading”, “annotate”, “margin notes”, “reading guide”, “help me read this document/PDF” | `close-read` | Source extraction quality is unknown or the user may expect exact conversion. Load `scholarly-rigor.md` for paper/formula/citation/figure-heavy sources. |
-| “derive”, “推导”, “skipped steps”, “formula logic”, “notation table” | `derivation-math` | The source equations are unavailable or generated derivation would be speculative. Load `scholarly-rigor.md`. |
+| “100% preserve”, “exact conversion”, “do not add/delete/change”, “convert only”, “do not summarize” | `conversion-preserve` | The user also asks for explanation, translation, or recommendations. |
+| “improve the layout”, “easier to read”, “format as HTML”, “make this more readable”, “reformat for reading” | `conversion-preserve` as source-preserving relayout | The user also wants summaries, commentary, or structure beyond relayout. |
+| “in-depth reading”, “close reading”, “annotate”, “margin notes”, “reading guide”, “help me read this document/PDF” | `close-read` | Source extraction quality is unknown or the user may expect exact conversion. Load `scholarly-rigor.md` for paper/formula/citation/figure-heavy sources. |
+| “derive”, “derivation”, “skipped steps”, “formula logic”, “notation table” | `derivation-math` | The source equations are unavailable or generated derivation would be speculative. Load `scholarly-rigor.md`. |
 | “Obsidian”, “wikilinks”, “note page”, “vault”, “Markdown note to HTML” | `notes-wiki` | The user expects vault link resolution but vault paths are unavailable. |
 | “report”, “brief”, “synthesis”, “executive summary”, “recommendations”, “combine these sources” | `synthesis-report` | Claims cannot be linked to the provided sources. |
 | “audit”, “verify”, “compare text”, “debug extraction” | `debug-audit` | None; use the strictest useful checks available. |
@@ -61,9 +59,9 @@ alt text presented as source fact.
 
 ### `close-read`
 
-Allowed outside canonical source: margin notes, argument-function notes,
-claim/evidence cards, optional translations when requested, figure or asset
-notes, derivation repairs when applicable, questions, reading guide rails.
+Allowed outside canonical source: evidence notes, argument-function notes,
+`key-point` claim blocks, optional translations when requested, figure or asset
+notes, derivation repairs when applicable, questions.
 
 Required: every generated note targets a source id, broader section id, asset
 id, figure/table/equation id, or explicitly says why a precise target is
@@ -84,7 +82,7 @@ assumptions, or standard named rules that can be cited, mark it as an
 ### `notes-wiki`
 
 Allowed: frontmatter panel, wikilink chips or resolved links, callout styling,
-local asset cards, backlinks when a vault manifest or explicit backlink source
+local asset links, backlinks when a vault manifest or explicit backlink source
 is available.
 
 Required: do not fake vault resolution; report broken/unresolved wikilinks. Do
