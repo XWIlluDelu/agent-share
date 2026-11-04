@@ -5,8 +5,9 @@ description: Create or audit source-first static HTML artifacts from papers, rep
 
 # Better Read HTML
 
-Produce static, local-first HTML pages whose source boundary is inspectable.
-This skill is for HTML creation or audit, not general document analysis.
+Produce local, offline HTML reading pages from the bundled template, with a
+source boundary a reader can inspect. This skill is for HTML creation or audit,
+not general document analysis.
 
 ## Mode first
 
@@ -32,48 +33,42 @@ text, papers, and math all still use one of the modes above.
    - separate document body from site chrome, menus, search widgets, duplicate
      tables of contents, and decorative/navigation assets before anything
      becomes canonical;
-   - for converter output (DOCX/PDF/Office/LibreOffice/Pandoc HTML), do not use
-     the converter DOM as the reader DOM by default — map it to source blocks,
-     assets, tables, equations, citations, comments, headings, lists, inline
-     links, inline emphasis, and code spans, then render semantic, namespaced
-     HTML;
-   - keep converter classes/styles only when they preserve meaningful structure
-     or when the user asks for visual facsimile.
-4. Render static HTML with local/inline assets by default. Use
-   `templates/source-reader.html`, `templates/report-brief.html`, or
-   `templates/note-wiki.html` as optional starting points when they help; adapt
-   freely. Preserve the full selected source scope in `preserve`; if you
-   intentionally render an excerpt, label the title/colophon/fidelity tier as an
-   excerpt and never let the artifact imply full-document preservation.
-5. Keep canonical source regions separate from noncanonical generated/layout
-   regions, e.g. `data-canonical="false"` or `data-layout-duplicate="true"`.
-   Omit empty noncanonical apparatus rather than rendering decorative
-   placeholders.
-6. Validate relevant fidelity, links, assets, ids, remote dependencies,
-   accessibility basics, readable structure, visible uncertainty, and converter
-   residue. Record the exact audit command/profile beside substantial artifacts.
-   For existing HTML, use `python3 <skill-dir>/scripts/audit_html.py
-   <file.html> [--strict] [--profile preserve|scholarly] [--source-text
-   <extracted.txt>]` when applicable; all flags: `--help`.
+   - for converter output (DOCX/PDF/Office/LibreOffice/Pandoc HTML), map the
+     converter DOM to source blocks, assets, tables, equations, citations,
+     comments, headings, lists, inline links, emphasis, and code spans instead
+     of reusing it as reader DOM;
+   - give every section and source block a stable id derived from the source.
+4. Render: copy the whole `template/` directory to the output location and
+   replace the title, brand, `annotation-report` id, and the contents of
+   `<main>`, following [`references/template.md`](references/template.md). Read
+   that file before writing markup. Output is `index.html` plus `assets/`;
+   produce a single file only when asked. Preserve the full selected source
+   scope in `preserve`; an intentional excerpt is labeled as an excerpt in the
+   title or colophon.
+5. Keep canonical source regions separate from noncanonical material:
+   evidence notes and added blocks carry `data-canonical="false"`, layout
+   copies carry `data-layout-duplicate="true"`. Omit empty apparatus.
+6. Validate with `python3 <skill-dir>/scripts/audit_html.py <dir>/index.html
+   --strict [--profile preserve|scholarly] [--source-text <extracted.txt>]`
+   (all flags: `--help`). Record the command beside substantial artifacts.
 
 ## Load references only when needed
 
+- [`references/template.md`](references/template.md): every render — page
+  skeleton, ids, components, evidence notes, IR-to-markup mapping.
 - [`references/mode-contracts.md`](references/mode-contracts.md): ambiguous
   preserve vs generated-content boundaries, PDFs/OCR preservation claims,
-  fidelity tiers, or implied exactness; do not replace the three public modes.
+  fidelity tiers, or implied exactness.
 - [`references/scholarly-rigor.md`](references/scholarly-rigor.md):
   academic/formal technical sources with citations, figures, tables, equations,
   derivations, or claim-level annotation.
 - [`references/content-contract.md`](references/content-contract.md): structured
   IR, stable source ids, generated-block ids, asset ids, or evidence links.
 - [`references/optional-components.md`](references/optional-components.md):
-  requested question/evidence ledgers, translations, math rendering/copy
-  affordances, figure cards, or citation status.
+  requested question/evidence ledgers, translations, math renderer policy,
+  figure records, or citation status.
 - [`references/integrity-validation.md`](references/integrity-validation.md):
   strict conversion gates or HTML audit failures.
-- [`references/ibm-design-md.md`](references/ibm-design-md.md): modifying or
-  auditing the IBM Carbon design language itself; do not load for normal
-  rendering.
 
 ## Fidelity invariants
 
@@ -81,73 +76,46 @@ text, papers, and math all still use one of the modes above.
 - Source facts, labels, metadata, citations, identities, quantities, and claims
   are copied from the source or marked unavailable/uncertain; inferred or
   generated claims belong only in noncanonical blocks.
-- Layout duplicates, previews, rails, colophons, and generated notes are marked
-  noncanonical.
+- Evidence excerpts are verbatim, and every evidence note names its source
+  location (`data-target` or `data-locator`).
 - Strict conversion requires verifiable source-order text. If it cannot be
   verified, mark the artifact unverified or ask; do not claim 100% preservation.
 - For PDFs/OCR, preservation can only be claimed against validated extracted
   text/IR unless trusted structure or equivalent audit evidence exists.
   Reading-order uncertainty must be visible.
 
-## Design rule
+## Design
 
-Artifacts use the IBM Carbon design language; inline `templates/ibm-carbon.css`
-into `<style>` — that file is the palette, type, and geometry source for
-rendering. `references/ibm-design-md.md` documents and governs those tokens;
-load it only to change or audit the design language, not to render. Give the
-document title `<h1 class="brh-doc-title">…</h1>`. When using subtype-specific
-styles, emit `data-mode-subtype="…"` on the article root for CSS scoping.
+The template is the design: its typography, panes, components, print and
+narrow-screen behaviour are the house style. Do not restyle it per artifact or
+add parallel CSS; add CSS only for a source structure the template lacks.
 
-Design is content-shaped: short notes use single-column article; long
-figure-heavy manuscripts may justify responsive semantic rails; table-heavy
-sources may need horizontal table wrappers. Rails, indexes, cards, annotations,
-glossaries, and copy controls are acceptable only when they reduce reader work
-and are marked noncanonical or as layout duplicates. For figure-heavy sources,
-place each figure once at relevant first mention with full source legend when
-user permits relayout; otherwise keep canonical figure in source order and use
-first-mention previews as noncanonical duplicates. On narrow screens, multiple
-rails/tools become one priority-ordered apparatus below the article, not
-unrelated repeated sidebars.
+Shape content within it:
 
-Aesthetic quality gate — verify each:
+- Material claims that need source support get evidence notes; the evidence
+  pane exists only when notes do.
+- One `key-point` block per substantive conclusion; qualifications stay in body
+  text or an `aside-note`.
+- Each figure appears once: at its first relevant mention when the user permits
+  relayout, otherwise in source order.
+- Wide tables go in `table-responsive`; long code and display math scroll
+  inside their blocks.
+- Link semantics stay distinct: author affiliations, footnotes, bibliography
+  citations, and figure/table/equation references are different links.
+- The source's own frontmatter is the page opening; no generated hero repeats
+  it.
+- Visible UI stays quiet: no assistant commentary, debug notes, process
+  explanations, or provenance prose unless the user asks or the artifact would
+  otherwise mislead.
 
-- clear hierarchy;
-- readable measure and spacing;
-- restrained accents;
-- local/offline typography;
-- visible focus/target states;
-- sane print and narrow-screen behavior;
-- no obvious converter residue in the reader-facing DOM unless source-structural
-  or explicitly requested;
-- quiet visible UI — no assistant commentary, debug notes, process explanations,
-  copy hints, or provenance prose unless the user asks or the artifact would
-  otherwise be misleading.
-
-The gate authorizes CSS, semantic wrappers, navigation, labels, and noncanonical
-aids; it never authorizes rewriting canonical source text.
-
-Design smoke check for substantial artifacts — each must hold:
-
-- first viewport is not dominated by noncanonical apparatus or extracted site
-  navigation;
-- source frontmatter is not visibly duplicated by a generated hero;
-- paragraph width matches the chosen reading column unless a source form
-  requires narrower measure;
-- long titles and bare URLs wrap naturally;
-- narrow screens show article content before the priority-ordered apparatus;
-- figures appear near their first relevant mention or are explicitly marked as
-  noncanonical previews;
-- automatic links respect semantics: author affiliations, footnotes,
-  bibliography citations, and figure/table/equation references are distinct.
-
-If a check fails, revise the rendering or report a design warning.
+Design never authorizes rewriting canonical source text.
 
 ## Reporting contract
 
-For substantial artifacts, report the HTML path, single-file/asset status, mode,
-fidelity tier, source list, layout notes when they affect reading, validation
-summary, and unresolved uncertainty. For trivial artifacts, report only path,
-mode/fidelity, and validation warnings.
+For substantial artifacts, report the output folder, mode, fidelity tier,
+source list, layout notes when they affect reading, validation summary, and
+unresolved uncertainty. For trivial artifacts, report only path, mode/fidelity,
+and validation warnings.
 
 ## Stop rules
 
@@ -157,7 +125,7 @@ Stop, ask, downgrade, or mark unverified when:
 - Source text or assets are unavailable and would require guessing.
 - A source block, attachment, table, figure, equation, citation, or evidence
   target is uncertain in strict mode.
-- Remote services, remote fonts, or CDN math are needed for private/local
+- Remote services, remote fonts, or CDN assets are needed for private/local
   sources without approval.
-- A design choice would reduce readability, accessibility, or source
+- A requested change would reduce readability, accessibility, or source
   auditability.

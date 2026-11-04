@@ -1,0 +1,8 @@
+code { font-family:ui-monospace, SFMono-Regular, Consolas, monospace; font-size:.9em; }
+.code-block { overflow-x:auto; padding:16px 18px; margin:24px 0; background:var(--surface); border:1px solid var(--line); border-radius:4px; font-size:15px; line-height:1.6; }
+.code-block code { font-size:inherit; }
+.code-copy-wrap { position:relative; margin:24px 0; }
+.code-copy-wrap .code-block { margin:0; padding-right:52px; }
+.code-copy-button { position:absolute; top:8px; right:8px; width:26px; height:26px; padding:5px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+.code-copy-button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+@media print { .code-copy-button { display:none; } .code-copy-wrap .code-block { padding-right:18px; } }

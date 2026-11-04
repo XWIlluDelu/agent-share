@@ -15,7 +15,7 @@ HEAD = (
     '<!doctype html><html lang="en"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width, initial-scale=1"><title>t</title>'
     "<style>:focus-visible{outline:2px solid} :target{background:#eee} "
-    ".brh-table-wrap{overflow-x:auto} @media print{a{color:inherit}}</style></head><body>"
+    ".table-responsive{overflow-x:auto} @media print{a{color:inherit}}</style></head><body>"
 )
 FOOT = "</body></html>"
 
@@ -59,21 +59,21 @@ def test_selfclosing_void_does_not_leak_noncanonical() -> None:
 
 def test_hero_check_only_fires_on_real_duplicate() -> None:
     clean = audit(
-        '<main id="main"><header data-canonical="false"><p class="brh-kicker">Status line</p></header>'
-        '<h1 class="brh-doc-title" id="t1">Doc Title</h1><p id="p001">body</p></main>'
+        '<main id="main"><header data-canonical="false"><p>Status line</p></header>'
+        '<h1 id="t1">Doc Title</h1><p id="p001">body</p></main>'
     )
     assert not clean["design_warnings"], clean["design_warnings"]
     duplicated = audit(
         '<main id="main"><header data-canonical="false"><h1>Doc Title</h1></header>'
-        '<h1 class="brh-doc-title" id="t1">Doc Title</h1><p id="p001">body</p></main>'
+        '<h1 id="t1">Doc Title</h1><p id="p001">body</p></main>'
     )
     assert any("hero" in w for w in duplicated["design_warnings"]), duplicated["design_warnings"]
 
 
 def test_unwrapped_table_warns_when_wrap_convention_present() -> None:
     unwrapped = audit('<main id="main"><table><tr><td>x</td></tr></table></main>')
-    assert any("brh-table-wrap" in w for w in unwrapped["readability_warnings"]), unwrapped["readability_warnings"]
-    wrapped = audit('<main id="main"><div class="brh-table-wrap"><table><tr><td>x</td></tr></table></div></main>')
+    assert any("table-responsive" in w for w in unwrapped["readability_warnings"]), unwrapped["readability_warnings"]
+    wrapped = audit('<main id="main"><div class="table-responsive"><table><tr><td>x</td></tr></table></div></main>')
     assert not wrapped["readability_warnings"], wrapped["readability_warnings"]
 
 
@@ -168,6 +168,58 @@ def test_generated_targets_and_executable_links_fail_strict() -> None:
     assert rc == 1, report
     assert report["unresolved_attribute_refs"] == ["missing"], report["unresolved_attribute_refs"]
     assert report["executable_links"] == ["javascript:alert(1)"], report["executable_links"]
+
+
+def test_linked_stylesheets_count_and_resolve_their_own_urls() -> None:
+    body = ('<link rel="stylesheet" href="assets/page.css"><main id="main"><p>body</p>'
+            '<div class="table-responsive"><table><tr><td>x</td></tr></table></div></main>')
+    css = '.w{overflow-x:auto} @media print{a{color:inherit}} @font-face{src:url(fonts/a.woff2)}'
+    good, rc = audit_result(body, "--strict", files={"assets/page.css": css, "assets/fonts/a.woff2": "f"})
+    assert rc == 0, good
+    assert not good["readability_warnings"], good["readability_warnings"]
+    bad, bad_rc = audit_result(body, "--strict", files={"assets/page.css": css})
+    assert bad_rc == 1 and bad["missing_referenced_assets"] == ["assets/page.css: fonts/a.woff2"], bad
+
+
+def test_evidence_notes_must_be_referenced_sourced_and_named_by_content() -> None:
+    good, rc = audit_result(
+        '<main id="main"><p id="p1">Claim.<a class="ev-ref" href="#ev-claim"></a></p>'
+        '<aside class="ev-note" id="ev-claim" data-kind="excerpt" data-locator="p. 3" data-canonical="false">quote</aside></main>',
+        "--strict",
+    )
+    assert rc == 0 and not good["source_boundary_errors"], good
+    bad, bad_rc = audit_result(
+        '<main id="main"><p id="p1">Claim.<a class="ev-ref" href="#ev-gone"></a></p>'
+        '<aside class="ev-note" id="ev-3">orphan</aside></main>',
+        "--strict",
+    )
+    errors = " | ".join(bad["source_boundary_errors"])
+    assert bad_rc == 1, bad
+    for expected in ("does not point to an evidence note: #ev-gone", "never referenced: ev-3",
+                     "needs data-target or data-locator: ev-3", 'data-canonical="false": ev-3', "positional"):
+        assert expected in errors, errors
+
+
+def test_ink_report_id_must_exist_and_not_be_the_template_example() -> None:
+    script = '<script src="assets/annotations.js"></script>'
+    files = {"assets/annotations.js": ""}
+    missing, rc = audit_result(script + '<main id="main"><h1>Other</h1></main>', "--strict", files=files)
+    assert rc == 1 and missing["template_errors"], missing
+    reused, rc = audit_result('<meta name="annotation-report" content="attention-is-all-you-need">' + script +
+                              '<main id="main"><h1>Other</h1></main>', "--strict", files=files)
+    assert rc == 1 and "template example" in reused["template_errors"][0], reused
+    own, rc = audit_result('<meta name="annotation-report" content="other-report">' + script +
+                           '<main id="main"><h1>Other</h1></main>', "--strict", files=files)
+    assert rc == 0, own
+
+
+def test_bundled_katex_math_needs_no_extra_math_markers() -> None:
+    body = '<main id="main"><div class="math-display">$$a^2$$</div></main>'
+    plain = audit(body, "--profile", "scholarly")
+    assert any("math" in w for w in plain["scholarly_warnings"]), plain
+    katex = audit('<script src="assets/katex/katex.min.js"></script>' + body, "--profile", "scholarly",
+                  files={"assets/katex/katex.min.js": ""})
+    assert not any("math" in w for w in katex["scholarly_warnings"]), katex
 
 
 def main() -> int:

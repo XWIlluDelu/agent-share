@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Research report template · Attention Is All You Need</title>
+<link rel="stylesheet" href="assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/annotations.css">
+<link rel="stylesheet" href="assets/annotation-files.css">
+<link rel="stylesheet" href="assets/template.css">
+<link rel="stylesheet" href="assets/key-points.css">
+<link rel="stylesheet" href="assets/content-copy.css">
+<link rel="stylesheet" href="assets/evidence.css">
+<meta name="annotation-report" content="attention-is-all-you-need">
+<script src="assets/text-index.js"></script>
+<script src="assets/annotation-files.js"></script>
+<script src="assets/annotations.js"></script>
+<script src="assets/panes.js"></script>
+<script src="assets/evidence.js"></script>
+<script src="assets/laser-trails.js"></script>
+<script defer src="assets/content-copy.js"></script>
+<script defer src="assets/katex/katex.min.js"></script>
+<script defer src="assets/katex/auto-render.min.js"></script>
+<script defer src="assets/template.js"></script>
+</head>
+<body>
+<button id="toc-toggle" aria-controls="toc" aria-expanded="true" aria-label="Collapse contents" title="Collapse contents">‹</button>
+<div class="toolbar" aria-label="Presentation tools">
+ <button class="laser-button icon-button" aria-label="Toggle laser pointer" aria-pressed="false" title="Laser pointer"><span class="laser-icon" aria-hidden="true"></span></button>
+</div>
+<div id="nav-shade"></div>
+<nav id="toc" class="pane pane--left" aria-label="Contents">
+ <div class="brand">Research notes</div>
+ <button class="pane-close" aria-label="Close contents">×</button>
+ <ol id="toc-list"></ol>
+</nav>
+<main><div class="paper">
+<header>
+ <h1>Attention Is All You Need</h1>
+ <p class="source-line">A reading note on <a href="https://arxiv.org/html/1706.03762v5">Vaswani et al. (2017)</a></p>
+</header>
+<section id="s-overview" aria-labelledby="overview">
+ <h2 id="overview">01　Overview</h2>
+ <h3 id="architecture">An attention-based architecture</h3>
+ <p>The Transformer uses attention and position-wise feed-forward layers in an encoder–decoder architecture. It removes recurrent and convolutional layers from the sequence model, enabling parallel computation across token positions during training.</p>
+ <p class="key-point"><strong>Key finding.</strong> Self-attention directly connects positions within a sequence, replacing the sequential computation required by recurrent layers.</p>
+ <h3 id="encoder-decoder">Encoder and decoder</h3>
+ <p>The encoder transforms the input sequence into contextual representations. The decoder combines masked self-attention with attention over the encoder output to predict the next token.</p>
+ <p class="aside-note">Parallel computation during training and autoregressive generation are distinct: decoder masking prevents a position from attending to future output tokens.</p>
+</section>
+<section id="s-method" aria-labelledby="method">
+ <h2 id="method">02　Method</h2>
+ <h3 id="scaled-attention">Scaled dot-product attention</h3>
+ <p>Queries and keys determine attention weights. A softmax normalizes these weights across keys, and the output is their weighted sum of the value vectors.</p>
+ <div class="math-display">$$
+ \operatorname{Attention}(\mathbf Q,\mathbf K,\mathbf V)
+ =\operatorname{softmax}\!\left(
+ \frac{\mathbf Q\mathbf K^\top}{\sqrt{d_k}}\right)\mathbf V.
+ $$</div>
+ <pre class="code-block" aria-label="Scaled dot-product attention in PyTorch"><code>import torch
+
+def attention(q, k, v):
+    scores = q @ k.transpose(-2, -1) / q.size(-1) ** 0.5
+    weights = torch.softmax(scores, dim=-1)
+    return weights @ v</code></pre>
+ <figure>
+  <div class="figure-resizable">
+   <button class="figure-open" aria-label="Open scaled dot-product attention diagram"><img src="assets/attention.svg" alt="Scaled dot-product attention"></button>
+   <button class="figure-resize" aria-label="Resize figure with arrow keys; double-click or press Enter to reset" title="Drag to resize · double-click to reset"></button>
+  </div>
+  <figcaption class="figure-caption">Scaled dot-product attention, redrawn from Equation (1).</figcaption>
+ </figure>
+ <h3 id="scaling">Why scale the dot products?</h3>
+ <p>If query and key components are independent with zero mean and unit variance, the dot product has variance $d_k$. Dividing by $\sqrt{d_k}$ counteracts the growth of its magnitude, which would otherwise push softmax toward regions with small gradients.<a class="ev-ref" href="#ev-softmax-gradients"></a></p>
+ <aside class="ev-note" id="ev-softmax-gradients" data-kind="excerpt" data-locator="§3.2.1" data-canonical="false">
+  <blockquote>We suspect that for large values of $d_k$, the dot products grow large in magnitude, pushing the softmax function into regions where it has extremely small gradients.</blockquote>
+ </aside>
+ <h3 id="multi-head">Multi-head attention</h3>
+ <p>Each head uses learned projections of the queries, keys and values. The heads operate in parallel; their outputs are concatenated and projected back into the model representation.</p>
+ <div class="math-display">$$
+ \begin{aligned}
+ \mathrm{head}_j&=\operatorname{Attention}
+ (\mathbf Q\mathbf W_j^Q,\mathbf K\mathbf W_j^K,\mathbf V\mathbf W_j^V),\\
+ \operatorname{MultiHead}(\mathbf Q,\mathbf K,\mathbf V)
+ &=\operatorname{Concat}(\mathrm{head}_1,\ldots,\mathrm{head}_h)\mathbf W^O.
+ \end{aligned}
+ $$</div>
+ <h3 id="positions">Encoding sequence position</h3>
+ <p>Position information is added to the token embeddings. The paper uses sinusoidal functions with different frequencies:</p>
+ <div class="math-display">$$
+ \begin{aligned}
+ \mathrm{PE}_{p,2i}&=\sin\!\left(p/10000^{2i/d_{\mathrm{model}}}\right),\\
+ \mathrm{PE}_{p,2i+1}&=\cos\!\left(p/10000^{2i/d_{\mathrm{model}}}\right).
+ \end{aligned}
+ $$</div>
+ <details class="academic-details">
+  <summary>Mathematical detail: Why sinusoidal frequencies?</summary>
+  <div class="details-content">
+   <p>For any fixed offset $k$, $\mathrm{PE}_{pos+k}$ can be represented as a linear function of $\mathrm{PE}_{pos}$. By using trigonometric addition formulas, $\sin(\omega(pos+k)) = \sin(\omega pos)\cos(\omega k) + \cos(\omega pos)\sin(\omega k)$. The corresponding cosine identity completes a linear transformation of each sine–cosine pair.</p>
+  </div>
+ </details>
+</section>
+<section id="s-results" aria-labelledby="results">
+ <h2 id="results">03　Reported results</h2>
+ <h3 id="translation">English-to-German translation</h3>
+ <p>The following scores are selected from Table 2 of the paper, evaluated on the WMT 2014 English-to-German newstest2014 test set.</p>
+ <div class="table-responsive">
+ <table class="task-io">
+  <thead><tr><th scope="col">Model</th><th scope="col">Setting</th><th scope="col" class="num">BLEU ↑</th></tr></thead>
+  <tbody>
+   <tr><td>GNMT + RL</td><td>Ensemble</td><td class="num">26.30</td></tr>
+   <tr><td>ConvS2S</td><td>Ensemble</td><td class="num">26.36</td></tr>
+   <tr><td>Transformer base</td><td>Single model</td><td class="num">27.3</td></tr>
+   <tr><td>Transformer big</td><td>Single model</td><td class="num">28.4</td></tr>
+  </tbody>
+ </table>
+ </div>
+ <p class="key-point key-point--positive"><strong>Improvement.</strong> Transformer big reaches 28.4 BLEU<a class="ev-ref" href="#ev-table2"></a>, exceeding the reported ConvS2S ensemble score by about 2 BLEU.</p>
+ <aside class="ev-note" id="ev-table2" data-kind="citation" data-locator="Table 2" data-canonical="false">
+  <p>Vaswani et al. (2017), Table 2: BLEU on newstest2014 English-to-German. Transformer (big): 28.4; ConvS2S Ensemble: 26.36.</p>
+ </aside>
+ <h3 id="training-cost">Training cost</h3>
+ <p>The paper reports training the big model for 3.5 days on eight NVIDIA P100 GPUs.<a class="ev-ref" href="#ev-training"></a></p>
+ <aside class="ev-note" id="ev-training" data-kind="excerpt" data-locator="§5.2" data-canonical="false">
+  <blockquote>The big models were trained for 300,000 steps (3.5 days).</blockquote>
+ </aside>
+</section>
+<section id="s-tradeoffs" aria-labelledby="tradeoffs">
+ <h2 id="tradeoffs">04　Computational trade-offs</h2>
+ <h3 id="sequence-cost">Sequence length and computation</h3>
+ <p>Table 1 compares the dependence on sequence length $n$ and representation dimension $d$. A self-attention layer requires $\mathcal O(n^2d)$ computation, whereas a recurrent layer requires $\mathcal O(nd^2)$.<a class="ev-ref" href="#ev-table1"></a></p>
+ <aside class="ev-note" id="ev-table1" data-kind="citation" data-locator="Table 1" data-canonical="false">
+  <p>Vaswani et al. (2017), Table 1: maximum path lengths, per-layer complexity and minimum number of sequential operations for different layer types.</p>
+ </aside>
+ <p class="key-point key-point--negative"><strong>Limitation.</strong> Full self-attention compares every query position with every key position. Its attention computation grows quadratically with sequence length.<a class="ev-ref" href="#ev-restricted-attention"></a></p>
+ <aside class="ev-note" id="ev-restricted-attention" data-kind="note" data-locator="§4" data-canonical="false">
+  <p>The paper's own mitigation for very long sequences is to restrict self-attention to a neighborhood of size $r$ around each output position, which raises the maximum path length to $\mathcal O(n/r)$.</p>
+ </aside>
+ <h3 id="path-length">Dependency paths</h3>
+ <p>The same comparison<a class="ev-ref" href="#ev-table1"></a> gives self-attention a constant maximum path length between positions within a layer, versus a path length that grows with sequence length for recurrent computation. This is a structural advantage for connecting distant positions.</p>
+</section>
+<section id="s-source" aria-labelledby="source">
+ <h2 id="source">05　Source</h2>
+ <p>Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser and Illia Polosukhin. <em>Attention Is All You Need.</em> 2017.</p>
+ <p><a href="https://arxiv.org/html/1706.03762v5">Read the paper</a> · <a href="https://arxiv.org/abs/1706.03762">arXiv record</a></p>
+ <p class="aside-note">This reading note paraphrases the paper. Equations and reported scores follow the linked version; the attention diagram is redrawn for this page.</p>
+</section></div></main>
+<dialog id="viewer" aria-labelledby="viewer-title">
+ <div class="viewer-bar">
+  <span class="viewer-title" id="viewer-title">Image viewer</span>
+  <button id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
+  <output id="zoom-label" aria-label="Zoom relative to fit">100%</output>
+  <button id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+  <button id="fit" class="icon-button" aria-label="Reset view" title="Reset view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 7.3"/><path d="M4 4v6h6"/></svg></button>
+  <button id="box-zoom" class="icon-button" aria-label="Box zoom" aria-pressed="false" title="Box zoom"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/><path d="M12 8v8M8 12h8"/></svg></button>
+  <button class="laser-button icon-button" aria-label="Toggle laser pointer" aria-pressed="false" title="Laser pointer"><span class="laser-icon" aria-hidden="true"></span></button>
+  <button id="close-viewer" class="icon-button" aria-label="Close image viewer" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+ </div>
+ <div id="viewport" tabindex="0" aria-label="Image area: scroll to zoom, drag to pan, Shift-drag to select">
+  <img id="zoom-image" alt="" draggable="false">
+  <div id="selection"></div>
+  <div id="image-status" role="status">Loading image…</div>
+ </div>
+ <div class="laser-dot" aria-hidden="true"></div>
+</dialog>
+<div class="laser-dot" aria-hidden="true"></div>
+</body>
+</html>

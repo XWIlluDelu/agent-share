@@ -1,0 +1,19 @@
+/* Semantic emphasis: shared geometry, three stable meanings. */
+.key-point {
+  --point-accent:#58758d;
+  --point-tint:#f4f7fa;
+  margin:24px 0;
+  padding:14px 18px;
+  border-left:3px solid var(--point-accent);
+  background:var(--point-tint);
+  color:var(--ink, #202124);
+  font-size:17px;
+  line-height:1.7;
+}
+.key-point--positive { --point-accent:#5d7d6c; --point-tint:#f3f8f5; }
+.key-point--negative { --point-accent:#a45c52; --point-tint:#fbf3f1; }
+.key-point > :first-child { margin-top:0; }
+.key-point > :last-child { margin-bottom:0; }
+@media print {
+  .key-point { break-inside:avoid; font-size:inherit; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}

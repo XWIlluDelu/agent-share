@@ -16,6 +16,8 @@ SKIP_TAGS = {"script", "style"}
 REMOTE_ASSET_SCHEMES = {"http", "https", "ftp", "ftps"}
 EXECUTABLE_SCHEMES = {"javascript"}
 BENIGN_LINK_SCHEMES = {"mailto", "tel"}
+TEMPLATE_REPORT_ID = "attention-is-all-you-need"
+TEMPLATE_TITLE = "Attention Is All You Need"
 REFERENCE_ATTRS = {"data-target", "data-duplicate-of", "aria-controls", "aria-describedby", "aria-labelledby"}
 
 
@@ -87,8 +89,11 @@ class AuditParser(html.parser.HTMLParser):
         self.title_seen = False
         self.html_lang = ""
         self.figures: list[dict[str, str]] = []
-        self.rails: list[dict[str, str]] = []
         self.math_elements: list[dict[str, str]] = []
+        self.stylesheets: list[str] = []
+        self.evidence_notes: list[dict[str, str]] = []
+        self.evidence_refs: list[str] = []
+        self.annotation_report: str | None = None
         self.canonical_text_stack: list[str | None] = []
         self.wrap_stack: list[bool] = []
         self.table_wrap_depth = 0
@@ -158,10 +163,16 @@ class AuditParser(html.parser.HTMLParser):
         class_tokens = attrs_d.get("class", "").split()
         if tag == "figure":
             self.figures.append(attrs_d)
-        if "brh-rail" in class_tokens:
-            self.rails.append(attrs_d)
-        if any(token.startswith("brh-math") or token == "brh-equation" for token in class_tokens):
+        if "math-display" in class_tokens:
             self.math_elements.append(attrs_d)
+        if tag == "aside" and "ev-note" in class_tokens:
+            self.evidence_notes.append(attrs_d)
+        if tag == "a" and "ev-ref" in class_tokens:
+            self.evidence_refs.append(attrs_d.get("href", ""))
+        if tag == "meta" and attrs_d.get("name") == "annotation-report":
+            self.annotation_report = attrs_d.get("content", "")
+        if tag == "link" and "stylesheet" in attrs_d.get("rel", "").lower().split() and href and not is_remote(href):
+            self.stylesheets.append(href)
 
         if href and not href.startswith("#"):
             if tag == "base":
@@ -210,7 +221,7 @@ class AuditParser(html.parser.HTMLParser):
             skipped_here = True
         self.capture_stack.append(not skipped_here)
         self.canonical_text_stack.append(canonical_text_attr if not skipped_here and not self.skip and canonical_text_attr else None)
-        wraps_table = "brh-table-wrap" in class_tokens
+        wraps_table = "table-responsive" in class_tokens
         if wraps_table:
             self.table_wrap_depth += 1
         self.wrap_stack.append(wraps_table)
@@ -287,9 +298,13 @@ def has_reference_attr(tag_text: str) -> bool:
     return bool(re.search(r'''\b(?:data-target|data-evidence)\s*=''', tag_text, re.I))
 
 
-def css_dependencies(html_text: str) -> tuple[list[str], list[str], list[str]]:
+def inline_css(html_text: str) -> list[str]:
     css_parts = re.findall(r"<style\b[^>]*>(.*?)</style>", html_text, re.I | re.S)
     css_parts.extend(match.group(2) for match in re.finditer(r'''\bstyle\s*=\s*(["'])(.*?)\1''', html_text, re.I | re.S))
+    return css_parts
+
+
+def css_dependencies(css_parts: list[str]) -> tuple[list[str], list[str], list[str]]:
     remote: list[str] = []
     local: list[str] = []
     inline: list[str] = []
@@ -334,10 +349,26 @@ def main() -> int:
     html_text = html_path.read_text(encoding="utf-8")
     parser = AuditParser(source_order=True)
     parser.feed(html_text)
-    css_remote, css_local, css_inline = css_dependencies(html_text)
+    css_remote, css_local, css_inline = css_dependencies(inline_css(html_text))
     parser.remote_dependencies.extend(css_remote)
     parser.assets.extend(css_local)
     parser.inline_data_assets.extend(css_inline)
+    # Linked local stylesheets count as page CSS; their url() references resolve against the stylesheet.
+    linked_css: list[str] = []
+    missing_css_assets: list[str] = []
+    for href in sorted(set(parser.stylesheets)):
+        css_path = local_candidate(html_path, href)
+        if not css_path.is_file():
+            continue
+        css_text = css_path.read_text(encoding="utf-8", errors="replace")
+        linked_css.append(css_text)
+        remote, local, inline = css_dependencies([css_text])
+        parser.remote_dependencies.extend(remote)
+        parser.inline_data_assets.extend(inline)
+        for ref in local:
+            if not local_candidate(css_path, ref).exists():
+                missing_css_assets.append(f"{href}: {ref}")
+    style_text = html_text + "\n".join(linked_css)
 
     ids = set(parser.ids)
     broken_internal_links = sorted({href for href in parser.hrefs if href not in ids})
@@ -346,6 +377,7 @@ def main() -> int:
     assets_dir = args.assets_dir or (html_path.parent / "assets")
     missing_assets: list[str] = []
     asset_refs = sorted(set(parser.assets))
+    missing_assets.extend(missing_css_assets)
     for ref in asset_refs:
         candidate = local_candidate(html_path, ref)
         if not candidate.exists() and assets_dir.exists():
@@ -388,15 +420,15 @@ def main() -> int:
 
     if '<meta name="viewport"' not in html_text.lower():
         readability_warnings.append("missing viewport meta")
-    if parser.hrefs and ":focus-visible" not in html_text:
+    if parser.hrefs and ":focus-visible" not in style_text:
         readability_warnings.append("navigation present but no visible :focus-visible style found")
-    if parser.hrefs and ":target" not in html_text:
+    if parser.hrefs and ":target" not in style_text:
         readability_warnings.append("internal links present but no :target style found")
-    if "<table" in html_text.lower() and not re.search(r"overflow-x\s*:\s*auto", html_text, re.I):
+    if "<table" in html_text.lower() and not re.search(r"overflow-x\s*:\s*auto", style_text, re.I):
         readability_warnings.append("tables present but no horizontal overflow handling found")
-    elif parser.tables_outside_wrap and "brh-table-wrap" in html_text:
-        readability_warnings.append(f"tables not inside a .brh-table-wrap overflow wrapper: {parser.tables_outside_wrap}")
-    if "@media print" not in html_text:
+    elif parser.tables_outside_wrap and "table-responsive" in style_text:
+        readability_warnings.append(f"tables not inside a .table-responsive overflow wrapper: {parser.tables_outside_wrap}")
+    if "@media print" not in style_text:
         readability_warnings.append("missing print stylesheet")
 
     main_open = re.search(r"<main\b[^>]*>(?P<body>.*?)</main>", html_without_css, re.I | re.S)
@@ -428,12 +460,8 @@ def main() -> int:
     if re.search(r"<(center|o:p|sdfield)\b", html_text, re.I):
         converter_residue_warnings.append("legacy converter/page-field tags present")
 
-    has_generated = (
-        'data-generated="true"' in html_without_css
-        or "data-generated='true'" in html_without_css
-        or re.search(r'''class=["'][^"']*\bbrh-generated\b''', html_without_css, re.I)
-    )
-    generated_tag_pattern = r'''<[^>]+(?:data-generated=["']true["']|class=["'][^"']*\bbrh-generated\b)[^>]*>'''
+    has_generated = 'data-generated="true"' in html_without_css or "data-generated='true'" in html_without_css
+    generated_tag_pattern = r'''<[^>]+data-generated=["']true["'][^>]*>'''
     generated_tags = list(re.finditer(generated_tag_pattern, html_without_css, re.I))
     if has_generated and not generated_tags:
         source_boundary_errors.append("generated block present but no generated tag could be parsed")
@@ -446,18 +474,51 @@ def main() -> int:
             source_boundary_errors.append("generated block has empty data-target/data-evidence")
             break
 
+    # Evidence notes: each marker resolves to a note, each note is referenced, noncanonical,
+    # tied to a source (in-page data-target or external data-locator), and named by content, not position.
+    template_errors: list[str] = []
+    note_ids = {note.get("id", "") for note in parser.evidence_notes}
+    referenced = {href[1:] for href in parser.evidence_refs if href.startswith("#")}
+    for href in sorted(set(parser.evidence_refs)):
+        if not href.startswith("#") or href[1:] not in note_ids:
+            source_boundary_errors.append(f"evidence marker does not point to an evidence note: {href or '(no href)'}")
+    for note in parser.evidence_notes:
+        note_id = note.get("id", "")
+        if not note_id:
+            source_boundary_errors.append("evidence note without id")
+            continue
+        if note_id not in referenced:
+            source_boundary_errors.append(f"evidence note never referenced: {note_id}")
+        if not (note.get("data-target", "").strip() or note.get("data-locator", "").strip()):
+            source_boundary_errors.append(f"evidence note needs data-target or data-locator: {note_id}")
+        if note.get("data-canonical") != "false":
+            source_boundary_errors.append(f'evidence note must carry data-canonical="false": {note_id}')
+        if re.fullmatch(r"(?:ev[-_]?)?\d+", note_id, re.I):
+            source_boundary_errors.append(f"evidence note id is positional; derive it from the source or claim: {note_id}")
+    # Ink files are keyed by the report id: it must be valid and not the template example's.
+    uses_ink = bool(re.search(r"<script\b[^>]*\bsrc=[\"'][^\"']*annotations\.js", html_text, re.I))
+    if uses_ink and parser.annotation_report is None:
+        template_errors.append("annotations.js loaded without <meta name=\"annotation-report\">")
+    elif parser.annotation_report is not None and not re.fullmatch(r"[A-Za-z0-9_-]+", parser.annotation_report):
+        template_errors.append(f"invalid annotation-report id: {parser.annotation_report!r}")
+    h1 = re.search(r"<h1\b[^>]*>(.*?)</h1>", html_without_css, re.I | re.S)
+    if parser.annotation_report == TEMPLATE_REPORT_ID and not (h1 and norm_compare(re.sub(r"<[^>]+>", "", h1.group(1))) == TEMPLATE_TITLE):
+        template_errors.append("annotation-report id is still the template example's; give this report its own stable id")
+
     scholarly_warnings: list[str] = []
     if args.profile == "scholarly":
         if "<figure" in html_text.lower() and "data-caption-status" not in html_text:
             scholarly_warnings.append("figures present without data-caption-status")
         # Math gate: require an actual math container, not a substring of "mathematics".
-        has_math = re.search(r"<math\b|class=\"[^\"]*brh-equation|class=\"[^\"]*brh-math", html_text, re.I)
-        if has_math and "data-math-renderer" not in html_text:
+        # Bundled KaTeX renders TeX kept in the HTML, so the source math stays inspectable.
+        has_math = re.search(r"<math\b|class=\"[^\"]*\bmath-display\b", html_text, re.I)
+        katex = re.search(r"<script\b[^>]*\bsrc=[\"'][^\"']*katex", html_text, re.I)
+        if has_math and not katex and "data-math-renderer" not in html_text:
             scholarly_warnings.append("math/equation content present without data-math-renderer")
-        if has_math and not re.search(r"data-canonical-text|data-math-source|data-equation-status|data-source-index", html_text, re.I):
+        if has_math and not katex and not re.search(r"data-canonical-text|data-math-source|data-equation-status|data-source-index", html_text, re.I):
             scholarly_warnings.append("math/equation content present without source math/provenance marker")
         citation_container = re.search(
-            r"<(?:cite|bibliography|references)\b|class=[\"'][^\"']*\b(?:brh-reference|brh-citation|bibliography|references)\b",
+            r"<(?:cite|bibliography|references)\b|class=[\"'][^\"']*\b(?:bibliography|references)\b",
             html_without_css,
             re.I,
         )
@@ -513,9 +574,6 @@ def main() -> int:
     if caption_warnings:
         design_warnings.extend(sorted(set(caption_warnings)))
 
-    if "{{" in html_without_css or "}}" in html_without_css:
-        design_warnings.append("unsubstituted template placeholder remains in rendered HTML")
-
     relaid_figures = [figure for figure in parser.figures if figure.get("data-relayout")]
     for figure in relaid_figures:
         if not figure.get("data-source-index") or not figure.get("data-caption-source-index"):
@@ -523,19 +581,6 @@ def main() -> int:
             break
     if relaid_figures and not re.search(r"data-relayout\s*=\s*[\"']first-mention[\"']", html_without_css, re.I):
         design_warnings.append("figure relayout present without first-mention policy marker")
-
-    if re.search(r'class=["\'][^"\']*\bbrh-shell--dual-rail\b', html_without_css):
-        if len(parser.rails) > 1 and any(not rail.get("data-rail-priority") for rail in parser.rails):
-            design_warnings.append("multiple rails present without data-rail-priority ordering")
-
-    for math_attrs in parser.math_elements:
-        math_class = math_attrs.get("class", "")
-        if (
-            ("brh-math" in math_class or "brh-equation" in math_class or "data-copy-latex" in math_attrs or "data-math-source" in math_attrs)
-            and not (math_attrs.get("data-canonical-text") or math_attrs.get("data-math-source") or math_attrs.get("data-equation-status") or math_attrs.get("data-source-index"))
-        ):
-            scholarly_warnings.append("math element missing source/provenance marker")
-            break
 
     visible_text = norm_compare(re.sub(r"<[^>]+>", " ", html_without_css))
     process_note_patterns = [
@@ -550,34 +595,6 @@ def main() -> int:
             design_warnings.append(f"visible process/helper note present: {pattern}")
             break
 
-    # A-M1: subtype-gated CSS without renderer-side emission.
-    # If the inline stylesheet references `[data-mode-subtype="…"]` but no element
-    # in the document carries the attribute, the gated rules are dead code.
-    if re.search(r'\[data-mode-subtype=', html_text):
-        if not re.search(r'<[^>]+\sdata-mode-subtype=', html_text):
-            design_warnings.append("CSS references [data-mode-subtype=…] but no element carries the attribute (subtype-gated rules will never fire)")
-
-    # A-M2: drop-cap misapplication. Only fires when the artifact's mode_subtype
-    # is one of the close-read / synthesis-report subtypes that activate the drop
-    # cap rule; under preserve/conversion-preserve the rule is dormant by design.
-    if re.search(r'<[^>]+\sdata-mode-subtype=["\'](?:close-read|synthesis-report)["\']', html_text):
-        if re.search(r'#summary\s*\+\s*\.body-text\s*::?first-letter', html_text):
-            if not re.search(r'<[^>]+\sid=["\']summary["\']', html_text):
-                design_warnings.append("close-read/synthesis-report subtype + drop-cap CSS but no #summary element (rule will not fire)")
-
-    # A-M3: empty rail-track on dual-rail shell.
-    # If the shell is marked --dual-rail, both left and right rails should
-    # contain at least one non-whitespace child; otherwise the middle-tier
-    # grid leaves a ghost column.
-    if re.search(r'class=["\'][^"\']*\bbrh-shell--dual-rail\b', html_text):
-        rails = re.findall(r'<aside\b[^>]*\bclass=["\'][^"\']*\bbrh-rail\b[^"\']*["\'][^>]*>(.*?)</aside>',
-                           html_text, re.I | re.S)
-        for body in rails:
-            stripped = re.sub(r'<[^>]+>|\s+', '', body)
-            if not stripped:
-                design_warnings.append("brh-shell--dual-rail has an empty .brh-rail (ghost column risk on mid-tier)")
-                break
-
     report = {
         "html_file": str(html_path),
         "main_seen": parser.main_seen,
@@ -585,7 +602,7 @@ def main() -> int:
         "id_count": len(parser.ids),
         "duplicate_ids": dups,
         "relaid_figure_count": len(relaid_figures),
-        "rail_count": len(parser.rails),
+        "evidence_note_count": len(parser.evidence_notes),
         "math_element_count": len(parser.math_elements),
         "internal_link_count": len(parser.hrefs),
         "broken_internal_links": broken_internal_links,
@@ -608,6 +625,7 @@ def main() -> int:
         "design_warnings": design_warnings,
         "converter_residue_warnings": converter_residue_warnings,
         "source_boundary_errors": source_boundary_errors,
+        "template_errors": template_errors,
         "scholarly_warnings": scholarly_warnings,
         "source_order_normalized_text_exact_match": source_match,
         "source_order_compatibility_text_match": compatibility_source_match,
@@ -623,6 +641,7 @@ def main() -> int:
         or missing_local_links
         or parser.html_validity_errors
         or source_boundary_errors
+        or template_errors
         or parser.executable_links
         or parser.navigation_hazards
         or (parser.remote_dependencies and not args.allow_remote)

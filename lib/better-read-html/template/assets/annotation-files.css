@@ -1,0 +1,13 @@
+.ink-tools { flex-wrap:wrap; }
+.ink-menu { position:fixed; inset:auto; margin:0; width:240px; max-width:calc(100vw - 24px); padding:8px; border:1px solid var(--control-border); border-radius:6px; background:white; color:var(--ui-ink); box-shadow:0 6px 24px #0002; font:14px/1.5 system-ui; }
+.ink-file-name { padding:4px 8px 8px; font-weight:600; overflow-wrap:anywhere; }
+.ink-menu button, .viewer-bar .ink-menu button { display:block; width:100%; height:auto; padding:7px 8px; border:0; text-align:left; border-radius:3px; font-size:14px; }
+.ink-menu button:hover { background:var(--hover); }
+.ink-menu button:disabled { opacity:.4; cursor:default; }
+.ink-menu button[hidden], .ink-file-error[hidden] { display:none; }
+.ink-more[data-state="error"] { border-color:#b53a34; color:#b53a34; }
+.ink-file-error { flex-basis:100%; max-width:310px; padding:4px 0; font:12px/1.5 system-ui; color:#b53a34; }
+@media(max-width:600px) {
+ .toolbar .ink-tools { position:fixed; top:58px; left:12px; right:12px; justify-content:center; }
+}
+@media print { .ink-menu { display:none!important; } }
