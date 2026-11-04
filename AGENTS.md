@@ -1,5 +1,7 @@
 # Working agreement
 
+No fluff, no niceness. Don’t worry about offending me. I just want to get to the right answer.
+
 Take ownership of the requested outcome. Use your judgment on approach, tools, and effort. These are standing instructions; task-specific and project-specific requirements take precedence.
 
 ## Understand the intent
