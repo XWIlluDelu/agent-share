@@ -951,8 +951,9 @@ def validate_library(unit: Path, *, privacy_only: bool = False) -> tuple[list[st
             elif progress == "done" and covers:
                 if unit_files is None:
                     unit_files = _list_unit_files(unit)
-                if not any(glob_match(f, pat) for f in unit_files for pat in covers):
-                    warnings.append(f"done spec has covers globs matching no files: {rel} ({covers})")
+                unmatched = [pat for pat in covers if not any(glob_match(f, pat) for f in unit_files)]
+                if unmatched:
+                    warnings.append(f"done spec has covers globs matching no files: {rel} ({unmatched})")
 
             spec_nodes.append({
                 "path": rel,

@@ -118,13 +118,14 @@ Generate the target project's `AGENTS.md` by concatenating linked
 
 When a fragment fits multiple tiers, use the most specific tier. Wrap each
 fragment with boundary comments naming its `.agents/fragments/...` source.
-Rebuild marker-owned `AGENTS.md` from the current fragment contents on every
-setup update, even when the link set did not change. If the first nonblank line
-is not the exact marker, treat the file as handwritten: do not overwrite it
-unless the user asks; report the migration plan. Root-level `AGENT-*.md` files
-are legacy inputs only: do not create new ones, and do not include them in
-generation unless the project has not yet been migrated and
-`.agents/fragments/` is empty.
+When the request includes instruction setup or sync, rebuild marker-owned
+`AGENTS.md` from the current fragment contents even if the link set did not
+change; for skills-only requests, skip this section and leave existing
+instruction files untouched. If the first nonblank line is not the exact
+marker, treat the file as handwritten: do not overwrite it unless the user
+asks; report the migration plan. Root-level `AGENT-*.md` files are legacy
+inputs only: do not create new ones, and do not include them in generation
+unless the project has not yet been migrated and `.agents/fragments/` is empty.
 
 ## Instruction aliases
 
@@ -151,8 +152,9 @@ Before reporting completion, verify:
 
 - every new skill, fragment, platform bridge, and alias symlink resolves to the
   exact expected target;
-- marker-owned `AGENTS.md` equals the current fragments in the declared order,
-  including only the fixed marker and boundary comments outside fragment text;
+- when `AGENTS.md` was generated or synced, marker-owned `AGENTS.md` equals the
+  current fragments in the declared order, including only the fixed marker and
+  boundary comments outside fragment text;
 - a second generation pass produces no diff;
 - skipped conflicts and handwritten files are byte-unchanged.
 

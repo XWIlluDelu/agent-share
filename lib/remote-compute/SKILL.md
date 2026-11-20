@@ -87,17 +87,19 @@ tool's own downloader, not hand-fetched files: layouts often include marker
 files the tool checks. Verify from the tool's perspective by running the
 real entrypoint once against the staged data.
 
-Validation is a ladder, and only the top rung counts:
+Validation is a ladder, and only the top rung proves the invocation shape:
 
 1. Import or `--version` exits 0 — cheap, catches almost nothing.
 2. A tiny end-to-end run on toy input — catches GPU/library/cache
    mismatches.
-3. The exact invocation you intend to use, verbatim — catches wrong flags,
-   config files that override the command line, and paths that exist but
-   lack what the tool checks for.
+3. The intended entrypoint, config, and key flags on a small or bounded input
+   writing to an isolated output path — catches wrong flags, config files that
+   override the command line, and paths that exist but lack what the tool
+   checks for, without duplicating a multi-hour job or clobbering outputs.
 
-Run rung 3 before building real work on the environment, and again after
-any rebuild.
+Run rung 3 before building real work on the environment, and again after any
+rebuild. Checks that only full input can exercise (full-scale memory, walltime,
+long-run checkpointing) run on the first real execution, whose outputs are kept.
 
 ## Move code and data
 

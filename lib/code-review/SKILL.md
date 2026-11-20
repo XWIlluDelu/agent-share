@@ -110,9 +110,13 @@ reader to reproduce the judgment:
 
 Re-read every cited location in context before reporting it. Reject behavior
 that is intentional, unreachable speculation, preference without maintenance
-cost, and findings already contradicted by tests or project decisions. Merge
-symptoms that share one root cause. Do not pad the report with quotas, health
-scores, fixed file-size rules, generic missing-doc advice, or style nits.
+cost, and findings whose claimed mechanism is disproved by tests or already
+settled by project decisions. Distinguish a test that disproves the triggering
+path (withdraw the finding) from a test that merely asserts the flagged
+behavior (check requirements and callers to determine whether the behavior is
+intentional or both implementation and test need fixing). Merge symptoms that
+share one root cause. Do not pad the report with quotas, health scores, fixed
+file-size rules, generic missing-doc advice, or style nits.
 
 Prioritize by consequence, breadth, confidence, fix cost, and fix risk. A short
 set of high-value findings is better than exhaustive low-value commentary, but

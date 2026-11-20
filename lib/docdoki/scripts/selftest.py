@@ -75,6 +75,7 @@ def main() -> int:
         run("git", "init", "-q", cwd=unit)
         write(unit / ".gitignore", "/docdoki/private/\n")
         write(unit / "src/export.py", "def export(): pass\n")
+        write(unit / "src/validate.py", "def validate(): pass\n")
         write(unit / "docdoki/northstar.md", "# Northstar\n\n## Mission\n\nLocal CSV tools.\n")
         write(unit / "docdoki/overview.md", "# Overview\n\n## Open decisions\n\n- Decide LF policy.\n")
         public = write(
@@ -83,7 +84,7 @@ def main() -> int:
         )
         write(
             unit / "docdoki/specs/validate.md",
-            "---\npurpose: Validate rows.\narea: IO\nafter: [export]\nprogress: done\ncovers: [src/missing.py]\n---\n# Validation\n\n## Goal\n\n- Check types.\n",
+            "---\npurpose: Validate rows.\narea: IO\nafter: [export]\nprogress: done\ncovers: [src/validate.py, src/missing.py]\n---\n# Validation\n\n## Goal\n\n- Check types.\n",
         )
         write(
             unit / "docdoki/work/atomic-export.md",
@@ -100,7 +101,10 @@ def main() -> int:
 
         errors, warnings = validate_library(unit)
         assert_true(errors == [], f"valid library has no errors (got {errors})")
-        assert_true(any("covers globs matching no files" in w for w in warnings), "done spec with unmatched covers emits warning")
+        assert_true(
+            any("covers globs matching no files" in w and "src/missing.py" in w and "src/validate.py" not in w for w in warnings),
+            f"done spec with partial unmatched covers warns only on unmatched globs (got {warnings})",
+        )
         assert_true(check_privacy(unit) == [], "privacy_only passes on valid library")
 
         # --for lookup

@@ -169,7 +169,10 @@ whether a skill should exist.
 1. Update the manifest name and any affected provenance or notes.
 2. Rename `lib/<old-name>/` to `lib/<new-name>/`.
 3. If the skill is `always-on`, replace `skills/<old-name>` with
-   `skills/<new-name> -> ../lib/<new-name>`.
+   `skills/<new-name> -> ../lib/<new-name>`. Note affected per-skill links in
+   known runtime roots (roots linked as a directory to `~/.agent-share/skills`
+   follow automatically); if runtime sync is in scope, migrate those per-skill
+   links as well.
 4. Remove stale references to the old name.
 5. Run the audit checklist.
 
