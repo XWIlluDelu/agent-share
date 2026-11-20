@@ -102,6 +102,16 @@ class AuditTests(unittest.TestCase):
         path.write_text(skill_text("demo").replace("description:", "unexpected-field: true\ndescription:"))
         self.error("Unexpected key(s)")
 
+    def test_duplicate_frontmatter_key_is_an_error(self):
+        path = self.root / "lib/demo/SKILL.md"
+        path.write_text(
+            skill_text("demo").replace(
+                "description:",
+                "disable-model-invocation: false\ndisable-model-invocation: true\ndescription:",
+            )
+        )
+        self.error("Duplicate YAML mapping key")
+
     def test_git_metadata_is_not_skill_content(self):
         path = self.root / "lib/demo/.git"
         path.mkdir()

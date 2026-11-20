@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 import html.parser
 import json
 import re
@@ -393,27 +393,41 @@ def first_mismatch(a: str, b: str) -> dict[str, object]:
     }
 
 
-def css_dependencies(css_parts: list[str]) -> tuple[list[str], list[str], list[str]]:
+CSS_IMPORT_RE = re.compile(
+    r'''@import(?:\s+url\(\s*(?:"([^"]+)"|'([^']+)'|([^)\s]+))\s*\)|\s*(?:"([^"]+)"|'([^']+)'))''',
+    re.I,
+)
+CSS_URL_RE = re.compile(r'''url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]*))\s*\)''', re.I | re.S)
+
+
+def css_dependencies(css_parts: list[str]) -> tuple[list[str], list[str], list[str], list[str]]:
     remote: list[str] = []
-    local: list[str] = []
+    local_assets: list[str] = []
+    local_imports: list[str] = []
     inline: list[str] = []
 
-    def record(url: str, *, allow_inline_image: bool = False) -> None:
-        kind, value = classify_asset_url(url, allow_inline_image=allow_inline_image)
+    def record(url: str, *, is_import: bool = False) -> None:
+        kind, value = classify_asset_url(url, allow_inline_image=not is_import)
         if kind in {"remote", "executable"}:
             remote.append(value)
         elif kind == "inline":
             inline.append(value)
         elif kind == "local":
-            local.append(value)
+            (local_imports if is_import else local_assets).append(value)
 
     for css in css_parts:
-        css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
-        for match in re.finditer(r'''@import\s+(?:url\(\s*)?(["']?)([^"')\s;]+)\1''', css, re.I):
-            record(match.group(2))
-        for match in re.finditer(r'''url\(\s*(["']?)(.*?)\1\s*\)''', css, re.I | re.S):
-            record(match.group(2), allow_inline_image=True)
-    return remote, local, inline
+        css = re.sub(r"/\*.*?\*/", " ", css, flags=re.S)
+        import_spans: list[tuple[int, int]] = []
+        for match in CSS_IMPORT_RE.finditer(css):
+            import_spans.append((match.start(), match.end()))
+            url = next(group for group in match.groups() if group is not None)
+            record(url, is_import=True)
+        for match in CSS_URL_RE.finditer(css):
+            if any(start <= match.start() < end for start, end in import_spans):
+                continue
+            url = next(group for group in match.groups() if group is not None)
+            record(url)
+    return remote, local_assets, local_imports, inline
 
 
 def main() -> int:
@@ -434,23 +448,49 @@ def main() -> int:
     parser.feed(html_path.read_text(encoding="utf-8"))
     parser.close()
 
-    css_remote, css_local, css_inline = css_dependencies(parser.style_blocks + parser.inline_styles)
+    css_remote, css_local, css_imports, css_inline = css_dependencies(parser.style_blocks + parser.inline_styles)
     parser.remote_dependencies.extend(css_remote)
     parser.assets.extend(css_local)
+    parser.assets.extend(css_imports)
     parser.inline_data_assets.extend(css_inline)
-    # Linked local stylesheets count as page CSS; their url() references resolve against the stylesheet.
+    # Linked and imported local stylesheets count as page CSS; each stylesheet resolves relative URLs against itself.
+    html_root = html_path.parent.resolve()
+
+    def css_label(path: Path) -> str:
+        try:
+            return path.resolve().relative_to(html_root).as_posix()
+        except ValueError:
+            return path.as_posix()
+
     linked_css: list[str] = []
     missing_css_assets: list[str] = []
-    for href in sorted(set(parser.stylesheets)):
-        css_path = local_candidate(html_path, href)
+    css_queue: deque[tuple[str, Path]] = deque(
+        (href, local_candidate(html_path, href))
+        for href in sorted(set(parser.stylesheets) | set(css_imports))
+    )
+    visited_css: set[Path] = set()
+    while css_queue:
+        label, css_path = css_queue.popleft()
         if not css_path.is_file():
             continue
+        resolved = css_path.resolve()
+        if resolved in visited_css:
+            continue
+        visited_css.add(resolved)
         css_text = css_path.read_text(encoding="utf-8", errors="replace")
         linked_css.append(css_text)
-        remote, local, inline = css_dependencies([css_text])
+        remote, local_assets, local_imports, inline = css_dependencies([css_text])
         parser.remote_dependencies.extend(remote)
         parser.inline_data_assets.extend(inline)
-        missing_css_assets.extend(f"{href}: {ref}" for ref in local if not local_candidate(css_path, ref).exists())
+        for ref in local_assets:
+            if not local_candidate(css_path, ref).exists():
+                missing_css_assets.append(f"{label}: {ref}")
+        for imp in local_imports:
+            imp_path = local_candidate(css_path, imp)
+            if not imp_path.is_file():
+                missing_css_assets.append(f"{label}: {imp}")
+            else:
+                css_queue.append((css_label(imp_path), imp_path))
     style_text = "\n".join([*parser.style_blocks, *parser.inline_styles, *linked_css])
 
     ids = set(parser.ids)

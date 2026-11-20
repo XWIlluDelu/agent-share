@@ -7,7 +7,6 @@ A listed local diff still needs review against manifest notes.
 
 import argparse
 import hashlib
-import importlib.util
 import io
 import os
 from pathlib import Path, PurePosixPath
@@ -17,44 +16,15 @@ import sys
 import tarfile
 
 sys.dont_write_bytecode = True
+_HERE = str(Path(__file__).resolve().parent)
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 try:
     import yaml
 except ImportError:
     raise SystemExit("PyYAML is required. Run with a Python environment containing PyYAML.")
 
-
-def load_validator(validator_path):
-    """Load bundled quick_validate.py in-process without mutating files on disk."""
-    scripts_dir = str(validator_path.parent)
-    prev_frontmatter = sys.modules.pop("frontmatter", None)
-    sys.path.insert(0, scripts_dir)
-    try:
-        spec = importlib.util.spec_from_file_location("_quick_validate", validator_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-    finally:
-        if sys.path and sys.path[0] == scripts_dir:
-            sys.path.pop(0)
-        sys.modules.pop("frontmatter", None)
-        if prev_frontmatter is not None:
-            sys.modules["frontmatter"] = prev_frontmatter
-    # Pi and Claude Code both honor this explicit-invocation control.
-    module.ALLOWED_PROPERTIES = set(module.ALLOWED_PROPERTIES) | {"disable-model-invocation"}
-    return module.validate_skill
-
-
-class UniqueLoader(yaml.SafeLoader):
-    """Reject duplicate keys rather than silently losing registry entries."""
-
-    def construct_mapping(self, node, deep=False):
-        keys = [self.construct_object(key, deep=deep) for key, _ in node.value]
-        if len(keys) != len(set(keys)):
-            raise ValueError("Duplicate YAML mapping key")
-        return super().construct_mapping(node, deep=deep)
-
-
-def load_yaml(text):
-    return yaml.load(text, Loader=UniqueLoader)
+from skill_validation import load_validator, load_yaml, validate_skill_directory
 
 
 def git(repo, *args):
@@ -160,20 +130,8 @@ def audit(root, sources=False, runtimes=()):
         directory = root / "lib" / name
         if not require(directory.is_dir() and not directory.is_symlink() and (directory / "SKILL.md").is_file() and not (directory / "SKILL.md").is_symlink(), f"{name}: missing canonical lib/{name}/SKILL.md (materialize source-backed skills first)"):
             continue
-        text = (directory / "SKILL.md").read_text(encoding="utf-8")
-        match = re.match(r"\A---\n(.*?)\n---(?:\n|$)", text, re.DOTALL)
-        metadata = load_yaml(match[1]) if match else None
-        if isinstance(metadata, dict):
-            require(metadata.get("name") == name, f"{name}: frontmatter name mismatch")
-            description = metadata.get("description")
-            require(isinstance(description, str) and bool(description.strip()), f"{name}: empty/non-string description")
-            if "disable-model-invocation" in metadata:
-                require(type(metadata["disable-model-invocation"]) is bool, f"{name}: disable-model-invocation must be a boolean")
-        else:
-            errors.append(f"{name}: invalid frontmatter")
-        if validate_skill is not None:
-            valid, message = validate_skill(directory)
-            require(valid, f"{name}: {message}")
+        for err in validate_skill_directory(directory, expected_name=name, validate_skill=validate_skill):
+            errors.append(f"{name}: {err}")
         local = local_tree(directory)
         for relative, info in local.items():
             require(".git" not in PurePosixPath(relative).parts, f"{name}/{relative}: repository internals in skill")

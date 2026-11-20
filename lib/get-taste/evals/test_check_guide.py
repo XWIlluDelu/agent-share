@@ -44,6 +44,30 @@ class GuideChecks(unittest.TestCase):
         self.assertTrue(any("Duplicate definitions: a" in x for x in result["errors"]))
         self.assertTrue(any("Unreferenced definitions: a" in x for x in result["errors"]))
 
+    def test_empty_and_multiline_footnote_definitions(self):
+        empty = check_text("Claim.[^a]\n## References\n[^a]:\n")
+        self.assertEqual(empty["reference_entries"], 0)
+        self.assertTrue(any("Empty definitions: a" in x for x in empty["errors"]))
+
+        comment_only = check_text("Claim.[^a]\n## References\n[^a]: <!-- todo -->\n")
+        self.assertEqual(comment_only["reference_entries"], 0)
+        self.assertTrue(any("Empty definitions: a" in x for x in comment_only["errors"]))
+
+        mixed = check_text("One.[^a] Two.[^b]\n## References\n[^a]:\n[^b]: Real source.\n")
+        self.assertEqual(mixed["reference_entries"], 1)
+        self.assertTrue(any("Empty definitions: a" in x for x in mixed["errors"]))
+
+        for body in [
+            "Claim.[^a]\n## References\n[^a]:\n    Author (2024). Title.\n",
+            "Claim.[^a]\n## References\n[^a]:\n\n    Author (2024). Title.\n",
+            "Claim.[^a]\n## References\n[^a]:\n  Author (2024). Title.\n",
+            "Claim.[^a]\n## References\n[^a]: `code-only-source`\n",
+        ]:
+            with self.subTest(body=body):
+                result = check_text(body)
+                self.assertEqual(result["reference_entries"], 1)
+                self.assertFalse(result["errors"])
+
     def test_frontmatter_comments_and_hyphenated_words(self):
         text = ("---\r\ntitle: Metadata not counted\r\n---\r\n<!-- hidden prose -->\r\n"
                 "# Guide\r\nHeld-out results.[^a]\r\n```\r\n<!-- kept -->\r\n```\r\n## References\r\n[^a]: Source.")

@@ -83,6 +83,44 @@ def count_words(text):
     return len(WORDS.findall(text))
 
 
+def parse_footnote_definitions(lines, masked):
+    """Return (all_keys, non_empty_count, empty_keys) for Markdown footnotes.
+
+    A definition has content if non-whitespace text appears on its opening line
+    (after HTML comments are stripped) or on subsequent indented continuation
+    lines before the next footnote definition, heading, or unindented text.
+    """
+    all_keys = []
+    empty_keys = []
+    non_empty_count = 0
+    for i, line in enumerate(masked):
+        match = re.match(r"^ {0,3}\[\^([^\]]+)\]:(.*)$", line)
+        if not match:
+            continue
+        key = match[1]
+        all_keys.append(key)
+        prose_match = re.match(r"^ {0,3}\[\^([^\]]+)\]:(.*)$", lines[i])
+        has_content = bool(prose_match and prose_match[2].strip())
+        if not has_content:
+            j = i + 1
+            while j < len(lines):
+                if not lines[j].strip() and not masked[j].strip():
+                    j += 1
+                    continue
+                if re.match(r"^ {0,3}\[\^([^\]]+)\]:", masked[j]):
+                    break
+                if re.match(r"^ {0,3}#{1,6}\s+", masked[j]):
+                    break
+                if re.match(r"^(?:\t| {2,})\S", lines[j]):
+                    has_content = True
+                break
+        if has_content:
+            non_empty_count += 1
+        else:
+            empty_keys.append(key)
+    return all_keys, non_empty_count, empty_keys
+
+
 def check_text(text, budget=4000, references_heading=None):
     text = text.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"\A---\s*\n.*?\n---(?:\s*\n|\s*\Z)", "", text, count=1, flags=re.S)
@@ -103,13 +141,14 @@ def check_text(text, budget=4000, references_heading=None):
         errors.append("Multiple bibliography headings found; body boundary is ambiguous.")
     boundary, title = boundaries[0] if boundaries else (len(lines), None)
     syntax = "\n".join(masked)
-    definitions = re.findall(r"^ {0,3}\[\^([^\]]+)\]:", syntax, re.M)
+    definitions, non_empty_count, empty_defs = parse_footnote_definitions(lines, masked)
     citations = re.findall(r"\[\^([^\]]+)\](?!:)", syntax)
     duplicate = sorted(k for k, n in Counter(definitions).items() if n > 1)
     missing = sorted(set(citations) - set(definitions))
     unused = sorted(set(definitions) - set(citations))
+    empty = sorted(set(empty_defs))
     for label, keys in [("Duplicate definitions", duplicate), ("Undefined citations", missing),
-                        ("Unreferenced definitions", unused)]:
+                        ("Unreferenced definitions", unused), ("Empty definitions", empty)]:
         if keys:
             errors.append(f"{label}: {', '.join(keys)}")
     if any(re.match(r"^ {0,3}\[\^[^\]]+\]:", line) for line in masked[:boundary]):
@@ -119,7 +158,7 @@ def check_text(text, budget=4000, references_heading=None):
     return {
         "body_words": body_words,
         "bibliography_words": count_words("\n".join(lines[boundary + 1:])),
-        "reference_entries": len(definitions),
+        "reference_entries": non_empty_count,
         "reference_heading": title,
         "budget": budget,
         "words_over_budget": max(0, body_words - budget),

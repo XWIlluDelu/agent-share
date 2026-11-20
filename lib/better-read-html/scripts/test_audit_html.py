@@ -181,6 +181,45 @@ def test_linked_stylesheets_count_and_resolve_their_own_urls() -> None:
     assert bad_rc == 1 and bad["missing_referenced_assets"] == ["assets/page.css: fonts/a.woff2"], bad
 
 
+def test_css_import_chains_resolve_relative_assets_and_deduplicate_cycles() -> None:
+    body = '<link rel="stylesheet" href="assets/a.css"><main id="main"><p>body</p></main>'
+    a_css = '@import "sub/b.css";'
+    b_css = '@import "../a.css"; .bg{background:url("bg.png")}'
+    bad, bad_rc = audit_result(body, "--strict", files={"assets/a.css": a_css, "assets/sub/b.css": b_css})
+    assert bad_rc == 1, bad
+    assert bad["missing_referenced_assets"] == ["assets/sub/b.css: bg.png"], bad
+
+    good, good_rc = audit_result(
+        body,
+        "--strict",
+        files={"assets/a.css": a_css, "assets/sub/b.css": b_css, "assets/sub/bg.png": "img"},
+    )
+    assert good_rc == 0, good
+    assert not good["missing_referenced_assets"], good
+
+    inline_body = '<style>@import url("assets/a.css");</style><main id="main"><p>body</p></main>'
+    inline_bad, inline_rc = audit_result(
+        inline_body,
+        "--strict",
+        files={"assets/a.css": '@import "sub/b.css";', "assets/sub/b.css": '@import "https://cdn.example/x.css";'},
+    )
+    assert inline_rc == 1, inline_bad
+    assert inline_bad["remote_dependencies"] == ["https://cdn.example/x.css"], inline_bad
+
+    missing_imp, missing_rc = audit_result(
+        body,
+        "--strict",
+        files={"assets/a.css": '@import "missing.css";'},
+    )
+    assert missing_rc == 1, missing_imp
+    assert missing_imp["missing_referenced_assets"] == ["assets/a.css: missing.css"], missing_imp
+
+    for css_text in ('@import"missing.css";', "@import'missing.css';", '@import/*c*/url("missing.css");'):
+        compact, compact_rc = audit_result(body, "--strict", files={"assets/a.css": css_text})
+        assert compact_rc == 1, (css_text, compact)
+        assert compact["missing_referenced_assets"] == ["assets/a.css: missing.css"], (css_text, compact)
+
+
 def test_evidence_notes_must_be_referenced_sourced_and_named_by_content() -> None:
     good, rc = audit_result(
         '<main id="main"><p id="p1">Claim.<a class="ev-ref" href="#ev-claim"></a></p>'

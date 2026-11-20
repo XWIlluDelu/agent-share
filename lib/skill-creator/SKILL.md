@@ -99,15 +99,22 @@ evidence when they are not.
    a test portion, and select the description by held-out score. Automated:
    `(cd <library-dir>/anthropic-skill-creator && python3 -m scripts.run_loop
    ...)` (needs the agent CLI). Without it, run the same loop by hand.
-9. **Package:** `(cd <library-dir>/anthropic-skill-creator && python3 -m
-   scripts.package_skill <skill-folder> <output-dir>)` when a `.skill` artifact
-   is wanted. Always choose an explicit output directory outside the bundled
-   creator so packaging cannot write into the official source copy.
+9. **Package:** `python3 <library-dir>/skill-creator/scripts/package_skill.py
+   <skill-folder> <output-dir>` (using a Python environment containing PyYAML,
+   such as `.venv/bin/python` in `.agent-share`) when a `.skill` artifact is
+   wanted. This wrapper reuses `skill-manager/scripts/skill_validation.py` so
+   packaging enforces the exact same PyYAML frontmatter rules as library audit
+   (including duplicate-key rejection, non-empty string `name`/`description`,
+   `name == <folder>`, and boolean `disable-model-invocation`), delegates
+   archive creation to `anthropic-skill-creator/scripts/package_skill.py`
+   without patching it, and refuses output directories inside the bundled
+   creators.
 
 ## Routing
 
 | Need | Go to |
 |---|---|
 | Scaffold, structure, naming, degrees of freedom, validate | `openai-skill-creator/` |
-| Test cases, grading, benchmarks, viewer, blind compare, description optimization, packaging | `anthropic-skill-creator/` |
+| Test cases, grading, benchmarks, viewer, blind compare, description optimization | `anthropic-skill-creator/` |
+| Packaging (preserving library-supported invocation controls) | `scripts/package_skill.py` (wraps `anthropic-skill-creator/`) |
 | Progressive disclosure, anatomy, description-as-trigger | either; `openai-skill-creator/` is canonical |

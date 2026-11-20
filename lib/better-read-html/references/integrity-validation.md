@@ -64,7 +64,7 @@ judgment and never authorize canonical text rewrites.
 - **Dependencies & navigation:** flag unauthorized remote render dependencies
   (scripts, stylesheets, fonts, iframes, media, CSS `url()`/`@import`,
   `srcset`, `<object>`), executable links, missing local links/assets (including
-  URLs inside linked local stylesheets), `<base href>`, and meta refresh.
+  URLs and local `@import` chains inside stylesheets), `<base href>`, and meta refresh.
 - **Readability & layout:** visible `:focus-visible` and `:target` styles when
   anchored, `.table-responsive` / `overflow-x: auto` wrappers for wide tables,
   print stylesheet (`@media print`), no duplicate noncanonical hero, no
