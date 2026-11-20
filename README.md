@@ -84,22 +84,16 @@ python3 -m venv --without-pip .venv
 python3 -m pip --python .venv install 'PyYAML>=6,<7'
 ```
 
-The audit reuses the bundled basic skill validator, adding compatibility for
-boolean `disable-model-invocation` in the checker process, not its files. This
-preserves explicit invocation in supporting hosts (including Pi and Claude
-Code); prose remains a fallback elsewhere. The checks themselves do not fetch,
-install, repair, or generate files:
+The default audit checks the registry, installed skills, and discovery links.
+Audit and packaging share frontmatter validation for the Agent Skills format
+and the boolean `disable-model-invocation` field supported by Pi and Claude Code.
 
 ```bash
 .venv/bin/python -B lib/skill-manager/scripts/audit.py
-.venv/bin/python -B lib/skill-manager/scripts/audit.py --sources
-.venv/bin/python -B lib/skill-manager/scripts/audit.py --runtime "$HOME/.pi/agent/skills"
-.venv/bin/python -B -m unittest discover -s lib/skill-manager/scripts -p 'test_*.py'
 ```
 
-The source check compares bytes, executable bits, and symlink targets against
-pinned Git trees. It reports normalized differences for review; it cannot
-prove that prose notes authorize every changed line or that a skill performs
-well. Run relevant bundled tests and inspect changed behavior as part of an
-update. Audits return nonzero on structural errors and leave other runtime
-payloads alone.
+Add `--runtime <skill-root>` to verify a runtime's links. For a library-wide
+provenance review, use `--sources` to compare installed files, executable bits,
+and symlink targets with pinned Git trees. Review reported differences against
+the manifest notes. For a routine update, compare the affected skills against
+their pins and check the changed behavior. Audits are read-only.

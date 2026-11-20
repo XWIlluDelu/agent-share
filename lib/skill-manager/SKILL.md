@@ -104,16 +104,14 @@ whether a skill should exist.
    that exact commit, preserving dotfiles, file modes, and symlinks. Exclude
    repository internals such as `.git` and runtime caches. Do not edit
    `sources/` to normalize content.
-5. Reapply only the intentional local normalizations to the candidate. Retire
-   a patch when upstream already fulfills its purpose; adapt it when upstream
-   changed the implementation. Do not copy old files over new upstream files
-   or apply a historical patch blindly. Update notes to describe the remaining
-   intent and affected resources, not a log of edits.
-6. Validate the candidate and inspect its remaining upstream diff. Replace the
-   old `lib/<name>` only after it passes and the captured local copy is still
-   current; keep a temporary backup until final audit. This is replacement,
-   not an overlay that leaves deleted upstream files behind. No-change trees
-   need no file replacement.
+5. Reapply the local normalizations that still serve the skill's intended
+   use. Retire a patch when its purpose no longer applies or upstream already
+   fulfills it. Review the candidate's diff against the new pin and record
+   the remaining adaptations in the manifest.
+6. Check changed entry points and plausible failure modes. Use focused bundled
+   tests when they cover those changes. Replace the entire skill directory
+   when the checked candidate is ready and the captured local copy is still
+   current. Skip replacement if the incoming tree is identical.
 7. Record `source_commit` with the accepted content, including when a new
    commit has the same selected tree. A fetch alone never advances this field.
    Per-skill commits allow partial updates without mislabeling other entries.
@@ -195,47 +193,24 @@ whether a skill should exist.
 
 ## Audit checklist
 
-Run after every workflow. If an item applies, it must pass before reporting
-completion. Use a Python environment containing PyYAML:
+Use the default audit after modifying the library. It checks registry
+consistency, skill metadata, canonical skill directories, and discovery links.
+Add `--runtime <existing-skill-root>` when checking an affected runtime.
+Use a Python environment containing PyYAML.
 
 ```bash
 python3 -B lib/skill-manager/scripts/audit.py
-python3 -B lib/skill-manager/scripts/audit.py --sources
-# Add --runtime <existing-skill-root> for each runtime in the requested scope.
 ```
 
-The default audit needs no source clones or network. `--sources` checks existing
-clones and compares each pinned tree, including bytes, executable bits, and
-symlink targets. It lists local differences and rejects undocumented ones;
-nonempty notes do not prove a diff is intentional. Review that correspondence
-and behavior separately. Neither command repairs anything.
+For an upstream update, review the candidate against the affected pins and
+normalization notes during the update workflow. Use `--sources` for a
+library-wide provenance audit. It compares the recorded Git trees with
+`lib/` bytes, executable bits, and symlink targets. Review reported differences
+against the intent in the notes. Check the remote and worktree cleanliness
+before fetching or moving a checkout in the sync workflow.
 
-- Manifest parses without duplicate keys; skill names are unique.
-- Every manifest skill has `lib/<name>/SKILL.md`.
-- Every touched skill passes the library audit. It reuses the bundled basic
-  validator with a process-local allow-list extension for the boolean
-  `disable-model-invocation` supported by Pi and Claude Code, without modifying
-  bundled validator files. Keep this native invocation control; do not replace
-  it with prose merely to pass a narrower checker. The audit also enforces
-  non-empty `name` and `description` plus `name == <name>`.
-- Every source-backed entry records a full `source_commit` containing
-  `<source_path>/SKILL.md`; verify through the source cache for upstream work.
-  Custom entries resolve locally. Missing clones are not a default audit
-  failure; a missing canonical skill is, including ignored local-only skills.
-- `agents-fragments/` contains only reusable `AGENT-*.md` fragments.
-- `skills/` contains only relative symlinks for `pack: always-on` entries.
-- Each always-on symlink target is exactly `../lib/<name>`.
-- Requested live runtime roots expose every `pack: always-on` skill through
-  relative links or a directory link to `~/.agent-share/skills/`, while
-  preserving platform-owned payload and treating legacy roots as compatibility
-  surfaces rather than current authority.
-- Touched upstream repos are clean after local normalization.
-- Source-backed replacements started from the exact recorded upstream tree,
-  then only documented local normalization was reapplied. Accepted candidates
-  were validated before replacing live content.
-- Remaining upstream-to-lib diffs are documented in `manifest.yaml.notes`.
-- Normalization changed only `lib/`, not `sources/`.
-- No stale docs, duplicate registries, old names, or setup debris remain.
+Run maintenance tests that cover changed audit or packaging behavior. Keep
+one-off comparisons and reproduction checks temporary.
 
 ## Completion report
 

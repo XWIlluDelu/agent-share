@@ -22,13 +22,11 @@ def _load_shared_validation(library_dir: Path):
     return importlib.import_module("skill_validation")
 
 
-def _load_creator_modules(anthropic_dir: Path):
+def _load_packager(anthropic_dir: Path):
     anthropic_str = str(anthropic_dir)
     if anthropic_str not in sys.path:
         sys.path.insert(0, anthropic_str)
-    quick_validate = importlib.import_module("scripts.quick_validate")
-    package_mod = importlib.import_module("scripts.package_skill")
-    return quick_validate, package_mod
+    return importlib.import_module("scripts.package_skill")
 
 
 def package_skill(skill_path: str | Path, output_dir: str | Path | None = None) -> Path | None:
@@ -50,13 +48,11 @@ def package_skill(skill_path: str | Path, output_dir: str | Path | None = None) 
             return None
 
     shared = _load_shared_validation(library_dir)
-    quick_validate, package_mod = _load_creator_modules(anthropic_dir)
-    orig_allowed = quick_validate.ALLOWED_PROPERTIES
+    package_mod = _load_packager(anthropic_dir)
     orig_validate = package_mod.validate_skill
-    bundled_validate = shared.extend_validator_module(quick_validate)
 
     def validate_for_package(path: str | Path) -> tuple[bool, str]:
-        errors = shared.validate_skill_directory(Path(path), validate_skill=bundled_validate)
+        errors = shared.validate_skill_directory(Path(path))
         return (False, "; ".join(errors)) if errors else (True, "Skill is valid!")
 
     package_mod.validate_skill = validate_for_package
@@ -64,7 +60,6 @@ def package_skill(skill_path: str | Path, output_dir: str | Path | None = None) 
         return package_mod.package_skill(skill_path, target_output)
     finally:
         package_mod.validate_skill = orig_validate
-        quick_validate.ALLOWED_PROPERTIES = orig_allowed
 
 
 def main(argv: list[str] | None = None) -> int:

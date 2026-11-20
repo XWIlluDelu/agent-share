@@ -71,15 +71,10 @@ evidence when they are not.
    when to use it, and make it a little pushy to counter under-triggering. Keep
    the body lean (<500 lines) and push detail into `references/`. Anatomy and
    writing patterns: `openai-skill-creator/SKILL.md`.
-5. **Validate:** `python3
-   <library-dir>/openai-skill-creator/scripts/quick_validate.py <skill-folder>`.
-   Treat that bundled check as basic validation: also confirm `name` and
-   `description` are non-empty and the skill name matches its folder, as the
-   portable Agent Skills contract requires. Do not patch the bundled creator to
-   change its policy; enforce wrapper-level requirements here. In managed
-   libraries, use the `skill-manager` audit for supported invocation extensions
-   such as `disable-model-invocation`; retain native controls rather than
-   deleting them to satisfy the basic checker's narrower field list.
+5. **Validate.** In managed libraries, use the `skill-manager` audit to check
+   frontmatter, including boolean `disable-model-invocation`. For standalone
+   skills, check the [Agent Skills format](https://agentskills.io/specification).
+   Test changed entry points when the task warrants it.
 6. **Evaluate.** Follow `anthropic-skill-creator/SKILL.md` "Running and
    evaluating test cases": write `evals/evals.json`, spawn with-skill and
    baseline runs in the same turn when independent runs are available, and
@@ -115,7 +110,7 @@ evidence when they are not.
 
 | Need | Go to |
 |---|---|
-| Scaffold, structure, naming, degrees of freedom, validate | `openai-skill-creator/` |
+| Scaffold, structure, naming, degrees of freedom | `openai-skill-creator/` |
 | Test cases, grading, benchmarks, viewer, blind compare, description optimization | `anthropic-skill-creator/` |
 | Packaging (preserving library-supported invocation controls) | `scripts/package_skill.py` (wraps `anthropic-skill-creator/`) |
 | Progressive disclosure, anatomy, description-as-trigger | either; `openai-skill-creator/` is canonical |

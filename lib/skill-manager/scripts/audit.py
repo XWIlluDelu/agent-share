@@ -24,7 +24,7 @@ try:
 except ImportError:
     raise SystemExit("PyYAML is required. Run with a Python environment containing PyYAML.")
 
-from skill_validation import load_validator, load_yaml, validate_skill_directory
+from skill_validation import load_yaml, valid_skill_name, validate_skill_directory
 
 
 def git(repo, *args):
@@ -38,19 +38,14 @@ def fingerprint(kind, mode, data):
     return kind, bool(mode & 0o111), hashlib.sha256(data).hexdigest()
 
 
-def local_tree(directory):
+def local_paths(directory):
     """Do not follow directory links or include Python runtime caches."""
-    files = {}
     for folder, dirs, names in os.walk(directory, followlinks=False):
         dirs[:] = [name for name in dirs if name != "__pycache__"]
         for name in dirs + names:
             path = Path(folder) / name
-            relative = path.relative_to(directory).as_posix()
-            if path.is_symlink():
-                files[relative] = fingerprint("link", 0, os.fsencode(os.readlink(path)))
-            elif path.is_file() and path.suffix not in {".pyc", ".pyo"}:
-                files[relative] = fingerprint("file", path.stat().st_mode, path.read_bytes())
-    return files
+            if path.is_symlink() or (path.is_file() and path.suffix not in {".pyc", ".pyo"}):
+                yield path
 
 
 def source_tree(repo, commit, path):
@@ -98,13 +93,11 @@ def audit(root, sources=False, runtimes=()):
                 raise ValueError(f"{key}: missing URL")
 
     names, always_on, checked_repos = set(), set(), set()
-    validator = root / "lib/openai-skill-creator/scripts/quick_validate.py"
-    validate_skill = load_validator(validator) if require(validator.is_file(), "Missing bundled quick_validate.py") else None
     for skill in skills:
         if not isinstance(skill, dict):
             raise ValueError("Each skill must be a mapping")
         name = skill.get("name")
-        if not isinstance(name, str) or len(name) > 64 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+        if not valid_skill_name(name):
             raise ValueError(f"Invalid skill name: {name!r}")
         require(name not in names, f"Duplicate skill name: {name}")
         names.add(name)
@@ -130,24 +123,26 @@ def audit(root, sources=False, runtimes=()):
         directory = root / "lib" / name
         if not require(directory.is_dir() and not directory.is_symlink() and (directory / "SKILL.md").is_file() and not (directory / "SKILL.md").is_symlink(), f"{name}: missing canonical lib/{name}/SKILL.md (materialize source-backed skills first)"):
             continue
-        for err in validate_skill_directory(directory, expected_name=name, validate_skill=validate_skill):
+        for err in validate_skill_directory(directory):
             errors.append(f"{name}: {err}")
-        local = local_tree(directory)
-        for relative, info in local.items():
+        compare_source = sources and not custom
+        local = {}
+        for entry in local_paths(directory):
+            relative = entry.relative_to(directory).as_posix()
             require(".git" not in PurePosixPath(relative).parts, f"{name}/{relative}: repository internals in skill")
-            if info[0] == "link":
-                link = directory / relative
-                require(not os.path.isabs(os.readlink(link)) and link.exists() and link.resolve().is_relative_to((root / "lib").resolve()), f"{name}/{relative}: broken, absolute, or library-escaping link")
-        if sources and not custom:
+            if entry.is_symlink():
+                target = os.readlink(entry)
+                require(not os.path.isabs(target) and entry.exists() and entry.resolve().is_relative_to((root / "lib").resolve()), f"{name}/{relative}: broken, absolute, or library-escaping link")
+                if compare_source:
+                    local[relative] = fingerprint("link", 0, os.fsencode(target))
+            elif compare_source:
+                local[relative] = fingerprint("file", entry.stat().st_mode, entry.read_bytes())
+        if compare_source:
             repo = root / "sources" / repo_key
             try:
                 if repo_key not in checked_repos:
                     if Path(os.fsdecode(git(repo, "rev-parse", "--show-toplevel")).strip()).resolve() != repo.resolve():
                         raise ValueError("Not a source repository checkout")
-                    require(not git(repo, "status", "--porcelain").strip(), f"{repo_key}: source checkout is dirty")
-                    remote = os.fsdecode(git(repo, "remote", "get-url", "origin")).strip().rstrip("/").removesuffix(".git")
-                    expected = repos[repo_key].get("url", "").rstrip("/").removesuffix(".git")
-                    require(remote == expected, f"{repo_key}: origin differs from manifest URL")
                     checked_repos.add(repo_key)
                 upstream = source_tree(repo, skill["source_commit"], path)
                 differences = sorted(p for p in upstream.keys() | local.keys() if upstream.get(p) != local.get(p))

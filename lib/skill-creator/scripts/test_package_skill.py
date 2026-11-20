@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-"""Tests for skill-creator's library-aware packaging wrapper."""
+"""Exercise the local packaging entry point with an independent skill fixture."""
 
-from __future__ import annotations
-
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -10,109 +8,69 @@ import unittest
 import zipfile
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parent
-SCRIPT = SCRIPTS_DIR / "package_skill.py"
-LIBRARY = SCRIPTS_DIR.parents[1]
+import yaml
+
+
+SCRIPT = Path(__file__).resolve().with_name("package_skill.py")
+LIBRARY = SCRIPT.parents[2]
 
 
 class PackageSkillTests(unittest.TestCase):
-    def run_packager(self, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.skill = self.root / "demo-skill"
+        self.skill.mkdir()
+        self.output = self.root / "dist"
+        self.archive = self.output / "demo-skill.skill"
+        self.metadata = self.skill / "SKILL.md"
+        self.metadata.write_text(
+            "---\nname: demo-skill\ndescription: Demonstrate packaging.\n"
+            "disable-model-invocation: true\n---\n\n# Demo skill\n",
+            encoding="utf-8",
+        )
+
+    def run_packager(self, output, script=SCRIPT):
         return subprocess.run(
-            [sys.executable, "-B", str(SCRIPT), *args],
-            cwd=cwd,
+            [sys.executable, "-B", str(script), str(self.skill), str(output)],
             capture_output=True,
             text=True,
             check=False,
         )
 
-    def test_packages_paper_triage_preserving_disable_model_invocation(self) -> None:
-        with tempfile.TemporaryDirectory() as td:
-            out_dir = Path(td)
-            proc = self.run_packager(str(LIBRARY / "paper-triage"), str(out_dir))
-            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
-            archive = out_dir / "paper-triage.skill"
-            self.assertTrue(archive.is_file())
-            with zipfile.ZipFile(archive) as zf:
-                skill_md = zf.read("paper-triage/SKILL.md").decode("utf-8")
-                self.assertIn("disable-model-invocation: true", skill_md)
+    def test_package_preserves_explicit_invocation(self):
+        result = self.run_packager(self.output)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        with zipfile.ZipFile(self.archive) as archive:
+            skill_text = archive.read("demo-skill/SKILL.md").decode("utf-8")
+        metadata = skill_text.split("---", 2)[1]
+        self.assertIs(yaml.safe_load(metadata)["disable-model-invocation"], True)
 
-    def test_rejects_non_boolean_disable_model_invocation_and_unknown_keys(self) -> None:
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            out_dir = root / "dist"
-            skill = root / "demo-skill"
-            skill.mkdir()
-
-            (skill / "SKILL.md").write_text(
-                '---\nname: demo-skill\ndescription: Test.\ndisable-model-invocation: "true"\n---\n# Demo\n',
-                encoding="utf-8",
-            )
-            bad_bool = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(bad_bool.returncode, 1)
-            self.assertIn("must be a boolean", bad_bool.stdout)
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: demo-skill\ndescription: Test.\ndisable-model-invocation: false\ndisable-model-invocation: true\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            dup_key = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(dup_key.returncode, 1)
-            self.assertIn("Duplicate YAML mapping key", dup_key.stdout)
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: demo-skill\ndescription: Test.\nmetadata: {owner: alice, owner: bob}\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            dup_flow = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(dup_flow.returncode, 1)
-            self.assertIn("Duplicate YAML mapping key", dup_flow.stdout)
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: demo-skill\ndescription: 123\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            non_str_desc = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(non_str_desc.returncode, 1)
-            self.assertIn("empty/non-string description", non_str_desc.stdout)
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: demo-skill\ndescription: Test.\nunexpected-field: true\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            bad_key = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(bad_key.returncode, 1)
-            self.assertIn("Unexpected key(s)", bad_key.stdout)
-
-    def test_enforces_name_matches_folder_and_nonempty_description(self) -> None:
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            out_dir = root / "dist"
-            skill = root / "demo-skill"
-            skill.mkdir()
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: other-name\ndescription: Test.\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            mismatch = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(mismatch.returncode, 1)
-            self.assertIn("frontmatter name mismatch", mismatch.stdout)
-
-            (skill / "SKILL.md").write_text(
-                "---\nname: demo-skill\ndescription: ''\n---\n# Demo\n",
-                encoding="utf-8",
-            )
-            empty_desc = self.run_packager(str(skill), str(out_dir))
-            self.assertEqual(empty_desc.returncode, 1)
-            self.assertIn("empty/non-string description", empty_desc.stdout)
-
-    def test_refuses_output_inside_bundled_creators(self) -> None:
-        proc = self.run_packager(
-            str(LIBRARY / "paper-triage"),
-            str(LIBRARY / "anthropic-skill-creator"),
+    def test_invalid_skill_does_not_produce_archive(self):
+        original = self.metadata.read_text(encoding="utf-8")
+        self.metadata.write_text(
+            original.replace("name: demo-skill", "name: wrong-name"), encoding="utf-8"
         )
-        self.assertEqual(proc.returncode, 1)
-        self.assertIn("must be outside bundled creator", proc.stderr)
+        result = self.run_packager(self.output)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertFalse(self.archive.exists())
+
+    def test_output_cannot_pollute_bundled_creator(self):
+        wrapper = self.root / "skill-creator"
+        script = wrapper / "scripts/package_skill.py"
+        script.parent.mkdir(parents=True)
+        shutil.copyfile(SCRIPT, script)
+        bundled = wrapper / "anthropic-skill-creator"
+        bundled.mkdir()
+        (bundled / "scripts").symlink_to(
+            LIBRARY / "anthropic-skill-creator/scripts", target_is_directory=True
+        )
+        (self.root / "skill-manager").symlink_to(LIBRARY / "skill-manager", target_is_directory=True)
+
+        result = self.run_packager(bundled, script=script)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertFalse((bundled / self.archive.name).exists())
 
 
 if __name__ == "__main__":

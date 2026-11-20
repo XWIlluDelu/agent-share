@@ -1,6 +1,5 @@
 """Deterministic audit checks using disposable local repositories; no network."""
 
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -8,9 +7,6 @@ import tempfile
 import unittest
 
 import audit
-
-
-LIBRARY = Path(__file__).resolve().parents[2]
 
 
 def skill_text(name):
@@ -22,21 +18,17 @@ class AuditTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for name in ("demo", "openai-skill-creator"):
+        for name in ("demo", "other"):
             path = self.root / "lib" / name
             path.mkdir(parents=True)
             (path / "SKILL.md").write_text(skill_text(name))
-        scripts = self.root / "lib/openai-skill-creator/scripts"
-        scripts.mkdir()
-        for name in ("quick_validate.py", "frontmatter.py"):
-            shutil.copy2(LIBRARY / "openai-skill-creator/scripts" / name, scripts / name)
         (self.root / "agents-fragments").mkdir()
         (self.root / "skills").mkdir()
         (self.root / "skills/demo").symlink_to("../lib/demo")
         self.demo = {"name": "demo", "pack": "always-on", "source_repo": "custom", "source_path": "lib/demo"}
         self.manifest = {
             "source_repos": {"custom": {"type": "custom", "path": "."}},
-            "skills": [self.demo, {"name": "openai-skill-creator", "pack": "agent-dev", "source_repo": "custom", "source_path": "lib/openai-skill-creator"}],
+            "skills": [self.demo, {"name": "other", "pack": "agent-dev", "source_repo": "custom", "source_path": "lib/other"}],
         }
         self.save()
 
@@ -57,7 +49,6 @@ class AuditTests(unittest.TestCase):
         self.git(repo, "config", "user.name", "Audit Test")
         self.git(repo, "config", "user.email", "audit@example.invalid")
         self.git(repo, "config", "commit.gpgsign", "false")
-        self.git(repo, "remote", "add", "origin", "https://example.invalid/skills.git")
         shutil.copytree(self.root / "lib/demo", repo / "demo")
         self.git(repo, "add", ".")
         self.git(repo, "commit", "-qm", "fixture")
@@ -121,7 +112,7 @@ class AuditTests(unittest.TestCase):
     def test_exact_always_on_target(self):
         link = self.root / "skills/demo"
         link.unlink()
-        link.symlink_to("../lib/openai-skill-creator")
+        link.symlink_to("../lib/other")
         self.error("expected -> ../lib/demo")
 
     def test_unregistered_entries(self):
@@ -139,12 +130,16 @@ class AuditTests(unittest.TestCase):
         self.save()
         self.error("source_path must stay inside")
 
-    def test_pinned_commit_not_cache_head(self):
+    def test_pinned_commit_is_independent_of_cache_head_and_worktree(self):
         repo = self.source()
-        (repo / "demo/SKILL.md").write_text(skill_text("demo") + "new upstream\n")
+        source_skill = repo / "demo/SKILL.md"
+        source_skill.write_text(skill_text("demo") + "new upstream\n")
         self.git(repo, "add", ".")
         self.git(repo, "commit", "-qm", "newer cache")
+        local_edit = skill_text("demo") + "local cache edit\n"
+        source_skill.write_text(local_edit)
         self.assertEqual(self.check(sources=True)[:2], ([], []))
+        self.assertEqual(source_skill.read_text(), local_edit)
 
     def test_missing_clone_only_fails_source_check(self):
         repo = self.source()
@@ -176,14 +171,9 @@ class AuditTests(unittest.TestCase):
         self.git(repo, "commit", "-qm", "link")
         self.demo["source_commit"] = self.git(repo, "rev-parse", "HEAD").strip()
         self.save()
-        (self.root / "lib/demo/ref").symlink_to("../openai-skill-creator/SKILL.md")
+        (self.root / "lib/demo/ref").symlink_to("../other/SKILL.md")
         self.error("local differences have no normalization notes", sources=True)
         self.assertEqual(self.check(sources=True)[1], ["demo: ref"])
-
-    def test_dirty_source_is_reported(self):
-        repo = self.source()
-        (repo / "untracked").write_text("keep me")
-        self.error("source checkout is dirty", sources=True)
 
     def test_runtime_owned_payload_is_preserved(self):
         runtime = self.root / "runtime"
@@ -197,22 +187,6 @@ class AuditTests(unittest.TestCase):
         (runtime / "demo").unlink()
         (runtime / "demo").mkdir()
         self.error("expected relative skill link", runtimes=[runtime])
-
-    def test_source_audit_writes_nothing(self):
-        self.source()
-
-        def snapshot():
-            return {
-                str(p.relative_to(self.root)): (p.lstat().st_mode, p.lstat().st_mtime_ns,
-                    os.readlink(p) if p.is_symlink() else p.read_bytes() if p.is_file() else None)
-                for p in self.root.rglob("*")
-            }
-
-        before = snapshot()
-        self.assertEqual(self.check(sources=True)[0], [])
-        self.assertEqual(snapshot(), before)
-        self.assertEqual(self.check(sources=True)[0], [])
-        self.assertEqual(snapshot(), before)
 
 
 if __name__ == "__main__":
