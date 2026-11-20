@@ -30,7 +30,8 @@ Codex/OpenAI). Strip that specificity:
   platform", or "the model". Do not carry these names into the skill you
   produce: its name, description, and body stay vendor-neutral unless the skill
   is genuinely about that product.
-- Skip `openai-skill-creator`'s "Agents metadata" step and `agents/openai.yaml`.
+- Treat `openai-skill-creator`'s "UI Metadata and Invocation Policy" section as
+  Codex-specific reference material.
   The scaffold creates that file only when you pass `--interface`; leave it off
   unless the user explicitly targets the OpenAI/Codex platform.
 - Treat environment-specific sections (Claude.ai-specific, Cowork-specific) as
@@ -56,11 +57,11 @@ evidence when they are not.
    realistic cases, a predefined qualitative rubric or blind comparison, and
    user review, but not forced quantitative assertions. If the conversation
    already contains the workflow, extract it first. See
-   `openai-skill-creator/SKILL.md` Step 1 and `anthropic-skill-creator/SKILL.md`
-   "Capture Intent".
+   "Create or Update a Skill" in `openai-skill-creator/SKILL.md` and "Capture
+   Intent" in `anthropic-skill-creator/SKILL.md`.
 2. **Plan reusable contents** — scripts, references, assets — and set degrees of
-   freedom and progressive-disclosure structure. `openai-skill-creator/SKILL.md`
-   Step 2 and its progressive-disclosure section are the canonical write-up.
+   freedom and progressive-disclosure structure. See "Anatomy of a Skill" and
+   "Progressive Disclosure in Practice" in `openai-skill-creator/SKILL.md`.
 3. **Scaffold:** `python3
    <library-dir>/openai-skill-creator/scripts/init_skill.py <name> --path <dir>
    [--resources scripts,references,assets]`. Omit `--interface` unless

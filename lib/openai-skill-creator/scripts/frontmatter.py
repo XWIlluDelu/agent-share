@@ -1,9 +1,9 @@
 """Minimal YAML frontmatter parser for SKILL.md.
 
 Skill frontmatter is simple enough that pulling in pyyaml is not justified,
-and pyyaml is not always installed. This parser extracts only what the
-skill-creator scripts need: the set of top-level keys, plus the `name` and
-`description` values. It is not a general YAML parser.
+and pyyaml is not always installed. This parser extracts the top-level keys
+and selected values needed by the skill-creator scripts. It is not a general
+YAML parser.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-_FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+_FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---(?:\n|\Z)", re.DOTALL)
 _KEY_RE = re.compile(r"^([A-Za-z][\w-]*):[ \t]*(.*)$")
 _BLOCK_INDICATORS = {">", "|", ">-", "|-"}
 
@@ -23,10 +23,10 @@ def _strip_quotes(value: str) -> str:
     return value
 
 
-def parse_frontmatter(text: str) -> tuple[dict[str, str], str, str] | None:
+def parse_frontmatter(text: str) -> tuple[dict[str, str], str, str, str] | None:
     """Parse SKILL.md frontmatter.
 
-    Returns (top_level_keys, name, description) where top_level_keys maps each
+    Returns (top_level_keys, name, description, body) where top_level_keys maps each
     top-level key to its raw single-line value (or "" for block scalars / empty
     values). Returns None if no frontmatter block is found.
     """
@@ -62,9 +62,9 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str, str] | None:
             description = value
         i += 1
 
-    return top, name, description
+    return top, name, description, text[match.end():]
 
 
-def parse_frontmatter_file(path: Path) -> tuple[dict[str, str], str, str]:
+def parse_frontmatter_file(path: Path) -> tuple[dict[str, str], str, str, str] | None:
     """Read and parse a SKILL.md frontmatter. Raises FileNotFoundError if missing."""
-    return parse_frontmatter(Path(path).read_text())  # type: ignore[return-value]
+    return parse_frontmatter(Path(path).read_text())

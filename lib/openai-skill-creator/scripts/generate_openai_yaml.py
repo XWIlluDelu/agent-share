@@ -111,7 +111,7 @@ def read_frontmatter_name(skill_dir):
     if parsed is None:
         print("[ERROR] Invalid SKILL.md frontmatter format.")
         return None
-    _frontmatter, name, _description = parsed
+    _, name, _, _ = parsed
     if not name.strip():
         print("[ERROR] Frontmatter 'name' is missing or invalid.")
         return None
@@ -136,7 +136,10 @@ def parse_interface_overrides(raw_overrides):
             print(f"[ERROR] Unknown interface field '{key}'. Allowed: {allowed}")
             return None, None
         overrides[key] = value
-        if key not in ("display_name", "short_description") and key not in optional_order:
+        if (
+            key not in ("display_name", "short_description")
+            and key not in optional_order
+        ):
             optional_order.append(key)
     return overrides, optional_order
 
@@ -147,7 +150,9 @@ def write_openai_yaml(skill_dir, skill_name, raw_overrides):
         return None
 
     display_name = overrides.get("display_name") or format_display_name(skill_name)
-    short_description = overrides.get("short_description") or generate_short_description(display_name)
+    short_description = overrides.get(
+        "short_description"
+    ) or generate_short_description(display_name)
 
     if not (25 <= len(short_description) <= 64):
         print(

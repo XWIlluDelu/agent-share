@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick validation script for skills.
-
-Checks YAML frontmatter format, required fields, naming rules, and description
-constraints. Uses a minimal hand parser so it runs anywhere with the stdlib —
-no pyyaml dependency.
+Quick validation script for skills (no third-party dependencies).
 """
 
 import re
@@ -14,13 +10,12 @@ from pathlib import Path
 from frontmatter import parse_frontmatter
 
 MAX_SKILL_NAME_LENGTH = 64
-MAX_DESCRIPTION_LENGTH = 1024
 MAX_COMPATIBILITY_LENGTH = 500
 ALLOWED_PROPERTIES = {"name", "description", "license", "allowed-tools", "metadata", "compatibility"}
 
 
 def validate_skill(skill_path):
-    """Basic validation of a skill. Returns (bool, message)."""
+    """Basic validation of a skill"""
     skill_path = Path(skill_path)
 
     skill_md = skill_path / "SKILL.md"
@@ -34,9 +29,9 @@ def validate_skill(skill_path):
     parsed = parse_frontmatter(content)
     if parsed is None:
         return False, "Invalid frontmatter format"
-    frontmatter, name, description = parsed
+    frontmatter, name, description, body = parsed
 
-    unexpected_keys = set(frontmatter.keys()) - ALLOWED_PROPERTIES
+    unexpected_keys = set(frontmatter) - ALLOWED_PROPERTIES
     if unexpected_keys:
         allowed = ", ".join(sorted(ALLOWED_PROPERTIES))
         unexpected = ", ".join(sorted(unexpected_keys))
@@ -70,22 +65,47 @@ def validate_skill(skill_path):
             )
 
     description = description.strip()
+    if description.startswith("[TODO:"):
+        return False, "Description contains an unfinished TODO placeholder"
     if description:
         if "<" in description or ">" in description:
             return False, "Description cannot contain angle brackets (< or >)"
-        if len(description) > MAX_DESCRIPTION_LENGTH:
+        if len(description) > 1024:
             return (
                 False,
-                f"Description is too long ({len(description)} characters). Maximum is {MAX_DESCRIPTION_LENGTH} characters.",
+                f"Description is too long ({len(description)} characters). Maximum is 1024 characters.",
             )
 
     compatibility = frontmatter.get("compatibility", "").strip()
-    if compatibility:
-        if len(compatibility) > MAX_COMPATIBILITY_LENGTH:
-            return (
-                False,
-                f"Compatibility is too long ({len(compatibility)} characters). Maximum is {MAX_COMPATIBILITY_LENGTH} characters.",
-            )
+    if len(compatibility) > MAX_COMPATIBILITY_LENGTH:
+        return (
+            False,
+            f"Compatibility is too long ({len(compatibility)} characters). "
+            f"Maximum is {MAX_COMPATIBILITY_LENGTH} characters.",
+        )
+
+    fence_marker = None
+    fence_length = 0
+    for line in body.splitlines():
+        fence = re.match(r"^[ \t]*(?:(?:[-+*]|\d+[.)])[ \t]+)?(`{3,}|~{3,})(.*)$", line)
+        if fence:
+            marker = fence.group(1)
+            if fence_marker is None:
+                fence_marker = marker[0]
+                fence_length = len(marker)
+            elif (
+                marker[0] == fence_marker
+                and len(marker) >= fence_length
+                and not fence.group(2).strip()
+            ):
+                fence_marker = None
+                fence_length = 0
+            continue
+
+        if fence_marker is None and re.fullmatch(
+            r"[ ]{0,3}\[TODO:[^\n]*\][ \t]*", line
+        ):
+            return False, "Skill instructions contain an unfinished TODO placeholder"
 
     return True, "Skill is valid!"
 
