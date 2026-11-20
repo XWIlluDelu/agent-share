@@ -36,9 +36,9 @@ Choose a deliberation mode only after the gate admits CHAOS.
 | Review loop | An implementation or artifact needs parent-controlled writing plus fresh independent review. |
 
 For full recipes, escalation, and stop rules, read
-[references/protocols.md](references/protocols.md). Before choosing models, read
-[MODEL_USAGE.md](MODEL_USAGE.md); project-local `MODEL_USAGE.md` overrides this
-default.
+[references/protocols.md](references/protocols.md). Before choosing advisers,
+inspect the host's live available models; when useful, look up the strengths,
+style, and reported weaknesses of the specific models available for the task.
 
 ## Core workflow
 
@@ -51,30 +51,36 @@ default.
 2. **Separate.** Apply the expansion rule in `references/protocols.md`: explicit
    exhaustive CHAOS uses all suitable approved routes; every other activation
    starts with the smallest sufficient independent set and expands only for a
-   missing decision-relevant axis. Discover the host's execution capabilities,
-   then launch each route as a native subagent when that backend satisfies the
-   isolation contract, otherwise as a fresh agent session. Start first positions
-   in parallel when possible; if the host can only serialize isolated sessions,
-   keep prior outputs hidden and record `serial-isolated`. Collect every first
-   position before any adviser sees peer answers. Every Council first-position
-   adviser answers the same whole frame and names the strongest alternative it
-   rejected; topic-sharded research is scouting only.
+   missing decision-relevant axis. Discover the host's live execution and model
+   capabilities (looking up specific models' strengths, style, and reported
+   weaknesses when helpful for duty assignment), then launch each route as a
+   native subagent when that backend satisfies the isolation contract, otherwise
+   as a fresh agent session. Start first positions in parallel when possible; if
+   the host can only serialize isolated sessions, keep prior outputs hidden and
+   record `serial-isolated`. Collect every first position before any adviser
+   sees peer answers. Every Council first-position adviser answers the same
+   whole frame and names the strongest alternative it rejected; topic-sharded
+   research is scouting only.
 3. **Externalize.** Convert positions into claims, assumptions, evidence,
    confidence basis, uncertainty, and risks.
 4. **Cross-examine.** The parent mediates: anonymize memos by diversity axis,
    forward only evidence-bearing critiques in `claim → evidence → consequence →
    requested change` form, drop rhetoric.
 5. **Revise.** Defend, narrow, correct, merge, concede, withdraw, or preserve
-   dissent. A reversal citing no new evidence is conformity, not correction; the
-   parent discounts it.
+   dissent. A reversal must cite the specific evidence, falsified premise, or
+   corrected inference that changed the conclusion; an ungrounded reversal is
+   conformity, not correction, and the parent discounts it.
 6. **Synthesize.** The parent normalizes claims and writes the final answer
    against the frame. Agreement counts are never truth; unanimous first
-   positions trigger a diversity-failure check, not a conclusion.
-7. **Record.** For nontrivial runs, keep a claim ledger. Save substantial
-   outputs in the runtime's artifact directory or an OS temporary directory by
-   default; write them into the project only when the user asks for durable
-   artifacts. Verify files exist. For a failed perspective, inspect execution
-   and authoritative output first; retry once only under the failure rules in
+   positions trigger a shared-blind-spot check, not a conclusion.
+7. **Record.** Match record depth to the problem: for a single contested issue,
+   keep the conclusion, supporting basis, surviving dissent, and its impact on
+   the decision; use a full claim ledger and decision receipt for multi-claim,
+   multi-round, or auditable runs. Save substantial outputs in the runtime's
+   artifact directory or an OS temporary directory by default; write them into
+   the project only when the user asks for durable artifacts. Verify files
+   exist. For a failed perspective, inspect execution and authoritative output
+   first; retry once only under the failure rules in
    `references/orchestration.md`, otherwise record the degraded perspective.
    Code claims require locatable evidence: `file:line`, diff hunk, test output,
    command output, or stable permalink.
@@ -102,7 +108,9 @@ synthesis; [references/philosophy.md](references/philosophy.md) only when
 modifying the skill or resolving protocol-design ambiguity.
 
 Before finishing, confirm: frame explicit and neutral; every Council first
-position answered the whole frame with no scouting shard counted as one; ledger
-present when nontrivial; critiques anonymized, evidence-bearing, and targeted at
-claim IDs; reversals cite the evidence that changed them; parent synthesis not
-majority rule; dissent and validation gaps recorded.
+position answered the whole frame with no scouting shard counted as one; record
+depth matches the issue (compact summary for a single issue, full ledger when
+tracking multiple claims, revision rounds, or an audit trail); critiques
+anonymized, evidence-bearing, and targeted at claim IDs; reversals cite the
+evidence, falsified premise, or corrected inference that changed them; parent
+synthesis not majority rule; dissent and validation gaps recorded.

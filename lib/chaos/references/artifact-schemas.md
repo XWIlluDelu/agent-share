@@ -1,7 +1,11 @@
 # CHAOS artifact schemas
 
-Use Markdown tables or compact field lists. Keep artifacts proportional to the
-task; nontrivial runs need at least a frame, claim ledger, and decision receipt.
+Use Markdown tables or compact field lists and match record volume to the
+problem. For a single contested issue, a compact record covering the conclusion,
+supporting basis, surviving dissent, and its impact on the decision is
+sufficient. Use the full claim ledger and formal decision receipt when tracking
+multiple claims or revision rounds, on high-stakes escalations, or when the user
+needs an audit trail.
 
 ## Task frame
 
@@ -87,8 +91,9 @@ accepted_by_judge: "parent/final writer only"
 
 Advisory agents may propose claim statuses and revisions. Only the parent/final
 writer fills final judge acceptance fields unless the user explicitly names
-another human decision owner. A reversal whose `support` is empty is conformity:
-record it and give it no decision weight.
+another human decision owner. A reversal whose `support` cites no specific
+evidence, falsified premise, or corrected inference is conformity: record it and
+give it no decision weight.
 
 ## Decision receipt
 

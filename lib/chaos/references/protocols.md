@@ -9,9 +9,9 @@ one-sentence proposal); see `SKILL.md` for when each mode applies.
 | Mode | Default shape | Required artifact | Stop condition |
 |---|---|---|---|
 | Skip/direct | Direct verification by parent | Brief note if useful | Answer is directly verifiable |
-| Claim audit | Extract claims → test testable claims → parallel anonymized critique → status table → synthesis | Claim ledger; decision receipt when a decision follows | Claims have statuses or evidence is insufficient |
-| Council | Frame → same-question independent positions → ledger → parent-routed cross-review → revision → synthesis/minority report | Position memos + ledger; escalation artifacts when used | No new material claims or useful narrowing remains |
-| Review loop | Validation contract → one writer → parallel fresh reviewers → synthesized fixes → validation | Ledger/receipt plus validation evidence | No fixes worth doing now or unapproved decision appears |
+| Claim audit | Extract claims → test testable claims → parallel anonymized critique → status table → synthesis | Compact record (single issue) or claim ledger + decision receipt (multi-claim/audit) | Claims have statuses or evidence is insufficient |
+| Council | Frame → same-question independent positions → claim summary or ledger → parent-routed cross-review → revision → synthesis (with minority report if dissent remains) | Position memos + compact record (single issue) or full ledger/receipt (multi-round/audit); escalation artifacts when used | No new material claims or useful narrowing remains |
+| Review loop | Validation contract → one writer → parallel fresh reviewers → synthesized fixes → validation | Compact record or ledger/receipt plus validation evidence | No fixes worth doing now or unapproved decision appears |
 
 ## Expansion rule
 
@@ -27,9 +27,14 @@ a task/evidence specialist, plus a counterpoint only when it adds a distinct
 source, method, failure mode, or model family). Expand only when an uncovered
 axis or unresolved claim could change the decision. Exclude any route that is
 unavailable, unsafe, outside the data trust boundary, off-modality, not
-independent, below the capability floor (`MODEL_USAGE.md`), or weaker than
-direct verification.
+independent, unable to reason validly about the task, or weaker than direct
+verification.
 
+- **Model selection:** inspect the host's live available models before launch.
+  When choosing advisers and assigning duties, the agent may look up the
+  strengths, style, and reported weaknesses of the specific models available for
+  the task. Use those findings as priors for route and duty selection, never to
+  override direct verification or inspected evidence.
 - **Test before debate:** settle any claim a cheap direct check can answer and
   enter it as tested evidence; deliberate only what verification cannot reach.
 - **Whole-frame rule:** Council first positions answer the same whole frame
@@ -60,14 +65,21 @@ direct verification.
    model identities, or the user's leaning.
 2. Each first-position memo answers the whole frame, states its diversity axis,
    and names the strongest alternative it rejected.
-3. Build a common claim ledger and normalize duplicate claims.
+3. Normalize duplicate claims; build a common claim ledger when tracking
+   multiple claims, revision rounds, or an audit trail (for a single contested
+   issue, keep a compact claim summary instead).
 4. Route anonymized, evidence-bearing critiques, prioritizing high-confidence
    claims with weak evidence.
-5. Record revisions; discount evidence-free reversals as conformity.
-6. Treat unanimous first positions as a diversity failure: launch a counter-case
-   duty (strongest evidenced case against consensus) or record reduced
-   confidence in the receipt.
-7. Synthesize with a minority report.
+5. Record revisions; require each change to cite the specific evidence,
+   falsified premise, or corrected inference that changed the conclusion, and
+   discount ungrounded reversals as conformity.
+6. When first positions are unanimous, inspect them for shared blind spots.
+   Launch a counter-case duty or targeted check when advisers share a decisive,
+   unverified assumption or narrow evidence basis; do not automatically add a
+   counter-case or lower confidence when genuinely independent evidence routes
+   converge.
+7. Synthesize against the frame, adding a minority report whenever live dissent
+   remains.
 
 **Escalation for high stakes:** precede with scouting; append an independent
 consistency check of the near-final synthesis by a fresh adviser run; close with

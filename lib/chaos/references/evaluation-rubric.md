@@ -44,13 +44,15 @@ correctness.
 
 ## Anti-patterns to reject
 
-- Majority vote, threshold consensus, unanimity without counter-case check, or
-  forced consensus that erases minority objections.
+- Majority vote, threshold consensus, unanimity accepted without checking for
+  shared unverified assumptions, or forced consensus that erases minority
+  objections.
 - Swarm/chatroom dynamics without claim IDs, evidence, or parent synthesis.
 - Persona theater or topic-sharded scouting counted as whole-frame first
   positions.
 - Identity-visible cross-examination, deference to fluent/confident/special
-  roles, or evidence-free reversals counted as corrections.
+  roles, or ungrounded reversals (citing no evidence, falsified premise, or
+  corrected inference) counted as corrections.
 - Context contamination before first positions, or counting process/session
   labels as proof of independence or extra claim weight.
 - Extra rounds after no new evidence or useful narrowing appears, or advisory

@@ -3,8 +3,10 @@
 ## Execution backends
 
 CHAOS requires independent adviser runs, not a particular orchestration product.
-Discover the host's execution and model-routing capabilities before launch, then
-choose the narrowest backend that satisfies the contract:
+Discover the host's execution and model-routing capabilities before launch; when
+choosing among available models, you may look up the strengths, style, and
+reported weaknesses of the specific models available for the task. Then choose
+the narrowest backend that satisfies the contract:
 
 1. **Native subagents.** Use them when the host can create a fresh isolated run
    for each adviser, select the intended model or route, dispatch the complete
@@ -83,9 +85,10 @@ agents for compact artifacts:
 The parent routes all critique traffic. Anonymize position memos by diversity
 axis before circulation — critics judge claims, not authors or model
 reputations. Drop critiques that carry no evidence; forward the rest to claim
-owners. Prioritize scrutiny of high-confidence claims with weak evidence. In
-revision, a reversal that cites no new evidence is conformity: record it and
-give it no decision weight.
+owners. Prioritize scrutiny of high-confidence claims with weak evidence. In revision,
+require the adviser to cite the specific evidence, falsified premise, or
+corrected inference that changed the conclusion; a reversal without that basis
+is conformity — record it and give it no decision weight.
 
 ## Parent synthesis
 
@@ -105,11 +108,14 @@ writer if authorized.
 
 ## Artifact handling
 
-For nontrivial runs, save substantial outputs to files and verify they exist
-before relying on them. Use the harness-designated artifact directory or an OS
-temporary directory with user-only permissions by default. Persist these files
-inside the project only when the user requests durable artifacts; otherwise
-remove temporary outputs after synthesis. Suggested names:
+Match record volume to the problem: a single contested issue needs only a
+compact record of the conclusion, supporting basis, surviving dissent, and its
+impact on the decision. When tracking multiple claims or revision rounds, or
+when the user wants an audit trail, save substantial outputs to files and verify
+they exist before relying on them. Use the harness-designated artifact directory
+or an OS temporary directory with user-only permissions by default. Persist
+these files inside the project only when the user requests durable artifacts;
+otherwise remove temporary outputs after synthesis. Suggested names:
 
 - `chaos-frame.md`
 - `chaos-positions/<perspective>-position.md`

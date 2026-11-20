@@ -45,10 +45,10 @@ For each attack, return:
 Attack high-confidence claims with weak evidence first. Do not attack style. Do not manufacture objections to appear thorough; return "no evidenced attack" where a claim holds.
 ```
 
-## Counter-case duty (diversity failure)
+## Counter-case duty (shared blind spot)
 
 ```text
-All independent advisers converged on one answer. Your duty is to build the strongest evidenced case against it. This is not roleplay: only evidence-bearing objections count.
+All independent advisers converged on one answer, and a shared unverified assumption or narrow evidence basis remains: {shared_assumption_or_gap}. Your duty is to test that blind spot and build the strongest evidenced case against the consensus. This is not roleplay: only evidence-bearing objections count.
 
 Consensus answer: {answer and its main support}
 Frame: {question, scope, evidence standard}
@@ -66,7 +66,7 @@ Anonymized reviewers critiqued your position memo:
 For each targeted claim, respond:
 - claim_id, change_type: defend | narrow | correct | merge | concede | withdraw | preserve_dissent
 - new: the revised claim, if changed
-- support: the evidence that justifies your response — a change without new evidence is recorded as conformity and discounted
+- support: the specific evidence, falsified premise, or corrected inference that justifies your response — an ungrounded change is recorded as conformity and discounted
 
 Do not change claims that were not attacked unless you found an error yourself; if you did, say so.
 ```
