@@ -4,34 +4,67 @@
     {
       "id": 1,
       "prompt": "Initialize DocDoki in this empty project directory. We are building a Python standard-library CLI for local CSV normalization. Row data must stay local and failures must preserve original files. The exact normalization rules are still undecided. Set up the useful project documents, but do not implement the CLI or install a panel.",
-      "expected_output": "A small library capturing supplied intent, decided but unimplemented constraints, and the remaining normalization decision, with the private Git-ignore boundary established.",
+      "expected_output": "A small library (northstar.md, overview.md, and initial spec if warranted) capturing supplied constraints, surfacing undecided normalization rules under overview.md Open decisions, and establishing the gitignored private boundary.",
       "files": [],
       "expectations": [
-        "The main documents distinguish supplied constraints from the undecided normalization rules and absent implementation.",
-        "The private ignore rule is established and checked without installing a panel or writing application code.",
+        "northstar.md and overview.md distinguish decided constraints from undecided normalization rules (placed under ## Open decisions) and absent implementation.",
+        "The /docdoki/private/ gitignore rule is established and verified with scripts/validate.py without installing a panel or writing application code.",
         "No implemented or verified behavior is invented."
       ]
     },
     {
       "id": 2,
-      "prompt": "Review this DocDoki export contract using only the supplied project excerpts; do not write files. The decided spec requires complete UTF-8 CSV output on success and preservation of an old destination on failure. The active stage records failure safety as unimplemented and network-filesystem behavior as untested. The entire export function is: def export_csv(rows, destination):\n    with open(destination, 'w', newline='', encoding='utf-8') as output:\n        csv.writer(output).writerows(rows)\nThe only recorded test covers a successful new-file export. What conforms, what is missing, and what can this evidence not establish?",
-      "expected_output": "A bounded review that identifies the direct-write failure risk as a known unmet contract, retains the requirement, and separates source evidence from unperformed checks.",
+      "prompt": "Review this DocDoki export contract using only the supplied project excerpts; do not write files. The decided spec requires complete UTF-8 CSV output on success and preservation of an old destination on failure. The active work file records failure safety as unimplemented and network-filesystem behavior as untested. The entire export function is: def export_csv(rows, destination):\n    with open(destination, 'w', newline='', encoding='utf-8') as output:\n        csv.writer(output).writerows(rows)\nThe only recorded test covers a successful new-file export. What conforms, what is missing, and what can this evidence not establish?",
+      "expected_output": "A read-only review identifying direct-write truncation risk as a known unmet requirement, retaining the contract intact, and separating tested behavior from unverified filesystem claims.",
       "files": [],
       "expectations": [
-        "The answer identifies truncation or partial final output on row-generation failure without weakening the requirement.",
-        "The answer distinguishes a known implementation gap from untested filesystem behavior and does not claim fresh test results.",
-        "No project files are written, including incidental cleanup or generated files."
+        "Identifies truncation or partial output on row-generation failure without weakening the contract.",
+        "Separates confirmed new-file UTF-8 output, known unmet failure safety, and untested network-filesystem behavior.",
+        "Performs zero file writes, including incidental cleanup or status updates."
       ]
     },
     {
       "id": 3,
-      "prompt": "Follow this human design amendment in DocDoki, documentation only: CSV record terminators must now be LF on every platform. The existing contract also requires local-only UTF-8 output and preservation of old output on failure. The current work entry says successful export exists, failure safety is still unimplemented, and no raw-byte line-ending test has been run. Return the revised spec and current-work entry from this supplied text; do not implement code or claim new verification.",
-      "expected_output": "Revised contract and work-state text that propagates the LF decision, preserves the other obligations, and records the remaining implementation and verification work.",
+      "prompt": "Reconcile this human design amendment in DocDoki, documentation only: CSV record terminators must now be LF on every platform. The existing export spec requires local-only UTF-8 output and preservation of old output on failure. The active work entry says successful export exists, failure safety is still unimplemented, and no raw-byte line-ending test has been run. Return the revised spec and work entry from this supplied text; do not implement code or claim new verification.",
+      "expected_output": "Revised spec and work text propagating the LF decision while keeping existing obligations intact and tracking remaining implementation and verification.",
       "files": [],
       "expectations": [
-        "The LF-on-every-platform requirement and the existing local-only, UTF-8, and failure-preservation requirements remain explicit.",
-        "Unimplemented failure safety and unverified line endings remain visible rather than being marked complete.",
-        "The response stays within documentation-only propagation and does not invent implementation changes or passing checks."
+        "The LF-on-every-platform obligation and existing local-only, UTF-8, and failure-preservation obligations remain explicit.",
+        "Unimplemented failure safety and unverified line endings remain visible in work state; progress is not marked done.",
+        "Stays documentation-only and invents no code edits or passing tests."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Cold-start architecture check (read-only): Using only this multi-spec DocDoki library (northstar.md, overview.md, specs/{ingest,validate,export}.md, work/atomic-export.md, notes/fs-gotchas.md), explain how the system works, which requirements are currently unmet, what gotchas apply when editing src/export.py, and what decisions await the human.",
+      "expected_output": "An accurate synthesis covering end-to-end architecture, unmet obligations from work/, the EXDEV sibling-temp-file gotcha from notes/fs-gotchas.md discovered via relates/covers, and open decisions from overview.md, with zero file writes.",
+      "files": [],
+      "expectations": [
+        "Retrieves relevant context across overview.md, specs/, work/, and notes/ (including notes matched by relates/covers) without reading unrelated archives.",
+        "Distinguishes decided specs, unmet implementation gaps, and open decisions awaiting human input.",
+        "Makes zero file writes."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Upstream design change propagation: The human edited specs/ingest.md to allow streaming arbitrarily large CSV inputs (removing the 100 MB in-memory limit). Analyze the downstream impact on specs/validate.md (which has after: [ingest] and currently assumes full-table buffering) and specs/export.md, update affected docs and active work state, and flag any unresolved tradeoffs under overview.md Open decisions.",
+      "expected_output": "Propagated downstream contract/work updates honoring after: dependencies, with streaming-vs-two-pass validation tradeoffs surfaced under Open decisions rather than silently guessed.",
+      "files": [],
+      "expectations": [
+        "Follows after: dependency edges from ingest to validate and export.",
+        "Preserves human intent in ingest while surfacing genuine unresolved downstream tradeoffs in overview.md ## Open decisions instead of inventing binding policy.",
+        "Re-evaluates affected spec progress markers rather than leaving stale done statuses after a breaking upstream design change."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Groom this drifting DocDoki library: overview.md still lists a closed stage and duplicates a spec's old summary; work/old-export.md has finished all tasks except one unimplemented retry requirement, includes a timestamped debugging diary, and records why remote S3 export was rejected. Clean up the library without losing active obligations or durable rationale.",
+      "expected_output": "Consolidated library where overview.md drops stale mirrors, chronological diary noise is pruned, rejected S3 rationale is routed to notes/ (or spec rationale), and the unfinished retry requirement remains owned in an active work file rather than silently dropped.",
+      "files": [],
+      "expectations": [
+        "Eliminates duplicate/stale summaries in overview.md and removes timestamped activity logs.",
+        "Retains the rejected remote S3 option rationale in a durable home (notes/ or spec) before archiving closed work.",
+        "Preserves the unmet retry requirement in an active work stream and does not mark the spec done."
       ]
     }
   ]

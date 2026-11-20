@@ -1,58 +1,37 @@
 # Philosophy
 
-## Reduce the cost of collaboration
+## One shared knowledge base, tailored perspectives
 
-Human time and attention are scarce. DocDoki lets the human understand and steer
-an agent-built project without personally maintaining all its implementation
-detail. A small reading surface should expose intent, design, progress, and the
-choices that need human judgment.
+Humans and agents work from a single coherent project knowledge base rather than separate human documentation and agent-only memory. Split memory guarantees drift; one shared corpus ensures that changes in human intent immediately govern agent work and agent discoveries remain visible to humans.
 
-The same library gives a cold agent enough context to continue without deriving
-everything again. It preserves useful understanding, not permission to skip
-checking the current project. A polished but unsupported document can mislead
-more than an explicit gap.
+One knowledge base still serves two distinct reading needs. Human attention is scarce, so humans need selective, high-signal views—project intent, system structure, unresolved tradeoffs, and visual or summary overviews—where small, thoughtful edits steer the whole project without requiring immersion in routine detail, while preserving direct drill-down when needed. Agents need complete, reliable access across the entire library so a fresh session can reconstruct full context and continue work without depending on prior conversation history.
 
-## Human-steered, agent-maintained
+## Coherent coverage without brittle duplication
 
-The human supplies intent and important tradeoffs. The agent does most of the
-drafting, organization, propagation, implementation, and maintenance, exercising
-design judgment within delegated authority. The human is not the library's
-clerical worker; agent ownership of the work is not ownership of every decision.
+The library should cover the full set of knowledge a project depends on—intent, design obligations, active execution state, verification evidence, and reusable technical knowledge—with clear ownership and minimal internal contradiction.
 
-Human input can arrive in conversation or any document. Preserve its meaning
-while making it usable. Ask for consequential missing decisions, not ritual
-approval of clear instructions or ordinary maintenance.
+Give each detailed fact one authoritative home and link to it elsewhere rather than maintaining independent copies that drift out of sync. Distinguish **useful hierarchical summaries** from **duplicate maintenance**: higher-level narrative, area synthesis, and generated overviews earn their place by clarifying the whole and pointing to detail, whereas mirroring leaf facts across multiple documents creates fragility without insight.
 
-## Contracts are not implementation reports
+## Human steering, agent maintenance
 
-A decided requirement remains valid when implementation is absent or defective.
-Specs describe the target; work records describe the gap. Code and tests supply
-evidence of conformance, not authority to redefine the goal.
+DocDoki is **human-steered and agent-maintained**. Humans supply direction, architectural judgment, and consequential tradeoffs; agents perform most of the writing, organization, cross-document propagation, implementation, and ongoing maintenance.
 
-Repair the side that is wrong when design, evidence, authorization, and scope
-settle the result. Otherwise make the uncertainty explicit. Neither a confident
-explanation nor a passing local check justifies broader claims than the evidence
-supports.
+Separate **human steering** from **routine approval**. Maintenance and execution within authorized scope proceed autonomously without per-edit permission gates. Reserve human attention for open questions, conflicting constraints, and tentative design proposals—surfaced clearly as steering choices rather than buried in prose or silently decided on the human's behalf.
 
-## Distill knowledge, not activity
+## Decided contracts, current reality, and evidence
 
-Keep what changes a future decision or saves consequential re-derivation:
-intent, contracts, a useful map, current work, evidence, reasons, and lessons.
-Do not retain a statement simply because it records something the agent did.
+Keep three things distinct: **what is decided**, **what currently exists**, and **what checks establish**.
 
-Summaries and links help different readers without duplicating every detail.
-Groom by future value: an untried option's rejection can matter as much as a
-failed experiment. Route durable knowledge before removing its old home;
-committed history is a recovery aid, not the only home of an important lesson.
+A decided requirement remains binding when implementation is absent or defective. Contracts define the target; active work tracking records current gaps and next steps; code and tests supply conformance evidence, never authority to weaken a goal. When design and implementation diverge, repair the side that is wrong once authority, evidence, and scope settle it—otherwise keep the discrepancy explicit.
 
-## Autonomy with clear boundaries
+## Durable knowledge over activity logs
 
-Maintain meaningful state during authorized work instead of waiting for a
-special cleanup or handoff. Autonomy should reduce human effort, not expand the
-task or override review-only permissions. Semantic judgment and small mechanical
-checks serve the same aim: a useful, trustworthy library without unnecessary
-infrastructure.
+Retain what changes a future decision or prevents costly re-derivation: intent, contracts, active gaps, verified evidence with its check scope, rationale, and rejected or untried options. Do not retain statements merely because an action happened at a given time.
 
-Public and private records are two scopes of one library. Public understanding
-and continuation must stand on their own; private context can enrich local work
-without becoming a hidden public dependency.
+Keep active state current in place and fold durable lessons into permanent homes before retiring finished work; version history is a recovery aid, not an organized knowledge base. When a project separates shared context from local-only context, shared knowledge must remain coherent and continuable without hidden dependence on local-only material.
+
+## Judgment over rigid ceremony
+
+Trust capable agents to exercise semantic judgment in classification, synthesis, conflict resolution, scoping, and deciding what evidence a claim requires. Avoid defensive rules and rigid procedures where judgment suffices.
+
+Use deterministic tooling only for mechanical invariants—structural validity, link integrity, lookup indexing, and visibility boundaries—that scripts can verify cheaply and reliably without constraining judgment.

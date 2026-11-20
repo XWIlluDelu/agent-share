@@ -1,89 +1,48 @@
-# Document schemas
+# Document Schemas
 
-Use this reference when reading an unfamiliar library or creating, moving, or
-changing its documents. Paths in the tree below belong to a **project unit**;
-they are not paths inside the installed skill.
+Paths below belong to a **project unit** (`<unit>/docdoki/`), not the installed skill directory.
 
-## Contents
-
-- [Library roles](#library-and-information-roles) · [Format and references](#common-format-and-references)
-- [Northstar](#northstarmd) · [Spec abstract](#spec_abstractmd)
-- [Specs](#specsmd) · [Stages](#stagesmd) · [Notes](#notesmd)
-
-## Library and information roles
+## Layout and authoritative homes
 
 ```text
 <unit>/docdoki/
   northstar.md
-  spec_abstract.md
+  overview.md
   specs/<name>.md
-  stages/<protocol>-<topic>-<date>.md
-  stages/archive/<protocol>-<topic>-<date>.md
+  work/<slug>.md
+  work/archive/<YYYY-MM-DD>-<slug>.md
   notes/<topic>.md
-  private/                   # ignored local overlay, when needed
+  private/                    # gitignored local overlay, when needed
     specs/<name>.md
-    stages/<protocol>-<topic>-<date>.md
-    stages/archive/<protocol>-<topic>-<date>.md
+    work/<slug>.md
+    work/archive/<YYYY-MM-DD>-<slug>.md
     notes/<topic>.md
 ```
 
-| Document | What it holds | What it does not decide |
-| :-- | :-- | :-- |
-| `northstar.md` | Mission, success criteria, and binding constraints. | Code cannot establish the project's purpose. |
-| `spec_abstract.md` | The human's design and progress overview, with direct links to detail. | A summary is not a second complete contract or task ledger. |
-| `specs/` | Current decided design contracts, including unimplemented requirements. | Conformance is not implied by the existence of a spec. |
-| `stages/` | Current work, implementation gaps, checks, and next actions. | A task or experiment does not silently revise a requirement. |
-| `notes/` | Reusable methods, evidence, rationale, and lessons. | Proposals and observations do not become decided requirements here. |
+*(Legacy libraries using `spec_abstract.md` and `stages/` remain readable by `validate.py` and the Panel; use `overview.md` and `work/` for new libraries.)*
 
-Keep information that guides future work or saves consequential re-derivation.
-Do not record an action merely because it happened. An agreed obligation goes
-in a spec; its implementation gap and next step go in a stage. A durable
-explanation or measurement goes in a note, unless it is a short rationale best
-kept beside the contract. Give each detailed fact a home; useful summaries and
-links elsewhere are welcome. Maintain them together when their meaning changes.
+| Document | Authoritative for | Do not duplicate here |
+| :--- | :--- | :--- |
+| `northstar.md` | Mission, success criteria, hard constraints, parent/child units. | Detailed module design or live task status. |
+| `overview.md` | System architecture, area narrative, and `## Open decisions`. | Manual per-spec summary tables or active work checklists. |
+| `specs/<name>.md` | Module obligations (`## Goal`), checks, `purpose`, `area`, `status`, `progress`, `after`, `covers`. | Live task checklists, run logs, or implementation diaries. |
+| `work/<slug>.md` | Active work streams (`specs`, `scope`, current gaps, check results, next actions, handoffs). | Permanent contracts or long-term reference knowledge. |
+| `notes/<topic>.md` | Reusable methods, gotchas, research, rejected options, durable evidence (`relates`, `covers`). | Binding requirements or active task tracking. |
 
-Private documents follow these same roles. Visibility comes from the path, not
-frontmatter. The two top-level documents remain public; do not create private
-copies of them. Read [Privacy](privacy.md) before handling private information or
-changing visibility, paths, or references.
+Visibility is determined solely by path (`docdoki/private/`), never by a metadata field. `northstar.md` and `overview.md` stay public.
 
-## Common format and references
+## Common format and links
 
-Use simple YAML frontmatter: scalars and inline or block lists. Start the body
-with one H1 title. Use sentence-case headings, retaining the spelling of real
-identifiers and proper names. Put displayed code, commands, output, and standalone
-paths in fences; use inline code for a path in a sentence. Omit empty optional
-fields and sections. Do not invent content just to fill a template.
+- **Frontmatter:** Simple top-level YAML keys supporting scalars, block/folded scalars (`>`, `>-`, `|`, `|-`), and inline or block lists. Omit empty optional fields and sections.
+- **Body:** One H1 title, sentence-case headings, fenced code/commands/paths, inline code for paths in prose.
+- **Filenames & stems:** Short kebab-case (`specs/export.md`, `work/atomic-export.md`, `notes/fs-gotchas.md`). Keep document stems unique across public, private, and archive folders within a unit.
+- **Links:** Use `[[stem]]` (or `[[stem#Heading]]`, `[[stem|label]]`) within a unit, and ordinary relative Markdown links between units. Do not use `covers` to link documents to each other.
 
-Specs and notes use short kebab-case filenames. Stages use
-`<protocol>-<topic>-<YYYY-MM-DD>.md`: the prefix and date record the operation
-that opened the work, not its current status. For a stage created by ordinary
-implementation, use `follow` as the origin (following the existing design).
-Reuse its name while the same work continues; archive by moving it, not renaming
-it to the latest operation or date.
+## `northstar.md`
 
-A `[[stem]]` link addresses a document by its filename without `.md`. Keep stems
-unique across public/private documents and archives in a unit. `after` uses the
-same spec identifiers. Renaming requires updating inbound references; moving
-requires checking relative Markdown links even when wiki-links remain valid.
-Use ordinary relative Markdown links for navigation between units. Do not use
-`covers` to link documents to each other.
+Captures slow-changing project intent from human input and authorized decisions. Use `# Northstar` with `## Mission`, `## Success criteria`, and `## Hard constraints`. State explicit questions if intent is incomplete rather than inventing generic goals.
 
-## northstar.md
-
-Draft intent from the human's input and existing authorized decisions. If intent
-is incomplete, mark the open question; do not infer a binding objective from
-whatever code happens to exist. Protect decisions by their substance and
-authorization, here and in every other document. Wording improvements that
-preserve meaning do not require renewed design approval.
-
-Use `# Northstar` with `## Mission`, `## Success criteria`, and
-`## Hard constraints` when known. During initialization an unknown section can
-state the specific question; do not populate it with generic invented goals.
-Constraints are actual limits, such as offline operation or a license obligation,
-not an automatic inventory of directories and Git settings.
-
-Only child units need frontmatter:
+Child units add frontmatter and `## Contribution`:
 
 ```yaml
 ---
@@ -91,67 +50,51 @@ parent: ../../docdoki/northstar.md
 ---
 ```
 
-The path is relative to the child's northstar file. Children add
-`## Contribution`, explaining how they serve the parent. Parents list children
-under `## Units`, for example:
+Parent units list children under `## Units`:
 
 ```md
 - [Analysis](../analysis/docdoki/northstar.md) — statistical analysis unit.
 ```
 
-Use the filesystem to discover units; reconcile these navigation links with it.
-Do not silently change a parent's intent while setting up a child.
+## `overview.md`
 
-## spec_abstract.md
-
-The primary human reading and steering surface, without frontmatter. It should
-make four things easy to find: current design, key implemented capabilities and
-gaps, active work, and decisions needing human attention.
-
-A small example (links refer to documents in the same example library):
+The human's architecture and steering entrypoint (no frontmatter). Keep it high-density and concise:
 
 ```md
-# Spec abstract
+# Project overview
 
-## Design map
+## Architecture
 
-| Area | Contract | Design |
-| :-- | :-- | :-- |
-| CSV export | [[export]] | Local export; publish complete files only. |
+Rows flow from local input readers through [[validation]] into [[export]].
+All processing stays local; network delivery is out of scope.
 
-## Current work
+## Areas
 
-Atomic publication is not implemented yet; direct writes can expose partial
-files. [[follow-export-2026-09-05]] holds the inspection and next actions.
+- **IO:** [[export]], [[validation]] — local CSV parsing, validation, and atomic publication.
 
-## Cross-spec direction
+## Open decisions
 
-Exports stay local. Network delivery is outside the export boundary.
+- Decide whether network filesystems must be supported for atomic publication.
 ```
 
-Add review questions when there are real decisions to make. Summarize the
-relevant stages and evidence, rather than inferring completion from missing
-fields or copying every checklist. When work closes, retain any useful concise
-capability summary and point to durable evidence if needed; remove obsolete
-active-work links. Do not delete stable design facts merely because they have
-stopped changing.
+- `## Architecture` and `## Areas` explain how subsystems fit together at a higher level than individual specs.
+- `## Open decisions` is the **single human steering queue** for consequential tradeoffs, unresolved questions, and proposed specs needing review.
+- Do not copy every spec's `purpose` table or active work checklists into `overview.md`. For a generated flat spec table in Markdown, run `validate.py --index` or open the Panel.
+- Human edits to `overview.md` can change design direction; reconcile them into concrete specs and authorized code.
 
-Human edits here can change the design. `follow` propagates them into the
-concrete contracts and authorized implementation, or leaves an explicit
-unresolved difference. Neither the overview nor a more detailed file silently
-wins a conflict solely because of its position.
+## `specs/<name>.md`
 
-## specs/*.md
-
-A spec records what the implementation **should satisfy under current decided
-design**, whether or not it satisfies it yet. Decisions can come from the human
-or from the agent acting within delegated design authority. Label an undecided
-proposal as a proposal in the relevant stage or note; do not mix it into binding
-claim bullets. Lack of implementation does not invalidate an agreed contract.
+Records what the implementation **should satisfy**, whether implemented yet or not.
 
 ```md
 ---
-purpose: Local CSV export that publishes complete output or leaves the destination unchanged.
+purpose: >-
+  Local CSV export that publishes complete output or leaves an existing
+  destination unchanged on failure.
+area: IO
+status: decided
+progress: in-progress
+after: [validation]
 covers:
   - src/export.py
   - tests/test_export.py
@@ -162,132 +105,82 @@ covers:
 ## Goal
 
 - Successful export publishes a complete CSV file at the requested path.
-- Failed export leaves an existing destination unchanged and no partial final file.
-- Export does not send row data over the network.
+- Failed export leaves an existing destination unchanged with no partial file.
+- Export never transmits row data over the network.
 
 ## Checks
 
 Exercise successful publication, row-generation failure, and replacement of an
-existing destination. Check failures before publication leave it unchanged.
+existing destination.
 
 ## Sources
 
-The human selected local-only, failure-safe export on 2026-09-05.
-Implementation work and evidence: [[follow-export-2026-09-05]].
+Human selected local-only, failure-safe export on 2026-09-05.
+Active work: [[atomic-export]].
 ```
 
-In this example atomic publication has been decided but is **not implemented**.
-That gap belongs in the linked stage, not in softened contract wording.
+Frontmatter fields:
+- `purpose` *(required)*: 1–2 sentences summarizing scope and core obligations (used on board cards).
+- `area` *(optional)*: Short grouping label (e.g., `Core`, `IO`, `UI`) for board organization when specs are orthogonal.
+- `status` *(optional, default `decided`)*: `decided` (binding contract) or `proposed` (draft design awaiting human review; surfaced in the Panel and not implemented as binding until decided).
+- `progress` *(optional)*: Concise execution summary maintained from evidence: `not-started`, `in-progress`, `blocked`, or `done`. Omit if unknown.
+- `after` *(optional)*: Genuine upstream spec stems (`after: [validation]`). Keep sparse and acyclic.
+- `covers` *(recommended)*: Unit-relative code/data globs (`*`, `**`, `{a,b}`). Use planned paths (noted in `## Sources`) or `covers: []` before code exists.
 
-`purpose` is required: one or two sentences explaining the area and its key
-obligations, not a repeat of the title or a progress report. `## Goal` is the
-required section; state concrete, checkable obligations, usually as bullets.
-Add `## Checks`, `## Non-goals`, `## Sources`, rationale, or domain sections when
-useful. Checks describe how to assess conformance; one run's results belong in
-a stage or evidence note. Keep live status, next actions, resume instructions,
-and chronological logs out of spec bodies.
+## `work/<slug>.md`
 
-### Code association: covers and after
-
-`covers` is a list of code/data globs relative to the unit root, including for
-private specs. `*` matches within a path segment, `**` across directories, and
-`{a,b}` denotes brace alternatives. Match the scope to the obligations: include
-necessary dependencies, exclude unrelated files. Inspect actual matches when
-setting it or challenging the spec. A glob is a navigation aid, not evidence.
-
-For a decided capability with no code yet, list intended paths and say the
-association is planned in `## Sources`, or use `covers: []` and explain that no
-in-tree target exists yet. Empty matches never mean conformance. Once code
-exists, update the association. For off-tree data, services, or environments,
-use the in-tree paths available (possibly none) and describe the actual check
-and access needed in prose. Do not invent a matching path or a verification.
-
-`after` is optional and lists genuine upstream spec dependencies, for example
-`after: [preprocess]`. It describes design order, not audit status. Keep it
-sparse and consistent with the design map.
-
-### Progress summary
-
-`progress` is an optional concise implementation-progress summary maintained by
-the agent during authorized work. Keep the existing values:
-
-- `not-started`: the relevant implementation work is known not to have begun.
-- `in-progress`: work has begun but the current contract is not yet met, or
-  required verification remains outstanding.
-- `done`: the current contract is implemented and supported by the relevant checks.
-
-Keep detailed evidence, limitations, blockers, and next actions in the stage or
-an evidence note, with a useful link from the spec. The field summarizes that
-record; it does not replace it. Missing or unreliable information means **not
-recorded**, not not-started. Do not infer completion from a filename, a matching
-`covers` glob, one passing check, or closing an unrelated stage.
-
-Maintain affected summaries alongside meaningful work-state updates. Recheck
-completion after a substantive design change, and re-evaluate older markers
-when adopting a library rather than treating their presence as proof. Preserve
-valid contracts when implementation is incomplete. Read-only operations do not
-change progress fields.
-
-## stages/*.md
-
-A stage is the current work record for one objective, not a transcript or a
-reference store. Selection, reuse, handoff, and closure are defined together in
-[Operations — Work stages](operations.md#work-stages).
+Active work record for one objective, rewritten in place at meaningful milestones rather than appended as a diary. Use a stable descriptive slug (e.g., `work/atomic-export.md`); add a date prefix only when archiving (`work/archive/2026-09-05-atomic-export.md`).
 
 ```md
 ---
+specs: [export]
 scope:
   - src/export.py
   - tests/test_export.py
+status: active
 ---
 
-# Failure-safe export
+# Atomic export
 
 ## Objective
 
-Implement the agreed publication contract in [[export]].
+Implement failure-safe publication required by [[export]].
 
 ## Current state
 
-- Working: CSV rows are written, confirmed by reading `src/export.py`.
-- Broken/Blocked: it writes directly to the destination; atomic publication is
-  known unmet, not merely unchecked.
-- Not checked: behavior on network filesystems; no such environment is available.
-- Modified files: none in this work stream yet.
+- Working: CSV rows are written (`src/export.py`).
+- Broken/Blocked: writes directly to destination; atomic replacement unmet.
+- Not checked: network filesystem rename semantics.
 
 ## Next actions
 
-- [ ] Write to a sibling temporary file and publish only on success.
-- [ ] Test successful replacement and row-generation failure.
+- [ ] Write to a sibling temp file and `os.replace` on success.
+- [ ] Add failure and overwrite tests in `tests/test_export.py`.
 ```
 
-`scope` contains unit-relative globs for touched paths and supports stage
-selection; planned paths are allowed. `Current state` separates known working,
-known gaps/blockers, and unverified claims. Record changed files when useful for
-resumption, not as a duplicate of scope. Preserve only relevant check results
-with their scope and limitations. Rewrite this state at meaningful milestones.
+Frontmatter fields:
+- `specs` *(recommended)*: Spec stems this work stream advances (links work directly to specs on the board and in `--for` lookup).
+- `scope` *(recommended)*: Unit-relative globs for touched/planned files.
+- `status` *(optional, default `active`)*: `active`, `blocked`, or `ready-for-review`.
 
-Add `## Decisions` for choices with reasons (including untried alternatives),
-`## Dead ends` for failed approaches worth not retrying, and `## Handoff` for
-explicit continuation instructions. Omit empty sections. Point reusable depth
-into notes; keep active obligations visible in stages and contracts.
+Optional sections (omit when empty): `## Decisions`, `## Dead ends`, `## Handoff`.
 
-## notes/*.md
+## `notes/<topic>.md`
 
-Notes retain methods, gotchas, research, source-grounded evidence, and useful
-rationale. Add a concise `purpose` when it helps identify the contents; omit a
-redundant optional field rather than pad it. Use an H1 title and sections suited
-to the subject, not a fixed report template.
+Retains durable methods, gotchas, research, verification evidence, and rejected-option rationale.
 
-Give non-obvious factual claims source pointers: code and symbols, tests and
-observed results, a commit, data identity, or a source URL with version/date
-where relevant. Distinguish observations from hypotheses and external claims.
-Record the scope and limitations needed to reuse evidence, not raw logs.
+```md
+---
+purpose: POSIX and network-FS atomic rename constraints for local export.
+relates: [export]
+covers:
+  - src/export.py
+---
 
-A rejected option can matter without having failed in an experiment: “Remote
-conversion was not selected because rows must stay local” preserves a design
-reason; “we discussed three services on Tuesday” usually does not. Notes may
-explain decisions or explore proposals, but binding requirements belong in specs
-and current tasks in stages. Keep the library self-contained for the knowledge
-it claims to retain: link external evidence, but do not leave the only copy of a
-durable lesson in an agent memory file or chat transcript.
+# Filesystem rename gotchas
+
+`os.replace` is atomic within one local filesystem; cross-device temp paths fail
+with `EXDEV`, so temp files must be created as siblings of the destination.
+```
+
+Frontmatter fields (all optional): `purpose`, `relates` (relevant document stems), `covers` (relevant code/data globs). Include source pointers (file/symbol, test command and observed scope, commit, or URL) for non-obvious claims, and separate observations from hypotheses.

@@ -4,117 +4,66 @@ description: >-
   Use for project work guided by a docdoki/ library: load before substantial
   implementation covered by its design, even when the user does not name DocDoki.
   Maintain human intent, decided specs (including unimplemented requirements),
-  implementation evidence, and work state. Also use to init/adopt a library,
-  answer project questions, follow human design edits, challenge drift, groom
-  documents, or prepare an explicit continuation handoff. Do not introduce it
-  for unrelated README/docs copyediting, code with no relevant library, or chat
-  summaries not intended to continue project work.
+  work state, evidence, and reusable knowledge. Also use to set up/adopt a
+  library, answer project questions, reconcile human design edits or code drift,
+  groom documents, or prepare a continuation handoff. Do not introduce it for
+  unrelated README/docs copyediting or code with no relevant library.
 ---
 
 # DocDoki
 
-DocDoki is a shared project document space, primarily maintained by the agent.
-The human supplies intent and important design choices, reads the main documents
-to understand design and progress, and can edit them to steer the project. The
-agent turns that input into usable contracts, implements authorized work, checks
-conformance, and keeps useful state and knowledge current. Read
-[Philosophy](references/philosophy.md) for the principles behind this collaboration
-when designing or adapting the library.
+DocDoki is a file-first, Git-native shared project knowledge base maintained primarily by agents and steered by humans. Humans focus on intent, architecture, and key decisions (`northstar.md`, `overview.md`, and selective design proposals); agents maintain contracts, work state, evidence, and reusable notes using normal file, Git, and verification tools.
 
-It is a library of files and agent procedures, not an application or a protocol
-CLI. Use normal reading, editing, Git, and verification tools. The optional panel
-is not required for any core operation and is not installed by default. The
-[related work](references/related-work.md) is optional background for comparing approaches,
-not an additional set of operating rules.
+Read [Philosophy](references/philosophy.md) for underlying principles and [Schemas](references/schemas.md) when creating or restructuring documents.
 
-## Start here
+## Library map
 
-Find the relevant `<unit>/docdoki/` in the project or its ancestors. Follow child
-unit links where the work belongs, and use the nearest applicable intent and
-contracts; do not adopt an unrelated repository just because this skill exists.
-If there is no relevant library and no request to create one, do the ordinary
-task without introducing DocDoki. A code task can be covered even if it never
-mentions documentation. README, comments, and ordinary `docs/` work alone are
-not a trigger unless they feed this library.
+Find the nearest applicable `<unit>/docdoki/` (following child unit links in `northstar.md` when work belongs to a child unit). Do not adopt an unrelated repository merely because this skill exists.
 
-The main project reading paths are:
+- `northstar.md` — **Intent:** mission, success criteria, hard constraints, parent/child units.
+- `overview.md` — **Human steering surface:** system architecture, area map, and `## Open decisions` (legacy libraries may use `spec_abstract.md`).
+- `specs/<name>.md` — **Design contracts:** decided obligations (or `status: proposed` drafts awaiting review), `purpose`, `area`, `progress`, `after`, and `covers`.
+- `work/<slug>.md` — **Active work:** linked `specs`, `scope`, current state, gaps, checks, next actions, and handoffs; closed work moves to `work/archive/` (legacy libraries may use `stages/`).
+- `notes/<topic>.md` — **Durable knowledge:** methods, gotchas, research, rejected options, and verification evidence, linked via `relates` or `covers`.
+- `private/` — **Local-only overlay** mirroring `specs/`, `work/`, and `notes/`, excluded via `.gitignore`.
 
-- `northstar.md`: intent, success criteria, and hard constraints.
-- `spec_abstract.md`: design and progress overview with links to detail.
-- `specs/`: current decided design contracts, including requirements not yet
-  implemented. Code and checks establish conformance, not design authority.
-- `stages/`: current work, known gaps, evidence, and next actions.
-- `notes/`: reusable methods, reasons, evidence, and lessons.
+## Standing invariants
 
-Read [Document schemas](references/schemas.md) when the library format is
-unfamiliar or before creating, moving, or changing documents. Load relevant
-project detail, not every note and archived stage.
+1. **Contracts ≠ conformance.** A decided requirement remains valid when code is absent or broken. Code and tests supply evidence, never authority to weaken a contract. Preserve the meaning, conditions, and exceptions of human input wherever it is written.
+2. **Read/review is zero-write.** Answering questions and read-only reviews modify no files—no formatting, status updates, work-file edits, or generated files.
+3. **Match claims to evidence.** Distinguish confirmed behavior (with check scope), known unmet requirements, and unchecked claims. Never mark a spec `done` from code reading alone or a single partial check.
+4. **Private stays private.** Local-only context lives under gitignored `docdoki/private/`. Public documents and public answers never depend on or expose private content. Never store credentials in either scope. See [Privacy](references/privacy.md).
 
-## Optional panel integration
+## Ordinary work
 
-Keep Panel code, assets, and tests in this skill's `panel/` directory.
-When requested, put a thin launcher at `<unit>/docdoki/panel.py`; it opens
-its own unit regardless of the working directory. See
-[Panel setup](panel/panel-model.md#project-integration).
+1. **Orient:** Read `northstar.md`, `overview.md`, and the relevant `specs/`, active `work/`, and `notes/`. In larger repositories, run the bundled lookup script to find every spec, active work stream, and note matching a code path:
+   ```sh
+   python3 /path/to/docdoki/scripts/validate.py /path/to/unit --for src/path/to/file.py
+   ```
+2. **Respect authority:** Implement within authorized scope using decided specs (`status: decided`, the default). Treat `status: proposed` specs and undecided options as proposals until confirmed. Surface material missing decisions in `overview.md` under `## Open decisions` rather than inventing binding policy.
+3. **Verify honestly:** Run checks appropriate to the claim and record scope and limits.
+4. **Maintain affected records:** Update affected contracts (if design changed within authority), active `work/` state, affected spec `progress`, and durable `notes/`. Do not mirror per-spec summaries or active checklists into `overview.md`—update each fact in its authoritative home.
+5. **Validate mechanics:** Whenever document paths, frontmatter, links, or visibility change, run:
+   ```sh
+   python3 /path/to/docdoki/scripts/validate.py /path/to/unit
+   ```
 
-## Ordinary project work
+## Focused workflows
 
-For “continue implementing this feature” and other substantial covered work:
+Natural-language intent selects the workflow; read the relevant section of [Operations](references/operations.md) when needed:
 
-1. Read project intent and the overview, the relevant specs, and the matching
-   active stage. Inspect existing changes before editing. Use
-   [Work stages](references/operations.md#work-stages) to select, reuse, or create
-   a stage when persistent state is needed.
-2. Determine the requested scope and permission to write. Use existing decisions
-   as the guide; label proposed choices as proposals until decided. For conflicts
-   or unclear authorization, read
-   [Shared decisions](references/operations.md#shared-decisions).
-3. Implement the authorized work. Preserve valid requirements even when they are
-   not yet met. Resolve clear local problems yourself; request only decisions
-   or access that materially affect the outcome.
-4. Check the changed behavior with evidence appropriate to the claim. Distinguish
-   confirmed behavior, known unmet requirements, and what was not checked. Do
-   not use code reading alone to claim measured performance or deployment success.
-5. Persist meaningful changes: maintain the affected contracts if authorized
-   design changed, update work state, overview and affected `progress` summaries
-   from implementation evidence, and retain reusable lessons in their proper home. If document paths or references changed, follow
-   [Privacy](references/privacy.md) and run the bundled boundary check. Leave
-   unrelated documents alone. If nothing relevant changed, no documentation edit
-   is necessary. A progress update is not a full handoff and needs no kickoff prompt.
+| Workflow | Use |
+| :--- | :--- |
+| **Setup** (`init` / `adopt`) | Initialize a new library or adopt an existing repository without confusing observed code for decided intent. |
+| **Reconcile** (`follow` / `challenge`) | Propagate human edits/commits or audit and repair conformance drift between contracts and code. |
+| **Lifecycle** (`work`, `handoff`, `close`, `groom`) | Manage active work streams, produce cold-start handoffs, route durable knowledge on closure, and prune low-value noise. |
 
-## Boundaries in every operation
+## Optional panel
 
-- **Read/review is zero-write**, including formatting, status, grooming,
-  generated files, and stage creation. Report useful changes instead.
-- **Maintenance is not unrestricted design authority.** Preserve the meaning
-  of human input, wherever it is written. Repair direction needs decided design,
-  authorization, evidence, and scope; never weaken a valid contract to excuse
-  wrong implementation. See [Shared decisions](references/operations.md#shared-decisions).
-- **Private stays private.** Private documents live only in the ignored
-  `docdoki/private/` overlay. Public documents and public-facing answers cannot
-  depend on or expose them. Read [Privacy](references/privacy.md) before setup,
-  handling private information, or changing paths, references, or visibility;
-  run its bundled check when required. Store no credentials in either scope.
+Launch directly without installing files into the project:
 
-## Named operations
+```sh
+python3 /path/to/docdoki/panel/panel.py /path/to/unit
+```
 
-Natural-language intent selects the operation, not an exact keyword. Read
-[Operations](references/operations.md), its shared decisions and the selected
-section, before using a named procedure. Read schemas only as needed for the
-project documents being handled.
-
-| Operation | Use and result |
-| :-- | :-- |
-| `init` | Set up a library from stated intent; expose important unknowns without inventing decisions. |
-| `adopt` | Read an existing project and establish contracts, observations, gaps, and useful knowledge separately. |
-| `ask` | Answer from documents and appropriate read-only checks; change no files. |
-| `follow` | Interpret human input or edits, including specified commits; review impacts or propagate within authorized scope. |
-| `challenge` | Review conformance or repair in-scope drift when requested; do not implement an entire unfinished roadmap. |
-| `groom` | Clean and consolidate library content without losing obligations or useful reasons. |
-| `handoff` | On a request to continue elsewhere, rewrite the matching stage and give a cold-start kickoff prompt. |
-
-“Compact,” “wrap up,” and “save context” can request a continuation handoff;
-“summarize this for an email” does not. For ordinary work-state updates or stage
-closure, use [Work stages](references/operations.md#work-stages), not an unasked
-handoff. Inspection alone defaults to review; a repair/propagation request permits
-in-scope writing, subject to explicit restrictions.
+See [Panel model](panel/panel-model.md) for the optional steering board and local editor. Only copy `scripts/panel_launcher.py` into `<unit>/docdoki/panel.py` when the user explicitly wants a project-local launcher.
