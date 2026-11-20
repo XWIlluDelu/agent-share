@@ -21,23 +21,60 @@ REFERENCE_HEADINGS = {
 WORDS = re.compile(r"[A-Za-z0-9]+(?:[’'–-][A-Za-z0-9]+)*")
 
 
-def mask_code(lines):
-    """Preserve line positions while hiding fenced/inline code from syntax checks."""
-    masked = []
+def scan_markdown(lines):
+    """Return (prose_lines, syntax_lines) with line positions preserved.
+
+    HTML comments outside code are removed from both views; fenced and inline
+    code are blanked in syntax_lines so code examples cannot mimic headings or
+    footnotes.
+    """
+    prose_lines, syntax_lines = [], []
     fence = None
+    in_comment = False
     for line in lines:
         marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
         if fence:
             if (marker and marker[1][0] == fence[0]
                     and len(marker[1]) >= len(fence) and not marker[2].strip()):
                 fence = None
-            masked.append("")
-        elif marker:
+            prose_lines.append(line)
+            syntax_lines.append("")
+            continue
+        if not in_comment and marker:
             fence = marker[1]
-            masked.append("")
-        else:
-            masked.append(re.sub(r"(`+).*?\1", "", line))
-    return masked
+            prose_lines.append(line)
+            syntax_lines.append("")
+            continue
+        prose, syntax = [], []
+        pos = 0
+        while pos < len(line):
+            if in_comment:
+                end = line.find("-->", pos)
+                if end < 0:
+                    break
+                in_comment = False
+                pos = end + 3
+                continue
+            code = re.search(r"(`+).*?\1", line[pos:])
+            comment = line.find("<!--", pos)
+            if code and (comment < 0 or pos + code.start() < comment):
+                prose.append(line[pos:pos + code.end()])
+                syntax.append(line[pos:pos + code.start()])
+                pos += code.end()
+            elif comment >= 0:
+                chunk = line[pos:comment]
+                prose.append(chunk)
+                syntax.append(chunk)
+                in_comment = True
+                pos = comment + 4
+            else:
+                chunk = line[pos:]
+                prose.append(chunk)
+                syntax.append(chunk)
+                break
+        prose_lines.append("".join(prose))
+        syntax_lines.append("".join(syntax))
+    return prose_lines, syntax_lines
 
 
 def count_words(text):
@@ -47,11 +84,9 @@ def count_words(text):
 
 
 def check_text(text, budget=4000, references_heading=None):
-    text = text.lstrip("\ufeff")
-    text = re.sub(r"\A---\s*\n.*?\n---\s*\n", "", text, count=1, flags=re.S)
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
-    lines = text.splitlines()
-    masked = mask_code(lines)
+    text = text.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"\A---\s*\n.*?\n---(?:\s*\n|\s*\Z)", "", text, count=1, flags=re.S)
+    lines, masked = scan_markdown(text.splitlines())
     wanted = {references_heading.casefold()} if references_heading else REFERENCE_HEADINGS
     boundaries = []
     for i, line in enumerate(masked):

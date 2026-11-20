@@ -7,6 +7,7 @@ A listed local diff still needs review against manifest notes.
 
 import argparse
 import hashlib
+import importlib.util
 import io
 import os
 from pathlib import Path, PurePosixPath
@@ -22,17 +23,24 @@ except ImportError:
     raise SystemExit("PyYAML is required. Run with a Python environment containing PyYAML.")
 
 
-# Extend the basic checker in its own process; keep the bundled files intact.
-# Pi and Claude Code both honor this explicit-invocation control.
-VALIDATOR_ADAPTER = """\
-import sys
-sys.path.insert(0, sys.argv[1])
-import quick_validate
-quick_validate.ALLOWED_PROPERTIES.add("disable-model-invocation")
-valid, message = quick_validate.validate_skill(sys.argv[2])
-print(message)
-sys.exit(not valid)
-"""
+def load_validator(validator_path):
+    """Load bundled quick_validate.py in-process without mutating files on disk."""
+    scripts_dir = str(validator_path.parent)
+    prev_frontmatter = sys.modules.pop("frontmatter", None)
+    sys.path.insert(0, scripts_dir)
+    try:
+        spec = importlib.util.spec_from_file_location("_quick_validate", validator_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    finally:
+        if sys.path and sys.path[0] == scripts_dir:
+            sys.path.pop(0)
+        sys.modules.pop("frontmatter", None)
+        if prev_frontmatter is not None:
+            sys.modules["frontmatter"] = prev_frontmatter
+    # Pi and Claude Code both honor this explicit-invocation control.
+    module.ALLOWED_PROPERTIES = set(module.ALLOWED_PROPERTIES) | {"disable-model-invocation"}
+    return module.validate_skill
 
 
 class UniqueLoader(yaml.SafeLoader):
@@ -121,7 +129,7 @@ def audit(root, sources=False, runtimes=()):
 
     names, always_on, checked_repos = set(), set(), set()
     validator = root / "lib/openai-skill-creator/scripts/quick_validate.py"
-    require(validator.is_file(), "Missing bundled quick_validate.py")
+    validate_skill = load_validator(validator) if require(validator.is_file(), "Missing bundled quick_validate.py") else None
     for skill in skills:
         if not isinstance(skill, dict):
             raise ValueError("Each skill must be a mapping")
@@ -163,12 +171,9 @@ def audit(root, sources=False, runtimes=()):
                 require(type(metadata["disable-model-invocation"]) is bool, f"{name}: disable-model-invocation must be a boolean")
         else:
             errors.append(f"{name}: invalid frontmatter")
-        if validator.is_file():
-            result = subprocess.run(
-                [sys.executable, "-B", "-c", VALIDATOR_ADAPTER, str(validator.parent), str(directory)],
-                capture_output=True, text=True,
-            )
-            require(result.returncode == 0, f"{name}: {(result.stdout + result.stderr).strip()}")
+        if validate_skill is not None:
+            valid, message = validate_skill(directory)
+            require(valid, f"{name}: {message}")
         local = local_tree(directory)
         for relative, info in local.items():
             require(".git" not in PurePosixPath(relative).parts, f"{name}/{relative}: repository internals in skill")

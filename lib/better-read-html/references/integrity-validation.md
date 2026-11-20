@@ -1,13 +1,5 @@
 # Integrity Validation
 
-## Table of contents
-
-- [Acceptance gates by mode](#acceptance-gates-by-mode)
-- [Canonical text extraction](#canonical-text-extraction)
-- [Required report fields](#required-report-fields)
-- [Readability and design checks](#readability-and-design-checks)
-- [Audit helper](#audit-helper)
-
 ## Acceptance gates by mode
 
 | Check | conversion-preserve | close-read | derivation-math | notes-wiki | synthesis-report |
@@ -23,114 +15,63 @@
 
 ## Canonical text extraction
 
-When comparing HTML with source text, ignore:
+When comparing HTML with source text, ignore `script`, `style`, elements with
+`data-canonical="false"`, and elements with `data-layout-duplicate="true"`. Do
+not blanket-exclude `<aside>`; canonical source asides count unless explicitly
+marked noncanonical.
 
-- `script` and `style`;
-- elements with `data-canonical="false"`;
-- elements with `data-layout-duplicate="true"`;
-- colophons, evidence notes, generated annotations, and UI indexes when marked
-  noncanonical.
+Normalize whitespace consistently and preserve codepoints (NFC) by default.
+Compatibility normalization (NFKC) may be reported diagnostically, never to
+satisfy strict exact-preservation parity. Report first mismatch context when
+parity fails.
 
-Do not blanket-exclude `<aside>`; canonical source asides must count unless they
-are explicitly marked noncanonical. Normalize whitespace consistently and
-preserve codepoints by default. Compatibility normalization such as NFKC may be
-reported as a diagnostic, but it must not satisfy strict exact-preservation
-parity. Report first mismatch context when parity fails.
+## Audit summary & helper output
 
-## Required report fields
+Run `scripts/audit_html.py` on every rendered HTML artifact (record the exact
+command and `--profile` used beside substantial audit outputs).
 
-A useful audit report should include:
+- **Agent audit summary** records artifact-level metadata not derived solely
+  from HTML: `mode`, `mode_subtype`, `fidelity_tier`, `sources`, `layout_notes`,
+  `unreferenced_assets`, and `unsupported_content`.
+- **`scripts/audit_html.py`** emits structured JSON covering:
+  - **Strict structural/source-boundary gates** (cause non-zero exit under
+    `--strict`): `main_seen`, `canonical_text_chars`, `duplicate_ids`,
+    `broken_internal_links`, `unresolved_attribute_refs`,
+    `missing_referenced_assets`, `missing_local_links`, `remote_dependencies`
+    (unless `--allow-remote`), `executable_links`, `navigation_hazards`
+    (`<base href>`, meta refresh), `html_validity_errors`,
+    `source_boundary_errors` (generated-block targets and evidence-note rules),
+    `template_errors` (`annotation-report` id), and
+    `source_order_normalized_text_exact_match` (with `first_text_mismatch` and
+    diagnostic `source_order_compatibility_text_match`).
+  - **Advisory warning buckets** (reported without failing `--strict` unless
+    they also violate a strict rule): `accessibility_warnings`,
+    `readability_warnings`, `design_warnings`, `converter_residue_warnings`, and
+    `scholarly_warnings` (`--profile scholarly`).
+  - **Informational inventories:** `asset_references`, `local_links`,
+    `external_links` (ordinary anchors, not render dependencies),
+    `inline_data_assets`, `benign_external_links`, and counts for ids, relaid
+    figures, evidence notes, math elements, and links.
 
-```json
-{
-  "mode": "preserve",
-  "mode_subtype": "conversion-preserve",
-  "fidelity_tier": "verified-preserve",
-  "html_file": "...",
-  "sources": [],
-  "layout_notes": [],
-  "source_order_normalized_text_exact_match": true,
-  "duplicate_ids": [],
-  "broken_internal_links": [],
-  "missing_referenced_assets": [],
-  "local_links": [],
-  "missing_local_links": [],
-  "unreferenced_assets": [],
-  "warnings": [],
-  "unsupported_content": [],
-  "remote_dependencies": [],
-  "external_links": [],
-  "navigation_hazards": []
-}
-```
+## Lightweight static checks
 
-## Readability and design checks
+Keep static checks local and contract-based; they do not replace human visual
+judgment and never authorize canonical text rewrites.
 
-Keep design checks static, local, and contract-based. They do not replace human
-visual judgment and they never authorize canonical text rewrites. Suggested
-report buckets:
-
-```json
-{
-  "fidelity_errors": [],
-  "source_boundary_errors": [],
-  "asset_link_errors": [],
-  "accessibility_errors": [],
-  "readability_warnings": [],
-  "design_warnings": [],
-  "converter_residue_warnings": []
-}
-```
-
-Recommended lightweight checks:
-
-- `html[lang]`, `<title>`, viewport meta, one useful `<main>`, nonempty
-  canonical text. Empty `alt=""` is valid for decorative images; missing `alt`
-  is an accessibility warning.
-- Duplicate ids, broken internal links, unresolved
-  `data-target`/`data-duplicate-of`/evidence refs.
-- Unauthorized remote render dependencies such as scripts, stylesheets, fonts,
-  iframes, remote media, CSS URLs, responsive-image candidates, embedded
-  objects, or CDN math; executable links; missing local document links and
-  local CSS/media dependencies. Ordinary external source/citation anchors are
-  reported as `external_links`, not failed as dependencies unless an
-  offline-no-external policy is selected. `<base href>` and meta refresh are
-  strict navigation hazards because they change or bypass ordinary URL
-  resolution.
-- Visible `:focus-visible` and `:target` styles when the artifact has navigation
-  or anchors; long URLs and code-like tokens wrap or scroll without body-level
-  horizontal overflow.
-- Readable measure/spacing by inspection or documented route; horizontal
-  overflow wrappers for wide tables/code/math.
-- Print or print-safe behavior for substantial reading artifacts.
-- Empty decorative apparatus omitted; evidence notes and previews marked
-  noncanonical or duplicate.
-- The SKILL.md design smoke check holds for substantial artifacts.
-- Converter residue warnings for high inline-style density, `<font>` tags,
-  tool-specific wrapper classes, empty spans/divs, page fields, and GIF-only
-  math when a cleaner source math representation is available.
-
-For scholarly/formal sources, additionally check declared
-figure/table/equation/citation ids and status fields when those structures
-exist: `asset_status`, `caption_status`, `citation_status`, `math_renderer`,
-`reading_order_status`, generated-note targets, and visible uncertainty. Do not
-require OCR, figure CV, CSL/BibTeX/DOI enrichment, browser visual regression,
-JavaScript, remote fonts, or subjective aesthetic scores.
-
-## Audit helper
-
-Use `scripts/audit_html.py` for already-rendered HTML. It is a partial
-structural/source audit, not a full accessibility or visual test. It checks
-duplicate ids, missing `<main>` in strict mode, empty canonical text in strict
-mode, broken internal links, local document links, selected reference/evidence
-attributes, evidence notes (marker targets, unreferenced notes, missing
-source ties, positional ids, canonical marking), the annotation report id,
-local asset references across HTML/CSS/srcset/object surfaces including linked
-stylesheets and the url() references inside them,
-remote render dependencies, executable links, navigation hazards, external
-source links, minimal accessibility warnings, optional canonical text parity, selected
-readability/design warnings, and emits JSON. `--strict` is a
-structural/source-boundary gate; it can still report accessibility, readability,
-design, or scholarly warnings without failing unless those warnings also violate
-a strict structural rule. Record the exact command/profile used beside
-substantial audit outputs.
+- **Accessibility & structure:** `html[lang]`, `<title>`, viewport meta, one
+  useful `<main>`, nonempty canonical text. Empty `alt=""` is valid for
+  decorative images; missing `alt` warns.
+- **Dependencies & navigation:** flag unauthorized remote render dependencies
+  (scripts, stylesheets, fonts, iframes, media, CSS `url()`/`@import`,
+  `srcset`, `<object>`), executable links, missing local links/assets (including
+  URLs inside linked local stylesheets), `<base href>`, and meta refresh.
+- **Readability & layout:** visible `:focus-visible` and `:target` styles when
+  anchored, `.table-responsive` / `overflow-x: auto` wrappers for wide tables,
+  print stylesheet (`@media print`), no duplicate noncanonical hero, no
+  double-rendered figures, no truncated or editorial-prefixed captions, no
+  visible process/helper notes, and low converter residue (`<font>`, legacy
+  tags, excessive inline `style=`).
+- **Scholarly (`--profile scholarly`):** check `data-caption-status`, math
+  renderer/provenance markers (satisfied automatically by bundled KaTeX), and
+  `citation_status` / `data-citation-status` when citations are present. Do not
+  require external engines listed in [`scholarly-rigor.md`](scholarly-rigor.md).

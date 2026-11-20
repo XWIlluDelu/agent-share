@@ -18,26 +18,14 @@ minority objections still matter.
 
 ## 2. Fundamental implementation method
 
-The invariant path is:
+Concrete tactics vary — proposer–critic–judge, parallel inquiry, adversarial
+review, voting with minority reports, or claim-led artifact review — but the
+invariant path is the seven-stage workflow in `SKILL.md`: frame, separate first,
+externalize claims, cross-examine, revise under evidence pressure, synthesize as
+a responsible judge, and retain unresolved dissent.
 
-1. **Frame the task.** Define the question, scope, evidence standard, success
-   criterion, and stop rule.
-2. **Separate first.** Agents produce initial positions before seeing one
-   another’s work, preserving independent search.
-3. **Externalize claims.** Each position is broken into claims, assumptions,
-   evidence, uncertainty, and risks.
-4. **Cross-examine.** Agents attack specific claims: weak evidence, invalid
-   inference, missing alternative, hidden premise, or practical risk.
-5. **Revise.** Claims are defended, narrowed, corrected, conceded, or withdrawn.
-6. **Synthesize.** A responsible judge or coordinator weighs the surviving
-   material against the original standard.
-7. **Preserve dissent.** The final artifact records unresolved objections
-   instead of laundering them into consensus.
-
-Concrete protocols may differ: proposer–critic–judge, parallel inquiry,
-adversarial review, voting with minority reports, or claim-led artifact review.
-These are tactics. The essence is independent generation, evidence-bound
-criticism, revision, synthesis, and retained dissent.
+Background literature consulted when designing CHAOS is listed in
+[`../design/source-bibliography.md`](../design/source-bibliography.md).
 
 ## 3. What it primarily leverages
 

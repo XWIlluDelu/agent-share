@@ -1,33 +1,17 @@
 # Optional Components
 
-Use this reference only when the user explicitly asks for one of these layers,
-or when the selected artifact mode clearly needs it. These are lightweight
-artifact patterns and metadata hooks, not bundled engines. They must never
-weaken source preservation: generated content stays noncanonical and targets
-source ids.
-
-## Table of contents
-
-- [Question/evidence ledger](#questionevidence-ledger)
-- [Translation layer](#translation-layer)
-- [Math rendering policy](#math-rendering-policy)
-- [Figure and asset records](#figure-and-asset-records)
-- [Citation status](#citation-status)
-- [Not included](#not-included)
+Use this reference only when the user explicitly asks for one of these layers or
+the selected mode needs it. These are lightweight patterns and metadata hooks —
+not bundled engines (see the excluded-engine boundary in
+[`scholarly-rigor.md`](scholarly-rigor.md)). Enum values live in
+[`content-contract.md`](content-contract.md). Generated content always stays
+noncanonical and targets declared source ids.
 
 ## Question/evidence ledger
 
 Use when the user supplies research questions, teaching prompts, review
-criteria, or decision questions. Render a generated ledger that maps each
-question to source evidence.
-
-Required fields:
-
-```yaml
-question_ledger_status: none | requested | generated | blocked
-```
-
-Suggested block:
+criteria, or decision questions. Set `question_ledger_status` and render a
+generated ledger mapping each question to source evidence:
 
 ```markdown
 :::question id="q001" generated="true" status="source-linked"
@@ -40,92 +24,39 @@ Open uncertainty:
 :::
 ```
 
-Do not use a fixed classroom or Wonksheet schema unless the user explicitly asks
-for it. Do not color-code questions in a way that implies unsupported source
-categories.
+Do not impose a fixed classroom or worksheet schema unless requested, and do not
+color-code questions in ways that imply unsupported source categories.
 
 ## Translation layer
 
-Translation is opt-in unless the source itself is bilingual. Generated
-translations are noncanonical and must target source ids.
-
-Required fields:
-
-```yaml
-translation_status: none | source-bilingual | selected-span-generated | paragraph-generated | side-by-side-generated | blocked
-translation_scope: none | selected | paragraph | section | full-document
-```
-
-Prefer paragraph or selected-span translation for readable artifacts.
-Sentence-level hover translation is allowed only when explicitly requested; it
-is not a default because it bloats HTML and relies on fragile sentence
-boundaries.
+Translation is opt-in unless the source itself is bilingual. Set
+`translation_status` and `translation_scope`. Prefer paragraph or selected-span
+translation; allow sentence-level hover translation only when explicitly
+requested (it bloats HTML and relies on fragile sentence boundaries).
 
 ## Math rendering policy
 
-Preserve source LaTeX or equation text even when a visual renderer is used. Ask
-before remote/CDN rendering for private or local sources.
-
-Required field:
-
-```yaml
-math_renderer: none | preserve-latex | native-mathml | local-katex | local-mathjax | approved-cdn
-```
-
-Rules:
+Set `math_renderer` and preserve source LaTeX or equation text even when a
+visual renderer is used. Ask before using remote/CDN rendering on private or
+local sources.
 
 - `none` or `preserve-latex` is acceptable when exact source display matters
   more than visual typesetting.
 - `native-mathml` is preferred for simple equations when it can be generated
-  deterministically and works without remote assets.
+  deterministically without remote assets.
 - The template bundles KaTeX, so `local-katex` is the default: write TeX
-  between `$…$` or `$$…$$`. The TeX stays in the HTML as the source math,
-  renders offline, and selection copy writes it back as LaTeX.
+  between `$…$` or `$$…$$`. Source TeX stays in the HTML, renders offline, and
+  copies back as LaTeX.
 - `local-mathjax` requires available local assets; `approved-cdn` requires
   explicit approval for the network dependency.
-- Rendering failure must leave readable source math visible (KaTeX is run with
-  `throwOnError:false`, which leaves the TeX in place).
+- Rendering failure must leave readable source math visible (KaTeX runs with
+  `throwOnError:false`).
 - Do not mix generated derivation steps into a source equation; reconstructed
-  steps are separate blocks with `data-equation-status`.
+  steps live in separate blocks with `data-equation-status`.
 
-## Figure and asset records
+## Figure, asset, and citation status hooks
 
-Use the template's figure markup with status attributes to keep source assets,
-captions, generated descriptions, and uncertainty distinct.
-
-Required or recommended fields:
-
-```yaml
-asset_status: copied | referenced | missing | placeholder
-caption_status: copied | unavailable | uncertain
-```
-
-Caption / figure / legend rules are owned by
-[`scholarly-rigor.md`](scholarly-rigor.md); see "Figures, tables, and captions"
-for the fidelity invariants (no auto-generated short-form captions; generated
-descriptions live in separate noncanonical blocks).
-
-## Citation status
-
-Use for scholarly or evidence-heavy artifacts where citation preservation or
-linking matters.
-
-Required field when citations are material:
-
-```yaml
-citation_status: not-applicable | copied | linked | unresolved | unavailable
-```
-
-Citation preservation, affiliation, and DOI/venue enrichment rules are owned by
-[`scholarly-rigor.md`](scholarly-rigor.md); see "Citations, affiliations, and
-author claims".
-
-## Not included
-
-These optional layers are lightweight patterns, never bundled engines. The
-canonical list of excluded engines — PDF/OCR extraction, figure CV,
-CSL/BibTeX/DOI enrichment, Obsidian vault graph, browser visual-regression,
-renderers beyond the bundled KaTeX, mandatory worksheet/hover translation — is owned
-by [`scholarly-rigor.md`](scholarly-rigor.md), "Boundary: accepted hooks, not
-bundled engines". Use external adapters and feed their audited outputs back into
-the content contract.
+Set `asset_status`, `caption_status`, and (when citations are material)
+`citation_status` on figure/asset and scholarly records. All fidelity rules for
+captions, legends, citations, affiliations, and enrichment are owned by
+[`scholarly-rigor.md`](scholarly-rigor.md).

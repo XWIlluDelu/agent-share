@@ -15,12 +15,12 @@ directly.
 ## Produce portable skills
 
 Follow symlinks to the canonical path of this `SKILL.md`, then resolve
-`<library-dir>` as the parent of its containing skill directory. Confirm that
-`<library-dir>` contains sibling `openai-skill-creator/` and
-`anthropic-skill-creator/` directories before running anything. Never derive
-bundled script paths from the lexical runtime symlink or the user's current
-project. Commands use `python3`; substitute another command only when it is
-verified to run Python 3.
+`<library-dir>` as the parent of its containing skill directory (where the
+bundled `openai-skill-creator/` and `anthropic-skill-creator/` symlinks point
+to sibling directories). Confirm both sibling directories exist before running
+anything. Never derive bundled script paths from the lexical runtime symlink or
+the user's current project. Commands use `python3`; substitute another command
+only when it is verified to run Python 3.
 
 The two bundled guides are each written for one vendor (Claude/Anthropic,
 Codex/OpenAI). Strip that specificity:

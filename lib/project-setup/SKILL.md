@@ -14,7 +14,8 @@ instructions.
 - Write only target-project agent assets: `.agents/skills/`, requested
   platform discovery links, `.agents/fragments/`, vendored external-skill
   `.source.yaml` files, `AGENTS.md`, and requested instruction aliases or
-  platform rule files. Do not use this skill to maintain `.agent-share`; that
+  platform rule files. Never run `project-setup` against `.agent-share` itself
+  (which keeps only its own root `AGENTS.md`); maintaining `.agent-share`
   belongs to `skill-manager`.
 - Prefer relative symlinks. Skip and report existing real files or unexpected
   symlinks instead of overwriting user customizations.
@@ -91,10 +92,7 @@ skills-only. Then create links under the target project's fragment directory:
 Prefer this directory layout over root-level `AGENT-*.md` links. If an older
 project already has expected root-level `AGENT-*.md` symlinks, migrate them into
 `.agents/fragments/` when the user requests a setup update and no conflict
-exists; otherwise skip and report the migration plan. If the target path is
-`.agent-share`, stop and use `skill-manager` instead; `.agent-share` itself
-should keep only its own root `AGENTS.md`, with no root `AGENT-*.md` or alias
-files.
+exists; otherwise skip and report the migration plan.
 
 For a skills-only request with no instruction update, skip `AGENTS.md`
 generation and leave any existing instruction file unchanged. Create a native
@@ -112,7 +110,7 @@ A generated file starts with this exact ownership marker:
 Generate the target project's `AGENTS.md` by concatenating linked
 `.agents/fragments/AGENT-*.md` files in this order:
 
-1. core persona / collaboration rules (`core`, `orthodox`, `general`, `base`)
+1. core persona / collaboration rules (`core`, `standard`, `orthodox`, `general`, `base`)
 2. project/process rules (`project`, `workflow`, `ops`, `security`)
 3. domain profiles (`research`, `science`, `product`, etc.)
 4. tool/runtime notes (`pi`, `claude`, `codex`, `gemini`, etc.)
@@ -143,12 +141,9 @@ other aliases they do not need. Current official client behavior overrides this
 list when it changes. Skip and report every existing real file or nonmatching
 symlink.
 
-Do not create different-format rule systems by default: Cursor uses
-`.cursor/rules/*.mdc`, GitHub Copilot repo-wide instructions use
-`.github/copilot-instructions.md`, Cline uses `.clinerules/`, Continue uses
-`.continue/rules`, Amazon Q uses project rules, Windsurf has `.windsurf/rules/`
-plus `AGENTS.md` discovery, and Claude Code Review can use review-specific
-`REVIEW.md`. Configure those only on explicit request.
+Do not create tool-specific rule directories or alternate formats (e.g.,
+`.cursor/rules/`, `.github/copilot-instructions.md`, `.clinerules/`,
+`.continue/rules`, `.windsurf/rules/`, `REVIEW.md`) unless explicitly requested.
 
 ## Validation and report
 

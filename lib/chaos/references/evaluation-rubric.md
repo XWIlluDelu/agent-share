@@ -1,17 +1,20 @@
 # CHAOS evaluation rubric
 
+Use before final synthesis to weigh evidence, calibrate confidence, and verify
+the deliberation did not collapse into consensus theater.
+
 ## Evidence hierarchy
 
 Prefer direct tests, observations, primary sources, calculations, and inspected
-artifacts over indirect summaries. For code or implementation claims, prefer
+artifacts over indirect summaries. For code or implementation claims, require
 `file:line`, diff hunks, command output, test output, logs, or stable
-permalinks. Explicit reasoning can support inferences but must not override
+permalinks. Explicit reasoning can support inferences but never overrides
 stronger direct evidence. Unsupported confidence has no decision weight.
 
 ## Confidence handling
 
 Record confidence only with basis: evidence quality, method fit, agreement with
-direct observations, and known uncertainty. Challenge confidence changes during
+direct observations, and known uncertainty. Challenge confidence shifts during
 critique. Treat confidence as calibration metadata, not authority.
 
 ## Diversity check
@@ -21,65 +24,42 @@ source path, method, assumptions, evidence standard, failure mode, stakeholder
 criterion, verification technique, or model family. Persona labels, tone
 changes, or roleplay without different work do not count.
 
-## Anti-patterns
-
-- Majority vote, threshold consensus, or unanimity as truth.
-- Forced consensus that erases minority objections.
-- Swarm/chatroom dynamics without claim IDs, evidence, or parent synthesis.
-- Persona theater instead of operational diversity.
-- Topic sharding masquerading as Council: one model writes theory, another
-  applications, another critique, without each first-position adviser answering
-  the whole frame.
-- Eloquent unsupported claims outranking tests, sources, or inspected artifacts.
-- Deference to weak agents, confident agents, or special roles.
-- Identity-visible cross-examination: critics judging authors or model
-  reputations instead of claims.
-- Evidence-free reversals counted as corrections instead of conformity.
-- Unanimous first positions accepted without a diversity-failure check.
-- Repeated rounds after no new evidence or useful narrowing appears.
-- Hidden judge responsibility or advisory agents self-accepting final claims.
-- Context contamination before independent first positions.
-- Treating a subagent label, process count, or session count as proof of fresh
-  independent context.
-- Giving claims extra weight because they came from a native subagent rather
-  than an isolated session, or vice versa.
-
 ## Synthesis rubric
 
-Judge the final answer by: fit to the frame; quality and directness of evidence;
-claim survival under critique; severity of unresolved risks; feasibility of
-remaining validation; breadth of available independent coverage; and whether
-dissent is preserved clearly enough for a later reviewer to act on it.
+Judge the final answer by:
 
-## Process metrics
+- fit to the task frame and evidence standard;
+- directness and verifiability of supporting evidence;
+- claim survival under anonymized critique;
+- severity of unresolved risks and feasibility of remaining validation;
+- breadth of independent coverage (and explicit disclosure of degraded runs);
+- actionable preservation of live minority objections.
 
-Useful diagnostics: number of unique first hypotheses, changed/narrowed claims,
+## Process metrics (diagnostic only)
+
+Useful diagnostics: unique first hypotheses, changed/narrowed claims,
 minority-correct adoption, wrong-majority reversal, unresolved-risk severity,
-and claims moved from unsupported to tested. Metrics are not proof of
+and claims moved from unsupported to tested. Metrics are never proof of
 correctness.
 
-## Failure outcomes
+## Anti-patterns to reject
 
-Use explicit failure states instead of false certainty:
+- Majority vote, threshold consensus, unanimity without counter-case check, or
+  forced consensus that erases minority objections.
+- Swarm/chatroom dynamics without claim IDs, evidence, or parent synthesis.
+- Persona theater or topic-sharded scouting counted as whole-frame first
+  positions.
+- Identity-visible cross-examination, deference to fluent/confident/special
+  roles, or evidence-free reversals counted as corrections.
+- Context contamination before first positions, or counting process/session
+  labels as proof of independence or extra claim weight.
+- Extra rounds after no new evidence or useful narrowing appears, or advisory
+  agents self-accepting final claims.
 
-- `unresolved after exhaustive available review`
-- `needs direct test`
-- `needs external expertise`
-- `insufficient evidence`
-- `degraded: independent agents unavailable`
-- `degraded: planned perspective failed`
+## Explicit failure outcomes
 
-## Scenario checks
-
-| Scenario | Expected behavior |
-|---|---|
-| Existing plan, document, or claim audit | Extract claims, create ledger, target critiques to claim IDs, record changed/withdrawn/surviving claims. |
-| Broad design or research decision | Collect same-question independent first positions with real diversity axes; use topic-sharded research only as scouting; preserve minority report. |
-| Majority pressure | Do not cite agreement count as truth; address or preserve the strongest minority objection. |
-| Unanimous first positions | Launch a counter-case duty or record reduced confidence; never accept unanimity as verification. |
-| Reversal without new evidence | Record as conformity; give it no decision weight. |
-| Software or web review | Require locatable artifact evidence for implementation claims. |
-| Document understanding dispute | Separate text evidence, interpretation, assumptions, and uncertainty. |
-| Exhausted useful coverage | Return an explicit failure state rather than forced consensus. |
-| Persona-theater prompt | Convert style roles into operational duties or reject them as fake diversity. |
-| Failed adviser run | Inspect execution, authoritative output, and failure provenance; retry once only when safe, or record the missing perspective and reduced coverage in the receipt. |
+When the evidence standard is unmet, return one of the explicit failure states
+rather than false certainty: `unresolved after exhaustive available review`,
+`needs direct test`, `needs external expertise`, `insufficient evidence`,
+`degraded: independent agents unavailable`, or `degraded: planned perspective
+failed`.

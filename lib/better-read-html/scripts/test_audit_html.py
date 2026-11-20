@@ -222,6 +222,23 @@ def test_bundled_katex_math_needs_no_extra_math_markers() -> None:
     assert not any("math" in w for w in katex["scholarly_warnings"]), katex
 
 
+def test_double_rendered_figure_detects_any_attr_order_and_nested_figure() -> None:
+    body = (
+        '<main id="main"><section id="s1">'
+        '<aside data-duplicate-of="fig1" data-layout-duplicate="true"><img src="assets/f.png" alt=""></aside>'
+        '<figure id="fig1"><div class="wrap"><img src="assets/f.png" alt="fig"></div></figure>'
+        '</section></main>'
+    )
+    report = audit(body, files={"assets/f.png": "img"})
+    assert any("figure rendered twice" in w for w in report["design_warnings"]), report["design_warnings"]
+
+
+def test_script_and_comments_do_not_trigger_converter_residue() -> None:
+    script = "<script>const x = '" + " style=\"color:red\"" * 60 + " <font>';</script>"
+    report = audit(script + '<!-- <font>ignored</font> --><main id="main"><p>body</p></main>')
+    assert not report["converter_residue_warnings"], report["converter_residue_warnings"]
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

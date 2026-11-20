@@ -2,36 +2,8 @@
 
 Use this reference when the artifact involves academic papers, preprints, formal
 technical documents, scientific/medical/legal/compliance sources, citations,
-figures, tables, equations, proofs, derivations, or paper-like PDFs. This
-reference strengthens the generic document-artifact workflow; it does not relax
-the source contract.
-
-## Table of contents
-
-- [When to load this reference](#when-to-load-this-reference)
-- [Default stance](#default-stance)
-- [Scholarly source inventory](#scholarly-source-inventory)
-- [Paper and PDF preservation](#paper-and-pdf-preservation)
-- [Figures, tables, and captions](#figures-tables-and-captions)
-- [Citations, affiliations, and author
-  claims](#citations-affiliations-and-author-claims)
-- [Equations and derivations](#equations-and-derivations)
-- [Academic close-reading layer](#academic-close-reading-layer)
-- [Academic output checks](#academic-output-checks)
-- [Boundary: accepted hooks, not bundled
-  engines](#boundary-accepted-hooks-not-bundled-engines)
-
-## When to load this reference
-
-Load it for any of these signals:
-
-- paper, preprint, article, proceedings, thesis, report, specification, RFC,
-  standard, clinical/legal/compliance document;
-- PDF close reading, annotated paper, figure-aware reading, citation-aware
-  reading;
-- formula, equation, notation, proof, derivation, skipped steps, appendix math;
-- source claims where fabricated legends, citations, affiliations, author
-  intent, or math steps would be harmful.
+figures, tables, equations, proofs, derivations, or paper-like PDFs. It
+strengthens the generic workflow without relaxing the source contract.
 
 ## Default stance
 
@@ -39,9 +11,7 @@ For formal scholarly or technical sources, default to `conversion-preserve`
 unless the user explicitly asks for annotation, explanation, synthesis, or
 derivation. If the user asks for both exact conversion and analysis, keep
 analysis noncanonical and visibly separate, or ask which output should be
-primary.
-
-Never let a `key-point` block, evidence note, figure note, or generated
+primary. Never let a `key-point` block, evidence note, figure note, or generated
 explanation imply that generated content is source text.
 
 ## Scholarly source inventory
@@ -54,136 +24,113 @@ In addition to the generic inventory, record:
 - figure, table, equation, algorithm, theorem, footnote, and citation counts
   when relevant;
 - bibliography/reference availability;
-- text-layer vs OCR status;
-- reading-order confidence by page, section, or block;
-- table/formula/figure extraction limitations;
-- missing pages, image-only pages, cropped content, or unsupported material.
+- text-layer vs OCR status and reading-order confidence by page, section, or
+  block;
+- table/formula/figure extraction limitations, missing/image-only pages, or
+  cropped/unsupported material.
 
 ## Paper and PDF preservation
 
-PDFs are not automatically source-preserving. The preservation policy and the
-fidelity-tier definitions are owned by [`mode-contracts.md`](mode-contracts.md)
-(§PDF and OCR policy, §Fidelity tiers); papers apply them at full stringency —
+PDFs are not automatically source-preserving. Apply the PDF/OCR policy and
+fidelity tiers from [`mode-contracts.md`](mode-contracts.md) at full stringency:
 claim `verified-preserve` only against original source text or a separately
 audited ground-truth extraction, never an unaudited intermediate. Surface
-reading-order uncertainty at page, section, or block level with
-`reading_order_status`.
+reading-order uncertainty with `reading_order_status`.
 
 ## Figures, tables, and captions
 
 - Copy figure/table legends only when the source provides them.
-- If a legend is absent, write `Legend unavailable from source`; do not invent
-  one.
+- If a legend is absent, set `caption_status="unavailable"` and leave canonical
+  caption text empty. If you show a visible placeholder (`Legend unavailable
+  from source`), mark it noncanonical status UI (`data-canonical="false"`);
+  never invent a legend.
 - Do not auto-generate short-form, summarized, or paraphrased captions.
-  `caption_status` is one of `copied | unavailable | uncertain`. A generated
-  alt-text or interpretation block must live in a separate noncanonical element
-  with `data-generated="true"` and a `data-target` pointing at the figure id; it
-  must not replace, prefix, or shadow the source caption.
-- Generated descriptions, alt text, visual summaries, or interpretation must be
-  marked generated/noncanonical.
-- Preserve original numbering and labels when present.
-- If figure/table association is uncertain, mark it uncertain rather than
-  attaching the wrong caption.
+  `caption_status` is `copied | unavailable | uncertain`. Any generated
+  alt-text or interpretation lives in a separate noncanonical element with
+  `data-generated="true"` and `data-target="<figure-id>"`; it must not replace,
+  prefix, or shadow the source caption.
+- Preserve original numbering and labels when present. If figure/table
+  association is uncertain, mark it uncertain rather than attaching the wrong
+  caption.
 - In `preserve`, keep figures/tables in source order unless the user asks for
   reader relayout, the source already places them near first mention, or the
-  document form clearly benefits from figure-aware relayout and the output is
-  labeled as relaid/extracted rather than exact source-order facsimile. When
-  relayout is used, each figure/table should appear once at the most relevant
-  first mention, carry `data-relayout="first-mention"` or equivalent provenance,
-  and keep the copied full legend/caption with it.
+  document clearly benefits from figure-aware relayout and the output is labeled
+  relaid/extracted rather than exact source-order facsimile. When relaid, each
+  figure/table appears once at first mention, carries
+  `data-relayout="first-mention"` plus source-index provenance, and keeps the
+  full copied legend/caption.
 
 ## Citations, affiliations, links, and author claims
 
 - Do not invent citations, affiliations, author intent, venue, institution,
   funding, or related-work claims.
 - Preserve citation strings and bibliography entries when present.
-- Link declared cross-references when safe: bibliography citations to
-  bibliography ids, figure/table references to figure/table ids, equation
-  references to equation ids, source footnotes/comments to their ids, and bare
-  source URLs to external anchors. Keep the visible source string intact; do not
-  turn affiliation superscripts, footnote markers, bibliography citations,
-  figure labels, or equation numbers into the wrong kind of link.
+- Link declared cross-references when safe (bibliography citations,
+  figure/table/equation refs, source footnotes/comments, bare source URLs) while
+  keeping the visible source string intact. Do not mislink affiliation
+  superscripts, footnote markers, or numbering.
 - Do not enrich DOI, venue, author, or citation style without a separate source.
   External source URLs are ordinary anchors, not render dependencies.
 - For synthesis reports, cite source ids, file paths, page numbers, URLs, or
-  manifest entries for material claims.
-- Label generated conclusions as synthesis; do not present them as findings of
-  the source authors.
+  manifest entries for material claims, and label generated conclusions as
+  synthesis rather than findings of the source authors.
 
 ## Equations and derivations
 
-Use `derivation-math` only when requested or clearly needed for the artifact.
-Distinguish:
+Use `derivation-math` only when requested or clearly needed. Distinguish exact
+source equations, notation tables derived from source symbols, stated
+assumptions, standard named rules/theorems, reconstructed intermediate steps,
+and unresolved gaps.
 
-- exact source equations;
-- notation tables derived from source symbols;
-- stated assumptions;
-- standard named rules or theorems;
-- reconstructed/supplemented intermediate steps;
-- unresolved gaps.
-
-Render source equations visually when a local/offline renderer is available or
-native MathML is sufficient, while preserving exact source equation text in
-`data-canonical-text`, `data-math-source`, adjacent source markup, or an
-equivalent audit field. If source math is lossy (for example, DOCX/OMML
-extraction without reliable conversion), preserve the raw equation text and mark
-the visual rendering as reconstructed rather than silently replacing the source.
+Render source equations visually with an offline renderer (bundled KaTeX by
+default) or native MathML while preserving exact source equation text in the
+HTML TeX, `data-canonical-text`, `data-math-source`, or adjacent source markup.
+When extraction is lossy (e.g., DOCX/OMML without reliable conversion), preserve
+raw equation text and mark visual rendering as reconstructed.
 
 Every generated derivation block must target source equation ids or an explicit
-source section. If a logical gap cannot be bridged using direct source
-equations, stated assumptions, or standard named rules that can be cited, mark
-it as an `Unresolved Derivation Gap` instead of inventing a bridge.
+source section. If a logical gap cannot be bridged from direct source equations,
+stated assumptions, or cited standard rules, mark it `Unresolved Derivation Gap`
+instead of inventing a bridge.
 
 ## Academic close-reading layer
 
-Allowed outside canonical source blocks:
-
-- evidence notes (excerpts, citations, commentary) in the right pane;
-- argument-function labels;
-- `key-point` claim blocks;
-- glossary or notation cards;
-- figure/table notes;
-- derivation repairs;
-- questions for the reader.
-
-Required: every generated note targets a source id, section id,
-figure/table/equation id, or explicitly states why a precise target is
-unavailable.
+Allowed outside canonical source blocks: evidence notes in the right pane,
+argument-function labels, `key-point` claim blocks, glossary/notation cards,
+figure/table notes, derivation repairs, and questions for the reader. Every
+generated note must target a declared source/section/figure/table/equation id or
+state why a precise target is unavailable.
 
 ## Academic output checks
 
-For scholarly/formal artifacts, add checks for:
+Verify in addition to generic checks:
 
-- figure/table/equation/citation ids are unique and linked;
+- figure/table/equation/citation ids are unique and linked without broken
+  cross-references;
 - generated notes target declared ids;
-- legends/captions are copied, unavailable, uncertain, or generated—never
-  silently inferred;
-- bibliography, citation, figure/table, equation, footnote, and bare-URL links
-  are not broken when rendered;
+- legends/captions are copied, unavailable, uncertain, or separately generated —
+  never silently inferred;
 - source equations and reconstructed steps are visually distinct and retain
-  copyable/source-preserving text when available;
-- extraction limitations and reading-order uncertainty are visible in the
-  artifact and audit summary, not as decorative process commentary in the reader
-  body.
+  source-preserving text;
+- extraction limitations and reading-order uncertainty appear in compact
+  provenance and the audit summary, not as decorative process commentary in the
+  reader body.
 
 ## Boundary: accepted hooks, not bundled engines
 
-Accept lightweight contracts and optional hooks:
+This skill accepts lightweight metadata contracts and optional hooks (figure/
+caption/asset status, `citation_status`, equation/derivation provenance,
+user-supplied question ledgers, opt-in noncanonical translation, math renderer
+policy). It does **not** bundle or require heavy engines:
 
-- figure/caption/asset records with stable ids and uncertainty status;
-- citation preservation and `citation_status` reporting;
-- equation/derivation provenance and unresolved-gap labels;
-- question/evidence ledgers when the user supplies questions;
-- opt-in translation layers marked noncanonical;
-- math renderer policy fields.
-
-Do not bundle or imply built-in support for heavy engines:
-
-- OCR and PDF reading-order reconstruction;
-- automatic figure cropping, panel segmentation, or computer-vision matching;
+- OCR or PDF reading-order reconstruction;
+- automatic figure cropping, panel segmentation, or CV matching;
 - CSL/BibTeX/Pandoc citation parsing or DOI enrichment;
 - full Obsidian vault graph, Dataview, or backlink resolution;
 - browser visual-regression infrastructure;
 - math renderers beyond the bundled KaTeX, or model-specific rendering apps;
-- mandatory sentence-level hover translation or bilingual worksheet generation;
-- fixed classroom Wonksheet layouts.
+- mandatory sentence-level hover translation, bilingual worksheet generation, or
+  fixed classroom worksheet layouts.
+
+Feed audited outputs from external adapters into the content contract when those
+capabilities are needed.

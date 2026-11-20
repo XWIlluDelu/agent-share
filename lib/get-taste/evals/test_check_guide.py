@@ -45,9 +45,9 @@ class GuideChecks(unittest.TestCase):
         self.assertTrue(any("Unreferenced definitions: a" in x for x in result["errors"]))
 
     def test_frontmatter_comments_and_hyphenated_words(self):
-        text = ("---\ntitle: Metadata not counted\n---\n<!-- hidden prose -->\n"
-                "# Guide\nHeld-out results.[^a]\n## References\n[^a]: Source.")
-        self.assertEqual(check_text(text)["body_words"], 3)
+        text = ("---\r\ntitle: Metadata not counted\r\n---\r\n<!-- hidden prose -->\r\n"
+                "# Guide\r\nHeld-out results.[^a]\r\n```\r\n<!-- kept -->\r\n```\r\n## References\r\n[^a]: Source.")
+        self.assertEqual(check_text(text)["body_words"], 4)
 
     def test_budget_is_reported_not_approved(self):
         result = check_text("one two three\n## References\n", budget=2)

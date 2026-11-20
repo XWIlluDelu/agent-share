@@ -11,15 +11,6 @@ Output is a folder: `index.html` plus `assets/`. Put source images under
 `assets/source/`. Produce a single file only when the user asks; inlining the
 KaTeX fonts makes it large.
 
-## Table of contents
-
-- [Page skeleton and ids](#page-skeleton-and-ids)
-- [Components](#components)
-- [Evidence notes](#evidence-notes)
-- [Content contract to markup](#content-contract-to-markup)
-- [What the template already provides](#what-the-template-already-provides)
-- [Changing the template](#changing-the-template)
-
 ## Page skeleton and ids
 
 ```html
