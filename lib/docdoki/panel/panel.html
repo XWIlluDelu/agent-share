@@ -11,18 +11,21 @@
 <div class="app" id="app">
   <header class="top">
     <div class="brand">Doc<span>♥</span>Doki</div>
-    <strong id="project-name"></strong>
+    <div class="unit-switcher" id="unit-switcher">
+      <button id="unit-toggle" class="unit-toggle" aria-haspopup="true" aria-expanded="false"><span id="project-name"></span><span id="unit-caret" class="unit-caret" aria-hidden="true" hidden><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l4 4-4 4"/></svg></span></button>
+      <div id="unit-menu" class="unit-menu" role="menu" hidden></div>
+    </div>
     <label class="search"><span class="sr-only" data-en="Search documents" data-zh="搜索文档">Search documents</span><input id="search" type="search" autocomplete="off"></label>
+    <button id="new-doc" class="primary" data-en="+ New" data-zh="+ 新建">+ New</button>
     <button id="changes-toggle" aria-controls="changes" aria-expanded="false"><span data-en="Changes" data-zh="改动">Changes</span><b id="count" hidden></b></button>
-    <button id="language" class="sticker" data-en-label="Switch to Chinese" data-zh-label="切换到英文">中</button>
   </header>
   <aside class="library" id="library" data-en-label="Navigation" data-zh-label="导航">
     <div class="library-heading"><strong data-en="Navigation" data-zh="导航">Navigation</strong><button id="library-close" data-en-label="Close navigation" data-zh-label="关闭导航">×</button></div>
     <nav class="primary-nav">
-      <button data-nav="dashboard" data-en="Dashboard" data-zh="看板">Dashboard</button>
-      <button data-nav="work" data-en="Current work" data-zh="当前工作">Current work</button>
-      <button data-nav="northstar" data-en="Northstar" data-zh="北极星">Northstar</button>
-      <button data-nav="overview" data-en="Overview" data-zh="总览">Overview</button>
+      <button data-nav="dashboard"><span data-en="Dashboard" data-zh="看板">Dashboard</span></button>
+      <button data-nav="work"><span data-en="Active work" data-zh="进行中工作">Active work</span><b id="work-badge" class="nav-badge" hidden></b></button>
+      <button data-nav="northstar"><span data-en="Northstar" data-zh="北极星">Northstar</span></button>
+      <button data-nav="overview"><span data-en="Overview" data-zh="总览">Overview</span></button>
     </nav>
     <div id="catalog"></div>
   </aside>
@@ -32,28 +35,50 @@
       <div class="document-location">
         <div id="document-path" class="document-path"></div>
         <span id="path-copy-status" class="sr-only" role="status"></span>
-        <button id="source-view" class="source-toggle" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6L2 12L7 18M17 6L22 12L17 18M14 4L10 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg></button>
+      </div>
+      <div id="board-filters" class="board-filters" hidden></div>
+      <div id="doc-actions" class="doc-actions" hidden>
+        <button id="source-view" class="doc-action-btn" aria-pressed="false"></button>
+        <button id="handoff-note-btn" class="doc-action-btn" data-en="Note to Agent" data-zh="给 Agent 留言">Note to Agent</button>
+      </div>
+      <div id="board-switch" class="board-switch" hidden>
+        <button data-board-mode="areas" data-en="Areas" data-zh="按领域">Areas</button>
+        <button data-board-mode="dag" data-en="DAG" data-zh="依赖图">DAG</button>
       </div>
     </div>
-    <div id="preview-status" class="preview-status" role="status" hidden></div>
-    <details id="diagnostics" class="diagnostics" hidden><summary data-en="Document issues" data-zh="文档问题">Document issues</summary><ul id="diagnostic-list"></ul></details>
-    <div class="reader" id="reader" hidden>
-      <article class="markdown" id="reading"></article><aside id="related" data-en-label="Document navigation" data-zh-label="文档导航"></aside>
-    </div>
-    <section id="graph" class="graph" data-en-label="Progress and dependencies" data-zh-label="进展与依赖">
-      <p id="graph-empty" class="empty" hidden data-en="No specs yet." data-zh="还没有规格。">No specs yet.</p>
-      <div id="viewport" class="viewport"><svg id="edges" class="edges"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#000"></path></marker><marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#e91d2a"></path></marker><marker id="arrow-dim" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="#cfcfcf"></path></marker></defs><g id="edge-lines"></g></svg><div id="graph-cards"></div></div>
-      <div id="connect-hint" class="connect-hint" role="status" hidden></div>
-      <div class="graph-tools"><button id="zoom-out" data-en-label="Zoom out" data-zh-label="缩小">−</button><button id="zoom-label" aria-pressed="false">100%</button><button id="zoom-in" data-en-label="Zoom in" data-zh-label="放大">+</button><button id="fit" data-en-label="Fit diagram (0)" data-zh-label="适配视图（0）"><span aria-hidden="true">▣</span></button><button id="reset-layout" data-en-label="Restore automatic layout (R)" data-zh-label="恢复自动布局（R）"><span aria-hidden="true">⟲</span></button><button id="connect" aria-pressed="false" data-en-label="Connect dependencies (C)" data-zh-label="连接依赖（C）"><span aria-hidden="true">⇄</span></button></div>
-      <svg id="minimap" class="minimap" role="img" data-en-label="Dependency map; click or drag to pan" data-zh-label="依赖缩略图；点击或拖动平移"><g id="mini-nodes"></g><rect id="mini-view" fill="none" stroke="#e91d2a" stroke-width="2" vector-effect="non-scaling-stroke"></rect></svg>
-      <div class="edge-detail" id="edge-detail" hidden></div>
+    <div class="workspace-body" id="workspace-body">
+    <details id="diagnostics" class="diagnostics" hidden><summary><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4l4 4-4 4"/></svg><span data-en="Document issues" data-zh="文档问题">Document issues</span></summary><ul id="diagnostic-list"></ul></details>
+    <section id="search-panel" class="search-panel" hidden></section>
+    <section id="dashboard" class="dashboard">
+      <div id="pulse" class="pulse"></div>
+      <div id="area-board" class="area-board"></div>
+      <section id="graph" class="graph" hidden data-en-label="Dependency diagram" data-zh-label="依赖关系图">
+        <p id="graph-empty" class="empty" hidden data-en="No matching specs." data-zh="没有匹配的规格。">No matching specs.</p>
+        <div id="viewport" class="viewport"><svg id="edges" class="edges"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="context-stroke"></path></marker><marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="context-stroke"></path></marker><marker id="arrow-dim" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L7,4 L0,8 Z" fill="context-stroke"></path></marker></defs><g id="edge-lines"></g></svg><div id="graph-cards"></div></div>
+        <div id="connect-hint" class="connect-hint" role="status" hidden></div>
+        <div class="graph-tools"><button id="zoom-out" data-en-label="Zoom out" data-zh-label="缩小">−</button><button id="zoom-label" aria-pressed="false">100%</button><button id="zoom-in" data-en-label="Zoom in" data-zh-label="放大">+</button><button id="fit" data-en-label="Fit diagram (0)" data-zh-label="适配视图（0）"><span aria-hidden="true">▣</span></button><button id="reset-layout" data-en-label="Restore automatic layout (R)" data-zh-label="恢复自动布局（R）"><span aria-hidden="true">⟲</span></button><button id="connect" aria-pressed="false" data-en-label="Connect dependencies (C)" data-zh-label="连接依赖（C）"><span aria-hidden="true">⇄</span></button></div>
+        <svg id="minimap" class="minimap" role="img" data-en-label="Dependency map; click or drag to pan" data-zh-label="依赖缩略图；点击或拖动平移"><g id="mini-nodes"></g><rect id="mini-view" fill="none" stroke="#e91d2a" stroke-width="2" vector-effect="non-scaling-stroke"></rect></svg>
+        <div class="edge-detail" id="edge-detail" hidden></div>
+      </section>
     </section>
+    <section id="work-view" class="work-view" hidden></section>
+    <div class="reader" id="reader" hidden>
+      <div id="doc-meta" class="doc-meta" hidden></div>
+      <article class="markdown" id="reading"></article>
+      <div id="editor-wrap" class="editor-wrap" hidden>
+        <textarea id="source" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+      </div>
+      <aside id="related" data-en-label="Related documents" data-zh-label="相关文档"></aside>
+    </div>
+    </div>
   </main>
   <aside class="changes" id="changes" data-en-label="Changes" data-zh-label="改动">
-    <h2><span data-en="Changes" data-zh="改动">Changes</span><button id="changes-close" data-en-label="Close changes" data-zh-label="关闭改动">×</button></h2>
+    <h2><span data-en="Changes &amp; Agent Handoff" data-zh="改动与 Agent 交接">Changes &amp; Agent Handoff</span><button id="changes-close" data-en-label="Close changes" data-zh-label="关闭改动">×</button></h2>
     <div class="change-list" id="change-list"></div>
     <div id="save-error" class="save-error" role="status" hidden></div>
-    <div class="save-controls" id="save-controls" hidden>
+    <div class="save-controls" id="save-controls">
+      <label class="steering-label" for="steering-note" data-en="Steering note for Agent (optional)" data-zh="给 Agent 的补充说明（可选）">Steering note for Agent (optional)</label>
+      <textarea id="steering-note" rows="3" placeholder="e.g., Propagate the LF change to code &amp; tests; leave network FS untested."></textarea>
       <div class="save-actions"><button id="save" class="primary" data-en="Save" data-zh="保存">Save</button><button id="copy-agent" data-en="Copy to Agent" data-zh="复制给 Agent">Copy to Agent</button></div>
       <button id="export" hidden data-en="Download recovery copy" data-zh="下载恢复副本">Download recovery copy</button>
       <p id="private-warning" class="private-warning" hidden></p>
@@ -61,6 +86,65 @@
       <textarea id="prompt" hidden readonly spellcheck="false"></textarea>
     </div>
   </aside>
+  <div id="create-modal" class="modal-backdrop" hidden>
+    <form id="create-form" class="modal-box" role="dialog" aria-modal="true" aria-labelledby="create-heading">
+      <header><h2 id="create-heading" data-en="New document" data-zh="新建文档">New document</h2><button type="button" id="create-close" aria-label="Close">×</button></header>
+      <div class="modal-body">
+        <label><span data-en="Type" data-zh="类型">Type</span>
+          <select name="kind" id="create-kind">
+            <option value="spec">Spec (specs/)</option>
+            <option value="work">Work (work/)</option>
+            <option value="note">Note (notes/)</option>
+          </select>
+        </label>
+        <label><span data-en="Title" data-zh="标题">Title</span><input name="title" id="create-title" required autocomplete="off"></label>
+        <label><span data-en="Filename slug" data-zh="文件名（kebab-case）">Filename slug</span><input name="slug" id="create-slug" required pattern="[a-z0-9][a-z0-9-]*" autocomplete="off"></label>
+        <label id="create-area-row"><span data-en="Area (optional)" data-zh="领域（可选）">Area (optional)</span><input name="area" id="create-area" autocomplete="off"></label>
+        <label id="create-purpose-row"><span data-en="Purpose (optional)" data-zh="摘要（可选）">Purpose (optional)</span><input name="purpose" id="create-purpose" autocomplete="off"></label>
+        <label class="checkbox-row"><input type="checkbox" name="private" id="create-private"><span data-en="Private (docdoki/private/)" data-zh="私有文档（docdoki/private/）">Private (docdoki/private/)</span></label>
+        <p id="create-error" class="save-error" hidden></p>
+      </div>
+      <footer><button type="button" id="create-cancel" data-en="Cancel" data-zh="取消">Cancel</button><button type="submit" class="primary" data-en="Create" data-zh="创建">Create</button></footer>
+    </form>
+  </div>
+  <div id="settings-root" class="settings-root">
+    <div id="settings-popover" class="settings-popover" role="dialog" aria-labelledby="settings-heading" hidden>
+      <header>
+        <h2 id="settings-heading" data-en="Preferences" data-zh="偏好设置">Preferences</h2>
+        <button type="button" id="settings-close" data-en-label="Close preferences" data-zh-label="关闭设置">×</button>
+      </header>
+      <div class="settings-body">
+        <div class="settings-row">
+          <span class="settings-label" data-en="Appearance" data-zh="外观">Appearance</span>
+          <div class="seg-switch" id="theme-switch" role="group" data-en-label="Appearance" data-zh-label="外观">
+            <button type="button" data-theme-choice="light">
+              <svg class="seg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+              <span data-en="Light" data-zh="浅色">Light</span>
+            </button>
+            <button type="button" data-theme-choice="dark">
+              <svg class="seg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              <span data-en="Dark" data-zh="深色">Dark</span>
+            </button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label" data-en="Language" data-zh="语言">Language</span>
+          <div class="seg-switch" id="lang-switch" role="group" data-en-label="Language" data-zh-label="语言">
+            <button type="button" data-lang-choice="en">English</button>
+            <button type="button" data-lang-choice="zh">中文</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button type="button" id="settings-fab" class="settings-fab" aria-haspopup="dialog" aria-controls="settings-popover" aria-expanded="false" data-en-label="Preferences" data-zh-label="偏好设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="4" y1="7" x2="20" y2="7"></line>
+        <circle cx="9" cy="7" r="2.2" fill="var(--bg-surface)"></circle>
+        <line x1="4" y1="17" x2="20" y2="17"></line>
+        <circle cx="15" cy="17" r="2.2" fill="var(--bg-surface)"></circle>
+      </svg>
+    </button>
+  </div>
   <footer id="status" class="status" role="status" aria-live="polite"></footer>
 </div>
 <script nonce="__NONCE__">__VENDOR__</script>

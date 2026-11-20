@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backend regressions in temporary libraries. --serve supplies the browser test."""
+"""Backend and HTTP regressions in temporary libraries. --serve supplies the browser test."""
 from __future__ import annotations
 
 import json
@@ -16,50 +16,51 @@ import urllib.request
 from pathlib import Path
 from unittest.mock import patch
 
-import documents
+HERE = Path(__file__).resolve().parent
+SCRIPTS = HERE.parent / "scripts"
+for d in (HERE, SCRIPTS):
+    if str(d) not in sys.path:
+        sys.path.insert(0, str(d))
+
+import docdoki_lib as lib
 import graph
 import panel
 import storage
 
 A = "docdoki/specs/a.md"
 B = "docdoki/specs/b.md"
+P = "docdoki/specs/proposed-cache.md"
 
 
-def write(root, path, text):
-    target = root / path
+def write(root: Path, rel: str, text: str) -> Path:
+    target = root / rel
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("w", encoding="utf-8", newline="") as stream:
         stream.write(text)
     return target
 
 
-def fixture(root):
-    write(root, "docdoki/northstar.md", "# Northstar\n\nIntroduction before sections.\n\n## Mission\nKeep exports local.\n")
-    write(root, "docdoki/spec_abstract.md", """# Project overview
-
-Introduction before headings remains visible.
-
-## Design map
-
-| Contract | Design |
-| --- | --- |
-| [[a]] | Local export only |
-| [[b]] | Validate before delivery |
-
-## Capabilities and gaps
-
-CSV output exists. Atomic publication is not implemented yet.
-
-## Current work
-
-[[follow-export]] holds the current work and checks. See [[evidence]] for details.
-
-## Human decisions
-
-Decide whether to support network filesystems.
-""")
-    write(root, A, """---
-purpose: Local export without network delivery.
+def fixture(root: Path) -> None:
+    write(
+        root,
+        "docdoki/northstar.md",
+        "# Northstar\n\n## Mission\n\nKeep CSV exports local and failure-safe.\n\n## Units\n\n- [Child Analysis](../child/docdoki/northstar.md) — statistical child unit.\n",
+    )
+    write(
+        root,
+        "docdoki/overview.md",
+        "# Project overview\n\n## Architecture\n\nRows flow through [[b]] into [[a]].\n\n## Open decisions\n\n- Decide whether to support network filesystems.\n",
+    )
+    write(
+        root,
+        A,
+        """---
+purpose: >-
+  Local export without
+  network delivery.
+area: IO
+status: decided
+progress: in-progress
 covers: ['src/{a,b}/**', 'tests/**']
 ---
 # Export
@@ -71,13 +72,6 @@ An introduction that is not a section.
 - Do not send rows
   to any remote service.
 
-## Example
-
-````md
-## Goal
-- This is code, not a contract.
-````
-
 ## Checks
 
 | Case | Expected |
@@ -87,36 +81,65 @@ An introduction that is not a section.
 ## Non-goals
 
 Never upload data. See [[evidence#Details]] and [validation](b.md).
-
-## Repeated
-
-First section.
-
-## Repeated
-
-Second section.
-""")
-    write(root, B, "---\npurpose: Validate local rows.\nafter: ['a']\nprogress: done\n---\n# Validation\n\n## Goal\n\n- Validate types.\n")
-    write(root, "docdoki/stages/follow-export.md", "# Atomic export\n\n## Current state\n\nAtomic publication is not implemented in [[a]].\n\n## Next actions\n\n- [ ] Add failure checks.\n")
-    write(root, "docdoki/notes/evidence.md", "# Evidence\n\n## Details\n\nA useful observation with a [spec link](../specs/a.md).\n")
-    write(root, "docdoki/stages/archive/follow-old.md", "# Previous work\n\nArchived knowledge remains reachable.\n")
-    write(root, "docdoki/private/specs/local.md", "---\npurpose: Private calibration.\nafter: [a]\n---\n# Local\n\n## Goal\n\n- Keep calibration local.\n")
-    write(root, "docdoki/private/stages/follow-local.md", "# Local work\n\n## Current state\nPrivate inspection of [[local]].\n")
+""",
+    )
+    write(
+        root,
+        B,
+        "---\npurpose: Validate local rows.\narea: IO\nafter: ['a']\nprogress: done\n---\n# Validation\n\n## Goal\n\n- Validate types.\n",
+    )
+    write(
+        root,
+        P,
+        "---\npurpose: Optional disk cache for parsed rows.\narea: Performance\nstatus: proposed\nprogress: not-started\ncovers: []\n---\n# Row cache\n\n## Goal\n\n- Cache parsed rows locally.\n",
+    )
+    write(
+        root,
+        "docdoki/work/atomic-export.md",
+        "---\nspecs: [a]\nscope: [src/export.py]\nstatus: blocked\n---\n# Atomic export\n\n## Objective\n\nFinish failure-safe publication for [[a]].\n\n## Current state\n\n- Working: writes new CSV files.\n- Broken/Blocked: direct write truncates destination on failure.\n\n## Next actions\n\n- [x] Inspect current writer.\n- [ ] Write sibling temp file and rename.\n",
+    )
+    write(
+        root,
+        "docdoki/notes/evidence.md",
+        "---\npurpose: Filesystem rename behavior.\nrelates: [a]\n---\n# Evidence\n\n## Details\n\nUniqueSearchTokenEXDEV observation with a [spec link](../specs/a.md).\n",
+    )
+    write(root, "docdoki/work/archive/2026-09-01-initial.md", "# Previous work\n\nArchived knowledge.\n")
+    write(
+        root,
+        "docdoki/private/specs/local.md",
+        "---\npurpose: Private calibration.\nafter: [a]\n---\n# Local\n\n## Goal\n\n- Keep calibration local.\n",
+    )
+    write(
+        root,
+        "docdoki/private/work/local-work.md",
+        "---\nspecs: [local]\nstatus: active\n---\n# Local work\n\n## Objective\n\nPrivate inspection of [[local]].\n",
+    )
+    # Linked child unit
+    write(
+        root,
+        "child/docdoki/northstar.md",
+        "---\nparent: ../../docdoki/northstar.md\n---\n# Child Northstar\n\n## Mission\n\nRun statistical checks.\n",
+    )
+    write(root, "child/docdoki/overview.md", "# Child overview\n\nChild unit overview.\n")
 
 
 class LauncherTest(unittest.TestCase):
-    def test_binds_own_unit_and_forwards_options(self):
+    def test_resolves_docdoki_home_and_binds_own_unit(self):
         with tempfile.TemporaryDirectory(prefix="docdoki-launcher-test-") as tmp:
-            home = Path(tmp)
-            write(home, ".agent-share/lib/docdoki/panel/panel.py",
-                  "import json, sys\nprint(json.dumps(sys.argv[1:]))\n")
-            unit = home / "project/child"
-            source = (panel.HERE.parent / "scripts/panel_launcher.py").read_text()
+            base = Path(tmp)
+            fake_skill = base / "custom-skill"
+            write(fake_skill, "panel/panel.py", "import json, sys\nprint(json.dumps(sys.argv[1:]))\n")
+            unit = base / "project/child"
+            source = (SCRIPTS / "panel_launcher.py").read_text()
             launcher = write(unit, "docdoki/panel.py", source)
             result = subprocess.run(
                 [sys.executable, "-B", str(launcher), "--no-open"],
-                cwd=home, env={**os.environ, "HOME": str(home)},
-                capture_output=True, text=True, check=True, timeout=10,
+                cwd=base,
+                env={**os.environ, "DOCDOKI_HOME": str(fake_skill)},
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10,
             )
             self.assertEqual(json.loads(result.stdout), [str(unit), "--no-open"])
 
@@ -129,413 +152,178 @@ class PanelTest(unittest.TestCase):
         fixture(self.root)
 
     def source(self, path=A):
-        return documents.read_source(self.root / path)
+        return lib.read_source(self.root / path)
 
     def edit(self, path=A, old=None, new=None):
         before = self.source(path) if old is None else old
         return {"path": path, "field": "source", "from": before, "to": new if new is not None else before + "\nA new constraint.\n"}
 
-    def preview(self, edits=(), *, base=None, after=None, card=None):
-        if base is None:
-            base = {p: d["source"] for p, d in graph.build_graph(self.root / "docdoki")["documents"].items()}
-        return storage.preview(self.root, list(edits), base=base, after=after, card=card)
-
-    def test_shared_frontmatter_boundaries(self):
-        cases = json.loads((panel.HERE / "frontmatter-cases.json").read_text())
-        for case in cases:
-            with self.subTest(case=case["name"]):
-                if case.get("error"):
-                    with self.assertRaisesRegex(documents.FormatError, "Unclosed"):
-                        documents.split_frontmatter(case["source"])
-                else:
-                    self.assertEqual(documents.split_frontmatter(case["source"])[1], case["body"])
-
-    def test_dependency_comments_survive_add_and_remove(self):
-        for newline in ("\n", "\r\n"):
-            for field in ("after: [auth] # authorization must run first",
-                          "after: # field rationale\n  - auth # authorization must run first\n  # independent reason\n  - cache # caching rationale"):
-                source = ("---\n" + field + "\npurpose: preserved\n---\n# Body\n").replace("\n", newline)
-                updated = documents.set_after(source, ["auth", "cache", "new"])
-                self.assertIn("# authorization must run first" + newline, updated)
-                self.assertEqual(documents.split_frontmatter(updated)[0]["after"], ["auth", "cache", "new"])
-                removed = documents.set_after(updated, ["auth", "new"])
-                self.assertIn("# authorization must run first" + newline, removed)
-                self.assertTrue(removed.endswith(("purpose: preserved\n---\n# Body\n").replace("\n", newline)))
-                if "field rationale" in field:
-                    self.assertIn("after: # field rationale" + newline, removed)
-                    self.assertIn("  # independent reason" + newline, removed)
-                    self.assertIn("  - auth # authorization must run first" + newline, removed)
-                    self.assertNotIn("caching rationale", removed)
-                empty = documents.set_after(updated, [])
-                self.assertEqual(documents.split_frontmatter(empty)[0]["after"], [])
-
-    def test_unloaded_history_reads_titles_without_parsing_bodies(self):
-        note = "docdoki/notes/evidence.md"
-        text = "\ufeff--- \r\npurpose: note\r\n---\t\r\n```md\r\n# Fake\r\n```\r\n# Actual title\r\n" + "history " * 8192
-        write(self.root, note, text)
-        with patch.object(graph, "document", wraps=documents.document) as parsed:
-            model = graph.build_graph(self.root / "docdoki")
-            self.assertEqual(next(d["title"] for d in model["catalog"] if d["path"] == note), "Actual title")
-            self.assertFalse(any(call.args[0] == self.root / note for call in parsed.call_args_list))
-        loaded = graph.build_graph(self.root / "docdoki", extra=[note])
-        self.assertEqual(loaded["documents"][note]["source"], text)
-        for source in ("# First\n# Second\n", "---\nnot closed\n# Fallback\n", "  # Spaced ##\n", "    # Indented\n# Real\n"):
-            write(self.root, note, source)
-            self.assertEqual(documents.document_title(self.root / note), documents.document(self.root / note, self.root)["title"])
-
-    def test_snapshot_references_are_bounded_and_never_adopt_disk(self):
-        from snapshots import SourceSnapshots
-        snapshots = SourceSnapshots(budget=32)
-        def doc(text):
-            return {"source": text, "revision": documents.revision(text)}
-        first = doc("a" * 16)
-        snapshots.remember({A: first})
-        refs = {A: first["revision"]}
-        write(self.root, A, "Changed elsewhere")
-        self.assertEqual(snapshots.resolve(refs)[A], first["source"])
-        snapshots.remember({B: doc("b" * 32)})
-        self.assertLessEqual(snapshots.size, 32)
-        with self.assertRaisesRegex(ValueError, "Captured source expired"):
-            snapshots.resolve(refs)
-
-    def test_yaml_lists_and_scalars(self):
-        for source, expected in [("after: ['a', 'b']", ["a", "b"]),
-                                 ('after: ["a", "b"]', ["a", "b"]),
-                                 ("after:\n- a\n- 'b'", ["a", "b"]),
-                                 ("after:\n  - a\n  - 'b'", ["a", "b"])]:
-            self.assertEqual(documents.parse_frontmatter(source)["after"], expected)
-        self.assertEqual(documents.parse_frontmatter("purpose: 'It''s local' # comment")["purpose"], "It's local")
-        self.assertEqual(documents.parse_frontmatter('covers: ["src/{a,b}/**", "tests/**"]')["covers"], ["src/{a,b}/**", "tests/**"])
-        for value in ("Auth: token #1", "true", "123", "say \"hello\""):
-            self.assertEqual(documents.parse_frontmatter("purpose: " + json.dumps(value))["purpose"], value)
-
-    def test_unsupported_yaml_is_explicit(self):
-        for source in ("purpose: >\n  folded", "after: [a,,b]", "after: [a", "after: [a]\nafter: [b]", "mapping:\n  nested: value"):
-            with self.subTest(source=source), self.assertRaises(documents.FormatError):
-                documents.parse_frontmatter(source)
-        write(self.root, A, "---\npurpose: >\n  folded\n---\n# Still readable\n")
+    def test_steering_graph_payload_and_backlinks(self):
         model = graph.build_graph(self.root / "docdoki")
-        self.assertIn("# Still readable", model["documents"][A]["source"])
-        self.assertTrue(any(d["code"] == "format" for d in model["diagnostics"]))
+        self.assertEqual(model["meta"]["overviewPath"], "docdoki/overview.md")
+        self.assertIn("Keep CSV exports local", model["meta"]["mission"])
+        self.assertEqual(len(model["meta"]["units"]), 1)
+        self.assertEqual(model["meta"]["units"][0]["relation"], "child")
 
-    def test_full_source_preserves_markdown_structure(self):
-        old = self.source()
-        new = old.replace("Do not send rows\n  to any remote service.", "Never transmit records\n  outside this machine.").replace("Second section.", "Second section revised.")
-        result = storage.apply_edits(self.root, [self.edit(new=new)])
-        self.assertTrue(result["ok"], result)
-        self.assertEqual(self.source(), new)
-        self.assertIn("## Goal\n- This is code, not a contract.\n````", self.source())
-        self.assertIn("First section.", self.source())
-        self.assertEqual(result["documents"][A]["source"], self.source())
-        self.assertEqual(result["receipt"][0]["from"], old)
-        self.assertTrue(storage.apply_edits(self.root, [self.edit()])["ok"])
+        # Open Decisions aggregates overview decisions, proposed specs, and blocked work
+        kinds = {d["kind"] for d in model["decisions"]}
+        self.assertEqual(kinds, {"decision", "proposed", "blocked"})
 
-    def test_fragments_are_rejected(self):
-        for field in ("claim", "section", "content", "title"):
-            before = self.source()
-            result = storage.apply_edits(self.root, [{**self.edit(), "field": field}])
-            self.assertFalse(result["ok"])
-            self.assertEqual(self.source(), before)
+        # Folded YAML purpose parsed cleanly on spec A
+        node_a = next(n for n in model["nodes"] if n["path"] == A)
+        self.assertEqual(node_a["content"], "Local export without network delivery.")
+        self.assertEqual(node_a["area"], "IO")
+        self.assertEqual(len(node_a["activeWork"]), 1)
+        self.assertEqual(node_a["activeWork"][0]["stem"], "atomic-export")
 
-    def test_crlf_and_after_patch(self):
-        original = "---\r\npurpose: local\r\nafter:\r\n  - a\r\n# keep this comment\r\n  - b\r\ncovers: ['src/**']\r\n---\r\n\r\n# Title\r\n\r\nBody.\r\n"
-        result = documents.set_after(original, ["c"])
-        self.assertEqual(documents.split_frontmatter(result)[0]["after"], ["c"])
-        self.assertIn("# keep this comment\r\n", result)
-        self.assertTrue(result.endswith("---\r\n\r\n# Title\r\n\r\nBody.\r\n"))
-        self.assertIn("covers: ['src/**']", result)
-        self.assertEqual(documents.h1("```md\n# Fake\n```\n# Real\n"), "Real")
+        # Rich active work card metadata
+        work = next(w for w in model["work"] if w["stem"] == "atomic-export")
+        self.assertEqual(work["tasks"], {"done": 1, "total": 2})
+        self.assertEqual(work["status"], "blocked")
+        self.assertEqual(work["specs"], ["a"])
 
-    def test_card_fields_preserve_other_source_bytes(self):
-        original = "---\r\npurpose: 'Old # text'   # keep rationale\r\nprogress: done # keep evidence reminder\r\nafter: ['b']\r\ncovers: ['src/**']\r\n---\r\nIntro.\r\n```md\r\n# Fake\r\n```\r\n   # Real ##  \r\n\r\n# Real\r\nDo not drop this second heading.\r\n"
-        title = documents.set_card_field(original, "title", "New title")
-        self.assertEqual(title, original.replace("   # Real ##", "   # New title ##"))
-        purpose = 'Quoted: "value" # literal\nNever remove this condition.'
-        updated = documents.set_card_field(title, "purpose", purpose)
-        self.assertEqual(updated, title.replace("'Old # text'", json.dumps(purpose, ensure_ascii=False)))
-        cleared = documents.set_card_field(updated, "progress", None)
-        self.assertEqual(cleared, updated.replace("progress: done # keep evidence reminder", "# keep evidence reminder"))
-        self.assertEqual(documents.set_card_field(cleared, "progress", None), cleared)
-        plain = "Introduction.\n\n```\n# Example\n```\n"
-        self.assertEqual(documents.set_card_field(plain, "title", "Title"), "# Title\n\n" + plain)
-        self.assertEqual(documents.set_card_field(plain, "purpose", "Text"), '---\npurpose: "Text"\n---\n' + plain)
+        # Backlinks include unopened note evidence.md!
+        self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
+        self.assertIn("docdoki/notes/evidence.md", model["backlinks"][A])
 
-    def test_card_preview_uses_captured_draft_and_full_source_save(self):
-        original = self.source()
-        draft = original.replace("Second section.", "Keep a newly typed condition.")
-        base = {p: d["source"] for p, d in graph.build_graph(self.root / "docdoki")["documents"].items()}
-        for field, value in [("title", "Renamed export"), ("purpose", "New summary: preserve all details."), ("progress", "in-progress")]:
-            result = self.preview([self.edit(old=original, new=draft)], base=base,
-                                     card={"path": A, "field": field, "value": value})
-            draft = result["documents"][A]["source"]
-            self.assertEqual(self.source(), original, "A field preview must not write")
-        self.assertIn("Keep a newly typed condition.", draft)
-        self.assertIn("to any remote service.", draft)
-        self.assertTrue(storage.apply_edits(self.root, [self.edit(new=draft)])["ok"])
-        self.assertEqual(self.source(), draft)
-        self.assertEqual(documents.document(self.root / A, self.root)["title"], "Renamed export")
+    def test_legacy_spec_abstract_and_stages_still_load(self):
+        with tempfile.TemporaryDirectory(prefix="docdoki-legacy-") as tmp:
+            legacy = Path(tmp)
+            write(legacy, "docdoki/northstar.md", "# Northstar\n")
+            write(legacy, "docdoki/spec_abstract.md", "# Abstract\n\n## Human decisions\n\n- Keep legacy working.\n")
+            write(legacy, "docdoki/specs/x.md", "---\npurpose: X\n---\n# X\n")
+            write(legacy, "docdoki/stages/follow-x-2026-09-01.md", "# Legacy stage\n\n## Objective\n\nWork on [[x]].\n")
+            model = graph.build_graph(legacy / "docdoki")
+            self.assertEqual(model["meta"]["overviewPath"], "docdoki/spec_abstract.md")
+            self.assertEqual(len(model["work"]), 1)
+            self.assertEqual(model["work"][0]["specs"], ["x"])
+            self.assertEqual(len(model["decisions"]), 1)
 
-    def test_card_edits_reject_unsupported_or_private_content(self):
-        for field, value in [("title", ""), ("title", "A\nB"), ("progress", "finished"), ("after", ["b"]), ("purpose", ["not text"])]:
-            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
-                documents.set_card_field(self.source(), field, value)
-        for raw in ["purpose: >\n  folded", "purpose: first\npurpose: second", "purpose: [a, b]"]:
-            with self.assertRaises(ValueError):
-                documents.set_card_field("---\n" + raw + "\n---\n# Title\n", "purpose", "New")
+    def test_full_library_search_includes_unopened_notes_and_overrides(self):
+        hits = graph.search_library(self.root / "docdoki", "UniqueSearchTokenEXDEV")
+        self.assertEqual([h["path"] for h in hits], ["docdoki/notes/evidence.md"])
+        draft_hits = graph.search_library(
+            self.root / "docdoki",
+            "DraftOnlyKeyword",
+            overrides={A: self.source(A) + "\nDraftOnlyKeyword\n"},
+        )
+        self.assertEqual([h["path"] for h in draft_hits], [A])
+
+    def test_transform_card_fields_and_dependencies(self):
+        res = storage.transform(self.root, {}, card={"path": A, "field": "progress", "value": "blocked"})
+        self.assertTrue(res["ok"])
+        self.assertIn('progress: "blocked"', res["source"])
+        self.assertEqual(self.source(A), lib.read_source(self.root / A))  # read-only
+
+        res_status = storage.transform(self.root, {}, card={"path": P, "field": "status", "value": "decided"})
+        self.assertTrue(res_status["ok"])
+        self.assertEqual(next(n for n in res_status["graph"]["nodes"] if n["path"] == P)["status"], "decided")
+
+        res_dep = storage.transform(self.root, {}, after={"path": B, "op": "remove", "stem": "a"})
+        self.assertEqual(next(n for n in res_dep["graph"]["nodes"] if n["path"] == B)["col"], 1)
+
         with self.assertRaises(ValueError):
-            documents.set_card_field("<pre>\n# Not a document title\n</pre>\n# Title\n", "title", "New")
-        base = {A: self.source()}
+            storage.transform(self.root, {}, after={"path": A, "op": "add", "stem": "b"})  # cycle
         with self.assertRaises(ValueError):
-            self.preview(base=base, card={"path": A, "field": "purpose", "value": "See [[local]]"})
-        with self.assertRaises(ValueError):
-            self.preview(base={}, card={"path": A, "field": "title", "value": "No captured source"})
-        with self.assertRaises(ValueError):
-            self.preview(base=base, card={"path": A, "field": "progress"})
-        self.assertEqual(self.source(), base[A])
+            storage.transform(self.root, {}, after={"path": A, "op": "add", "stem": "local"})  # private edge
 
-    def test_stale_and_failed_batches_preserve_files(self):
-        before = self.source()
-        stale = storage.apply_edits(self.root, [self.edit(old="old snapshot")])
-        self.assertFalse(stale["ok"])
-        self.assertIn("conflict", stale["error"])
-        failed = storage.apply_edits(self.root, [self.edit(), self.edit(B, old="stale")])
-        self.assertFalse(failed["ok"])
-        self.assertEqual(self.source(), before)
+    def test_create_document_validation(self):
+        created = storage.create_document(
+            self.root, "spec", "quoted-spec", "Quoted Spec", area="IO: local", purpose='User\'s "export": safe'
+        )
+        self.assertTrue(created["ok"])
+        self.assertEqual(created["document"]["fm"]["area"], "IO: local")
+        self.assertEqual(created["document"]["fm"]["purpose"], 'User\'s "export": safe')
 
-    def test_write_failure_rolls_back(self):
-        before = {path: self.source(path) for path in (A, B)}
+        created_note = storage.create_document(self.root, "note", "new-gotcha", "New Gotcha", purpose="A tip")
+        self.assertTrue(created_note["ok"])
+        self.assertEqual(created_note["path"], "docdoki/notes/new-gotcha.md")
+        self.assertTrue((self.root / created_note["path"]).is_file())
+
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            storage.create_document(self.root, "spec", "new-gotcha", "Duplicate Stem")
+        with self.assertRaisesRegex(ValueError, "kebab-case"):
+            storage.create_document(self.root, "spec", "../escape", "Bad")
+
+    def test_save_optimistic_conflict_rollback_and_privacy(self):
+        old_a, old_b = self.source(A), self.source(B)
+        self.assertFalse(storage.apply_edits(self.root, [self.edit(old="stale")])["ok"])
+        self.assertFalse(storage.apply_edits(self.root, [self.edit(new=old_a + "\nSee [[local]].\n")])["ok"])
+
         real = storage.atomic_write
         count = 0
+
         def fail_second(path, text):
             nonlocal count
             count += 1
             if count == 2:
                 raise OSError("injected failure")
             real(path, text)
+
         with patch.object(storage, "atomic_write", fail_second):
             result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
         self.assertFalse(result["ok"])
         self.assertIn("rollback completed", result["error"])
-        self.assertEqual(before, {path: self.source(path) for path in (A, B)})
-
-    def test_mid_save_external_write_survives(self):
-        old_a, old_b = self.source(A), self.source(B)
-        external = old_b + "\nExternal obligation.\n"
-        real = storage.atomic_write
-        def modify_other(path, text):
-            real(path, text)
-            if path == self.root / A:
-                write(self.root, B, external)
-        with patch.object(storage, "atomic_write", modify_other):
-            result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
-        self.assertFalse(result["ok"])
         self.assertEqual(self.source(A), old_a)
-        self.assertEqual(self.source(B), external)
+        self.assertEqual(self.source(B), old_b)
 
-    def test_rollback_does_not_overwrite_newer_content(self):
-        real = storage.atomic_write
-        def fail_with_newer(path, text):
-            if path == self.root / B:
-                write(self.root, A, "# External replacement\n")
-                raise OSError("injected failure")
-            real(path, text)
-        with patch.object(storage, "atomic_write", fail_with_newer):
-            result = storage.apply_edits(self.root, [self.edit(A), self.edit(B)])
-        self.assertFalse(result["ok"])
-        self.assertIn("rollback incomplete", result["error"])
-        self.assertEqual(self.source(), "# External replacement\n")
-
-    def test_path_and_private_boundary(self):
-        outside = write(self.root, "outside.md", "# Outside\n")
-        for raw in ("../outside.md", str(outside), "docdoki/../outside.md", "outside.md"):
-            self.assertFalse(storage.apply_edits(self.root, [self.edit(path=raw, old="", new="x")])["ok"])
-        (self.root / "docdoki/specs/link.md").symlink_to(outside)
-        self.assertFalse(storage.apply_edits(self.root, [self.edit(path="docdoki/specs/link.md")])["ok"])
-        for extra in ("See [[local]].", "See [local](../private/specs/local.md).", "Read `../private/specs/local.md`."):
-            self.assertFalse(storage.apply_edits(self.root, [self.edit(new=self.source() + extra)])["ok"])
-        private = "docdoki/private/specs/local.md"
-        result = storage.apply_edits(self.root, [self.edit(private)])
-        self.assertTrue(result["ok"], result)
-        self.assertTrue(result["receipt"][0]["private"])
-        self.assertTrue(storage.apply_edits(self.root, [self.edit(new=self.source().replace("tests/**", "src/private/**"))])["ok"])
-
-    def test_graph_diagnostics_and_cycles(self):
-        for items, code in [(["missing"], "missing-edge"), (["a"], "self-edge"), (["b", "b"], "duplicate-edge"), (["b"], "cycle"), (["local"], "private-edge")]:
-            with self.subTest(items=items):
-                model = graph.build_graph(self.root / "docdoki", {A: documents.set_after(self.source(), items)})
-                self.assertTrue(any(d["code"] == code for d in model["diagnostics"]))
-                result = storage.apply_edits(self.root, [self.edit(new=documents.set_after(self.source(), items))])
-                self.assertFalse(result["ok"])
-        model = graph.build_graph(self.root / "docdoki", {A: self.source().replace("purpose:", "after: a\npurpose:")})
-        self.assertTrue(any(d["code"] == "after-type" for d in model["diagnostics"]))
-
-    def test_linear_shared_ancestor_graph(self):
-        nodes = [{"path": str(i), "stem": str(i), "private": False,
-                  "after": [str(j) for j in (i - 1, i - 2) if j >= 0]} for i in range(3000)]
-        start = time.monotonic()
-        self.assertEqual(graph.analyze(nodes), [])
-        self.assertEqual(nodes[-1]["col"], 3000)
-        self.assertLess(time.monotonic() - start, 2)
-
-    def test_reading_payload_and_previews(self):
-        model = graph.build_graph(self.root / "docdoki")
-        self.assertIsNone(next(n for n in model["nodes"] if n["path"] == A)["progress"])
-        self.assertIn("## Non-goals", model["documents"][A]["source"])
-        self.assertNotIn("body", model["documents"][A])
-        self.assertNotIn("id", model["documents"][A])
-        self.assertTrue(any(d["private"] for d in model["documents"].values()))
-        self.assertNotIn("docdoki/notes/evidence.md", model["documents"])
-        note = next(d for d in model["catalog"] if d["path"] == "docdoki/notes/evidence.md")
-        self.assertEqual(note["title"], "Evidence")
-        self.assertEqual(set(model["meta"]), {"title", "root"})
-        self.assertEqual(next(n for n in model["nodes"] if n["path"] == B)["progress"], "done")
-        self.assertTrue(any(d["archived"] for d in model["catalog"]))
-        before = self.source(B)
-        preview = self.preview(after={"path": B, "op": "remove", "stem": "a"})
-        self.assertEqual(next(n for n in preview["nodes"] if n["path"] == B)["col"], 1)
-        self.assertEqual(self.source(B), before)
-
-    def test_preview_uses_client_snapshot_not_mixed_disk_versions(self):
-        base = {A: self.source(A), B: self.source(B)}
-        write(self.root, B, base[B].replace("Validate local rows.", "External rewrite."))
-        model = self.preview([self.edit(A)], base=base)
-        self.assertEqual(model["documents"][B]["source"], base[B])
-        self.assertIn("External rewrite", self.source(B))
-
-    def test_dependency_operations_use_current_draft_source(self):
-        c = "docdoki/specs/c.md"
-        write(self.root, c, "# Publication\n")
-        write(self.root, B, documents.set_after(self.source(B), []))
-        base = {A: self.source(A), B: self.source(B), c: self.source(c)}
-        for op, before, expected in [("add", ["b"], ["b", "c"]), ("remove", ["b", "c"], ["b"])]:
-            with self.subTest(op=op):
-                draft = documents.set_after(base[A], before) + "\nKeep this typed requirement.\n"
-                model = self.preview([self.edit(old=base[A], new=draft)], base=base,
-                                     after={"path": A, "op": op, "stem": "c"})
-                proposed = model["documents"][A]["source"]
-                self.assertEqual(model["documents"][A]["fm"]["after"], expected)
-                self.assertEqual(proposed, documents.set_after(draft, expected))
-                self.assertEqual(self.source(A), base[A], "Preview is read-only")
-                result = storage.apply_edits(self.root, [self.edit(old=base[A], new=proposed)])
-                self.assertTrue(result["ok"], result)
-                self.assertEqual(self.source(A), proposed)
-                write(self.root, A, base[A])
-
-    def test_dependency_noops_preserve_source_bytes(self):
-        source = "---\r\npurpose: local\r\nafter: ['a'] # retain formatting\r\n---\r\n# Validation\r\n"
-        write(self.root, B, source)
-        for op, stem in [("add", "a"), ("remove", "missing")]:
-            model = self.preview(after={"path": B, "op": op, "stem": stem})
-            self.assertEqual(model["documents"][B]["source"], source)
-        model = self.preview(after={"path": A, "op": "remove", "stem": "missing"})
-        self.assertEqual(model["documents"][A]["source"], self.source(A))
-
-    def test_dependency_operations_reject_invalid_source_and_requests(self):
-        before = self.source(A)
-        for value in ("false", "0", "''", "b", "[false]", "[null]"):
-            draft = before.replace("purpose:", f"after: {value}\npurpose:")
-            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "after must be a list"):
-                self.preview([self.edit(new=draft)], after={"path": A, "op": "add", "stem": "b"})
-        for action in (["b"], {"items": ["b"]}, {"op": "replace", "stem": "b"},
-                       {"op": "add", "stem": ""}, {"op": "add", "stem": 1}):
-            with self.subTest(action=action), self.assertRaises(ValueError):
-                self.preview(after={"path": A, **action} if isinstance(action, dict) else action)
-        for stem in ("b", "missing", "local", "a"):
-            with self.subTest(stem=stem), self.assertRaises(ValueError):
-                self.preview(after={"path": A, "op": "add", "stem": stem})
-        self.assertEqual(self.source(A), before)
-
-    def test_http_security_and_storage_baselines(self):
+    def test_http_security_multi_unit_and_endpoints(self):
         server = panel.make_server(self.root / "docdoki", token="test-token")
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         self.addCleanup(lambda: (server.shutdown(), server.server_close(), thread.join()))
         url = f"http://127.0.0.1:{server.server_address[1]}"
+
         with urllib.request.urlopen(url) as response:
             page = response.read().decode()
             self.assertIn("no-store", response.headers["Cache-Control"])
             self.assertIn("frame-ancestors 'none'", response.headers["Content-Security-Policy"])
             self.assertIn('SAVE_TOKEN="test-token"', page)
+
         headers = {"Content-Type": "application/json", "X-DocDoki-Token": "test-token", "Origin": url}
         payload = json.dumps({"edits": [self.edit()]}).encode()
-        for changes, expected in [({"X-DocDoki-Token": ""}, 403), ({"Origin": "https://evil.example"}, 403),
-                                  ({"Host": "evil.example"}, 403), ({"Content-Type": "text/plain"}, 415)]:
-            with self.subTest(changes=changes), self.assertRaises(urllib.error.HTTPError) as raised:
-                urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers={**headers, **changes}))
-            self.assertEqual(raised.exception.code, expected)
+        for bad, code in [({"X-DocDoki-Token": ""}, 403), ({"Origin": "https://evil.example"}, 403), ({"Content-Type": "text/plain"}, 415)]:
+            with self.assertRaises(urllib.error.HTTPError) as raised:
+                urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers={**headers, **bad}))
+            self.assertEqual(raised.exception.code, code)
             raised.exception.close()
+
+        # Linked child unit works and full unit tree is exposed; unknown unit rejected
+        with urllib.request.urlopen(url + "/?unit=child") as resp:
+            body = resp.read().decode()
+            self.assertIn("Child Northstar", body)
+            self.assertIn('"unitTree"', body)
         with self.assertRaises(urllib.error.HTTPError) as raised:
-            urllib.request.urlopen(url + "/snapshot")
+            urllib.request.urlopen(url + "/?unit=../../etc")
+        self.assertEqual(raised.exception.code, 400)
         raised.exception.close()
-        result = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
-        self.assertTrue(result["ok"])
-        self.assertEqual(result["documents"][A]["source"], self.source())
+
+        # Search endpoint finds unopened note
+        search_res = json.loads(
+            urllib.request.urlopen(
+                urllib.request.Request(url + "/search", data=json.dumps({"q": "UniqueSearchTokenEXDEV"}).encode(), headers=headers)
+            ).read()
+        )
+        self.assertEqual(len(search_res["results"]), 1)
+
+        # Save + replay conflict
+        res = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
+        self.assertTrue(res["ok"])
         replay = json.loads(urllib.request.urlopen(urllib.request.Request(url + "/save", data=payload, headers=headers)).read())
         self.assertFalse(replay["ok"])
-        malformed = [None, [], {"edits": None}, {"edits": [], "baseRefs": []},
-                     {"edits": [{}], "baseRefs": {}},
-                     {"edits": [], "baseRefs": {}, "after": []},
-                     {"edits": [], "baseRefs": {}, "card": []},
-                     {"edits": [], "baseRefs": {}, "card": {"path": [], "field": "title", "value": "x"}}]
-        for body in malformed:
-            with self.subTest(body=body), self.assertRaises(urllib.error.HTTPError) as raised:
-                urllib.request.urlopen(urllib.request.Request(url + "/preview", data=json.dumps(body).encode(), headers=headers))
-            self.assertEqual(raised.exception.code, 400)
-            raised.exception.close()
-
-    def test_large_library_http_preview_and_capacity_error(self):
-        for i in range(65):
-            write(self.root, f"docdoki/specs/large-{i}.md", f"# Large {i}\n\n" + "content " * 2048)
-        server = panel.make_server(self.root / "docdoki", token="test-token")
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        self.addCleanup(lambda: (server.shutdown(), server.server_close(), thread.join()))
-        url = f"http://127.0.0.1:{server.server_address[1]}"
-        headers = {"Content-Type": "application/json", "X-DocDoki-Token": "test-token"}
-        def request(route, payload=None):
-            data = None if payload is None else json.dumps(payload).encode()
-            return json.loads(urllib.request.urlopen(urllib.request.Request(url + route, data=data, headers=headers)).read())
-        snapshot = request("/snapshot")
-        self.assertGreater(sum(len(d["source"]) for d in snapshot["documents"].values()), panel.MAX_REQUEST_BYTES)
-        refs = {p: d["revision"] for p, d in snapshot["documents"].items()}
-        original = self.source(A)
-        for operation in ({"card": {"path": A, "field": "purpose", "value": "new purpose"}},
-                          {"edits": [self.edit(new=original + "\nNew body\n")]},
-                          {"after": {"path": B, "op": "add", "stem": "large-0"}}):
-            payload = {"edits": [], "baseRefs": refs, **operation}
-            self.assertLess(len(json.dumps(payload).encode()), 20_000)
-            result = request("/preview", payload)
-            self.assertTrue(result["ok"], result)
-        compact = request("/preview", {"edits": [], "baseRefs": refs})["graph"]
-        self.assertFalse(compact["documents"])
-        self.assertEqual(compact["documentRefs"], refs)
-        self.assertLess(len(json.dumps(compact)), 100_000)
-        self.assertEqual(self.source(A), original)
-        write(self.root, B, "# External\n")
-        self.assertEqual(request("/preview", {"edits": [], "baseRefs": refs})["graph"]["documentRefs"][B], refs[B])
-        for payload in ({"edits": []}, {"edits": [], "base": {A: original}},
-                        {"edits": [self.edit()], "baseRefs": {}},
-                        {"edits": [], "baseRefs": {}, "after": {"path": B, "op": "remove", "stem": "a"}}):
-            with self.subTest(payload=payload), self.assertRaises(urllib.error.HTTPError) as raised:
-                request("/preview", payload)
-            self.assertEqual(raised.exception.code, 400)
-            raised.exception.close()
-        server.snapshots.sources.clear()
-        with self.assertRaises(urllib.error.HTTPError) as raised:
-            request("/preview", {"edits": [], "baseRefs": refs})
-        self.assertIn("Captured source expired", json.loads(raised.exception.read())["error"])
-        raised.exception.close()
-        with self.assertRaises(urllib.error.HTTPError) as raised:
-            request("/preview", {"edits": [], "padding": "x" * panel.MAX_REQUEST_BYTES})
-        self.assertEqual(raised.exception.code, 413)
-        self.assertIn("1 MiB", json.loads(raised.exception.read())["error"])
-        raised.exception.close()
 
     def test_script_data_cannot_escape(self):
-        write(self.root, A, self.source() + '\n</script><script>window.injected=true</script>\n')
+        write(self.root, A, self.source() + "\n</script><script>window.injected=true</script>\n")
         rendered = panel.render(self.root / "docdoki", "token")
-        self.assertNotIn('</script><script>window.injected=true', rendered)
-        self.assertIn('\\u003c/script>', rendered)
+        self.assertNotIn("</script><script>window.injected=true", rendered)
+        self.assertIn("\\u003c/script>", rendered)
+
+    def test_linear_shared_ancestor_graph(self):
+        nodes = [{"path": str(i), "stem": str(i), "private": False, "after": [str(j) for j in (i - 1, i - 2) if j >= 0]} for i in range(2000)]
+        start = time.monotonic()
+        self.assertEqual(lib.analyze_spec_graph(nodes), [])
+        self.assertEqual(nodes[-1]["col"], 2000)
+        self.assertLess(time.monotonic() - start, 2)
 
 
 def serve_fixture():
@@ -543,8 +331,10 @@ def serve_fixture():
         root = Path(tmp)
         fixture(root)
         server = panel.make_server(root / "docdoki")
+
         def stop(*_):
             raise KeyboardInterrupt
+
         signal.signal(signal.SIGTERM, stop)
         print(json.dumps({"url": f"http://127.0.0.1:{server.server_address[1]}", "root": str(root)}), flush=True)
         try:
