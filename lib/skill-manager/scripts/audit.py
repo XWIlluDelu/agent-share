@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tarfile
 
+sys.dont_write_bytecode = True
 _HERE = str(Path(__file__).resolve().parent)
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
@@ -127,7 +128,8 @@ def audit(root, sources=False, runtimes=()):
         local = {}
         for entry in local_paths(directory):
             relative = entry.relative_to(directory).as_posix()
-            require(".git" not in PurePosixPath(relative).parts, f"{name}/{relative}: repository internals in skill")
+            if not require(".git" not in PurePosixPath(relative).parts, f"{name}/{relative}: repository internals in skill"):
+                continue
             if entry.is_symlink():
                 target = os.readlink(entry)
                 require(not os.path.isabs(target) and entry.exists() and entry.resolve().is_relative_to((root / "lib").resolve()), f"{name}/{relative}: broken, absolute, or library-escaping link")
