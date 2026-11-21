@@ -1,6 +1,6 @@
 ---
 name: chaos
-description: "Claim-led multi-agent deliberation for high-stakes judgments that direct verification cannot settle. Use only when the user explicitly requests CHAOS, council/debate, structured disagreement, adversarial or claim audit, minority report, stress-test, or evidence-standard synthesis. Unasked, never launch; only propose it when a decision is simultaneously hard to reverse, costly if wrong, and not directly verifiable. Work directly for document/diff review, lookup, calculation, routine edits, brainstorming, or anything one agent can verify."
+description: "Claim-led multi-agent deliberation for high-stakes judgments that direct verification cannot settle. Use only when the user explicitly requests CHAOS, council/debate, structured disagreement, adversarial or claim audit, minority report, stress-test, or evidence-standard synthesis. Never launch unasked; propose it only when a decision is simultaneously hard to reverse, costly if wrong, and not directly verifiable. Work directly for document/diff review, lookup, calculation, routine edits, brainstorming, or anything one agent can verify."
 ---
 
 # CHAOS
@@ -13,16 +13,16 @@ final writer; advisers run as native subagents or fresh agent sessions.
 
 CHAOS is off by default, and loading this skill is not a decision to run it.
 Launch adviser runs only when the user asked for a deliberation mode by name.
-Unasked, the strongest case — a judgment hard to reverse, costly if wrong, and
-beyond direct verification, all three — buys a one-sentence proposal to the
-user, never a launch. Felt importance buys nothing: a task is not promoted to
-deliberation by mattering. Reading, reviewing, or assessing a document, diff,
-or answer is one reader's direct work, whatever its stakes, unless the user
-asked for independent review. When in doubt, work directly; when direct work
-exposes a genuinely contested claim, that is the moment to propose escalation
-— cheap to offer, and the user decides. The gate also applies inside a run:
-any claim a cheap direct check can settle is settled by the check;
-deliberation handles only what verification cannot reach.
+Unasked, even the strongest case — a judgment hard to reverse, costly if wrong,
+and beyond direct verification, all three — warrants at most a one-sentence
+proposal to the user, never a launch. Perceived importance is not enough: high
+stakes alone do not justify deliberation. Reading, reviewing, or assessing a
+document, diff, or answer is direct single-agent work, whatever its stakes,
+unless the user asked for independent review. When in doubt, work directly;
+when direct work exposes a genuinely contested claim, propose escalation —
+cheap to offer, and the user decides. The gate also applies inside a run: any
+claim a cheap direct check can settle is settled by the check; deliberation
+handles only what verification cannot reach.
 
 ## Modes after the gate
 
@@ -36,9 +36,7 @@ Choose a deliberation mode only after the gate admits CHAOS.
 | Review loop | An implementation or artifact needs parent-controlled writing plus fresh independent review. |
 
 For full recipes, escalation, and stop rules, read
-[references/protocols.md](references/protocols.md). Before choosing advisers,
-inspect the host's live available models; when useful, look up the strengths,
-style, and reported weaknesses of the specific models available for the task.
+[references/protocols.md](references/protocols.md).
 
 ## Core workflow
 
@@ -107,10 +105,8 @@ agent prompts;
 synthesis; [references/philosophy.md](references/philosophy.md) only when
 modifying the skill or resolving protocol-design ambiguity.
 
-Before finishing, confirm: frame explicit and neutral; every Council first
-position answered the whole frame with no scouting shard counted as one; record
-depth matches the issue (compact summary for a single issue, full ledger when
-tracking multiple claims, revision rounds, or an audit trail); critiques
-anonymized, evidence-bearing, and targeted at claim IDs; reversals cite the
-evidence, falsified premise, or corrected inference that changed them; parent
-synthesis not majority rule; dissent and validation gaps recorded.
+Before finishing, confirm: neutral frame; every Council first position answered
+the whole frame (no scouting shards); record depth matches the issue; critiques
+anonymized, evidence-bearing, and keyed to claim IDs; reversals grounded in
+specific evidence or corrected reasoning; synthesis based on evidence rather
+than majority count; dissent and validation gaps preserved.

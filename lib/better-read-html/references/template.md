@@ -4,7 +4,7 @@
 artifact, then replace the `<title>`, the `.brand` text, the
 `<meta name="annotation-report">` id, and everything inside `<main>`. Delete the
 example content completely. Keep the stylesheets, scripts and their order: the
-page works offline from `file://`, and its behaviour depends on that order (math
+page works offline from `file://`, and its behavior depends on that order (math
 renders before evidence notes move and before ink indexes text).
 
 Output is a folder: `index.html` plus `assets/`. Put source images under
@@ -120,6 +120,6 @@ endnotes; reduced-motion and forced-colors handling.
 
 Edit `template/` only for changes every artifact should get. Annotation-file
 persistence has regression tests: `node --test tests/`. Pane, evidence and ink
-behaviour are browser-level; check them in Chrome at 800, 1280, 1440 and
+behavior are browser-level; check them in Chrome at 800, 1280, 1440 and
 1920 px after changing `panes.js`, `evidence.js`, `annotations.js` or
 `text-index.js`.

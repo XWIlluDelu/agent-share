@@ -15,16 +15,11 @@ import subprocess
 import sys
 import tarfile
 
-sys.dont_write_bytecode = True
 _HERE = str(Path(__file__).resolve().parent)
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
-try:
-    import yaml
-except ImportError:
-    raise SystemExit("PyYAML is required. Run with a Python environment containing PyYAML.")
 
-from skill_validation import load_yaml, valid_skill_name, validate_skill_directory
+from skill_validation import load_yaml, valid_skill_name, validate_skill_directory, yaml
 
 
 def git(repo, *args):
@@ -41,6 +36,9 @@ def fingerprint(kind, mode, data):
 def local_paths(directory):
     """Do not follow directory links or include Python runtime caches."""
     for folder, dirs, names in os.walk(directory, followlinks=False):
+        if ".git" in dirs:
+            yield Path(folder) / ".git"
+            dirs.remove(".git")
         dirs[:] = [name for name in dirs if name != "__pycache__"]
         for name in dirs + names:
             path = Path(folder) / name
@@ -168,7 +166,8 @@ def audit(root, sources=False, runtimes=()):
         for entry in fragments.iterdir():
             require(entry.is_file() and re.fullmatch(r"AGENT-.+\.md", entry.name), f"Unexpected fragment: {entry.name}")
     for runtime in runtimes:
-        require(runtime.is_dir(), f"Runtime root missing: {runtime}")
+        if not require(runtime.is_dir(), f"Runtime root missing: {runtime}"):
+            continue
         if runtime.is_symlink():
             require(not os.path.isabs(os.readlink(runtime)) and runtime.resolve() == links.resolve(), f"{runtime}: expected relative directory link to skills/")
         else:

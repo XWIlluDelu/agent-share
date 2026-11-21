@@ -1,6 +1,6 @@
 ---
 name: better-read-html
-description: Create or audit source-first static HTML artifacts from papers, reports, notes, plans, or specifications. Use only for local/offline/single-file/printable HTML, document-to-HTML conversion, source-preserving relayout, evidence-linked reports/close-reading pages, or existing HTML validation. Do not use for general reading, summarization, Markdown/math editing, design exploration, or non-HTML reports.
+description: Create or audit source-first static HTML artifacts from papers, reports, notes, plans, or specifications. Use only for local, offline, single-file, or printable HTML; document-to-HTML conversion; source-preserving relayout; evidence-linked reports or close-reading pages; or auditing existing HTML. Do not use for general reading, summarization, Markdown/math editing, design exploration, or non-HTML reports.
 ---
 
 # Better Read HTML
@@ -50,7 +50,8 @@ text, papers, and math all still use one of the modes above.
    copies carry `data-layout-duplicate="true"`. Omit empty apparatus.
 6. Validate with `python3 <skill-dir>/scripts/audit_html.py <dir>/index.html
    --strict [--profile preserve|scholarly] [--source-text <extracted.txt>]`
-   (all flags: `--help`). Record the command beside substantial artifacts.
+   (all flags: `--help`). Include the command in your report for substantial
+   artifacts.
 
 ## Load references only when needed
 
@@ -86,8 +87,8 @@ text, papers, and math all still use one of the modes above.
 
 ## Design
 
-The template is the design: its typography, panes, components, print and
-narrow-screen behaviour are the house style. Do not restyle it per artifact or
+The template is the design: its typography, panes, components, print, and
+narrow-screen behavior are the house style. Do not restyle it per artifact or
 add parallel CSS; add CSS only for a source structure the template lacks.
 
 Shape content within it:
@@ -108,8 +109,6 @@ Shape content within it:
   explanations, or provenance prose unless the user asks or the artifact would
   otherwise mislead.
 
-Design never authorizes rewriting canonical source text.
-
 ## Reporting contract
 
 For substantial artifacts, report the output folder, mode, fidelity tier,
@@ -119,7 +118,7 @@ and validation warnings.
 
 ## Stop rules
 
-Stop, ask, downgrade, or mark unverified when:
+Stop and ask, downgrade the fidelity tier, or mark the artifact unverified when:
 
 - Exact conversion is requested but only lossy extraction/OCR is available.
 - Source text or assets are unavailable and would require guessing.

@@ -34,7 +34,7 @@ skills:
     source_repo: anthropic
     source_path: "skills/skill-creator"
     source_commit: "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f"
-    notes: "Local normalization: skill name changed to anthropic-skill-creator to avoid collision; validator uses stdlib frontmatter parsing instead of pyyaml; upstream vendor-specific wording retained as reference material."
+    notes: "Local normalization: skill name changed to anthropic-skill-creator to avoid collision; upstream vendor-specific wording retained as reference material."
   - name: pdf
     pack: documents
     source_repo: anthropic
@@ -201,6 +201,12 @@ skills:
     source_path: "rebuttal-response"
     source_commit: "da8a231892963b37fbb6d09e49ad5c3f7db22958"
     notes: "Local normalization clarifies that actual reviews, AC comments, and rebuttal rules should use this skill rather than review-revision."
+  - name: humanizer
+    pack: documents
+    source_repo: humanizer
+    source_path: "."
+    source_commit: "a32f24407364c74c812b43c15926d638bee1e072"
+    notes: "The core skill is harness-neutral. Retain the upstream license and repository-level packaging."
 
   # Custom/local skills
   - name: get-taste
@@ -228,32 +234,21 @@ skills:
     source_repo: custom
     source_path: "lib/better-read-html"
     notes: "Custom portable skill for source-first, static, auditable HTML document artifacts; scholarly/paper rigor lives in its reference material. Pack: documents, not always-on."
-
   - name: docdoki
     pack: always-on
     source_repo: custom
     source_path: "lib/docdoki"
     notes: "Custom living-documentation skill for docdoki/ libraries. The agent executes semantic protocols with Read/Edit/Bash; a bundled deterministic checker enforces the gitignored private-document boundary, and the optional panel presents both visibility scopes."
-
   - name: project-setup
     pack: always-on
     source_repo: custom
     source_path: "lib/project-setup"
     notes: "Custom project setup skill for shared skill links and generated AGENTS.md files from agents-fragments."
-
-  - name: humanizer
-    pack: documents
-    source_repo: humanizer
-    source_path: "."
-    source_commit: "a32f24407364c74c812b43c15926d638bee1e072"
-    notes: "The core skill is harness-neutral. Retain the upstream license and repository-level packaging."
-
   - name: chaos
     pack: deliberation
     source_repo: custom
     source_path: "lib/chaos"
     notes: "Custom deliberation skill; keep lightweight and generic."
-
   - name: remote-compute
     pack: compute
     source_repo: custom

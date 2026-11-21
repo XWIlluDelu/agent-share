@@ -5,158 +5,145 @@ description: "Set up or sync repository agent assets from .agent-share: shared-s
 
 # Project Setup
 
-Set up or update a repository to use shared `.agent-share` skills and agent
-instructions.
+Configure or sync a target repository to use shared `.agent-share` skills and
+agent instructions.
 
 ## Boundaries
 
-- Treat `~/.agent-share` as the read-only source library during project setup.
+- Treat `~/.agent-share` as read-only during project setup.
 - Write only target-project agent assets: `.agents/skills/`, requested
   platform discovery links, `.agents/fragments/`, vendored external-skill
   `.source.yaml` files, `AGENTS.md`, and requested instruction aliases or
   platform rule files. Never run `project-setup` against `.agent-share` itself
   (which keeps only its own root `AGENTS.md`); maintaining `.agent-share`
   belongs to `skill-manager`.
-- Prefer relative symlinks. Skip and report existing real files or unexpected
-  symlinks instead of overwriting user customizations.
-- Add incrementally; remove or replace existing project assets only when the
-  user requests it.
-- When linking shared skills into a project, skip manifest entries with `pack:
-  always-on` unless explicitly requested; they are already globally available.
+- Prefer relative symlinks. Leave matching symlinks untouched; skip and report
+  existing real files or unexpected symlinks rather than overwriting user
+  customizations.
+- Add incrementally; remove or replace existing project assets only when
+  requested.
+- Skip `manifest.yaml` entries with `pack: always-on` when linking project
+  skills unless explicitly requested — they are already globally available.
 
 ## Target agents and shared skills
 
-Use `~/.agent-share/manifest.yaml` and `~/.agent-share/lib/*/SKILL.md`. Use the
-agents the user named. If none were named, infer targets only from unambiguous
-repository evidence such as existing agent configuration and report that
+Read `~/.agent-share/manifest.yaml` and `~/.agent-share/lib/*/SKILL.md`. Target
+the agents the user named. If none were named, infer targets only from
+unambiguous repository evidence (such as existing agent config) and report the
 inference; otherwise ask before creating platform-specific files.
 
 Keep one canonical project skill set under `.agents/skills/`:
 
-- Link only explicitly requested skill names or packs; never link every
-  non-`always-on` manifest entry by default.
-- Create `.agents/skills/<name> -> <relative path to
-  ~/.agent-share/lib/<name>>`.
-- Existing expected symlink: leave unchanged. Existing nonmatching path: skip
-  and report.
-- `.agents/skills/` is discovered directly by Pi, Codex, Gemini CLI,
-  OpenCode, and GitHub Copilot. When Claude Code is a target, also create
-  `.claude/skills/<name> -> ../../.agents/skills/<name>`. When Qwen Code is a
-  target, also create `.qwen/skills/<name> -> ../../.agents/skills/<name>`.
-  When Windsurf is a target, create
-  `.windsurf/skills/<name> -> ../../.agents/skills/<name>`. Create only the
-  requested platform bridges, preserve existing platform-owned content, and
-  skip conflicts.
-- Do not claim skill discovery for a target whose current official client does
+- Link only explicitly requested skill names or packs; never link all
+  non-`always-on` entries by default.
+- Create `.agents/skills/<name> -> <relative path to ~/.agent-share/lib/<name>>`.
+- `.agents/skills/` is discovered directly by Pi, Codex, Gemini CLI, OpenCode,
+  and GitHub Copilot. Add per-skill bridges
+  `-> ../../.agents/skills/<name>` only for requested platforms that need them,
+  preserving platform-owned content:
+  - Claude Code: `.claude/skills/<name>`
+  - Qwen Code: `.qwen/skills/<name>`
+  - Windsurf: `.windsurf/skills/<name>`
+- Do not claim skill discovery for a client whose current official release does
   not expose a compatible project skill root. Instruction-file support and
   skill discovery are separate capabilities.
 
 ## External skills
 
-Use external sources only when the user explicitly requests an external
-repository or URL.
+Use external sources only when the user explicitly names an external repository
+or URL.
 
 1. Resolve a Git source to a commit SHA; record a requested tag or branch only
    as provenance, never as the immutable identity. For an archive without a
-   commit identity, compute a SHA-256 digest. If neither can be established,
-   stop unless the user explicitly accepts a mutable source.
+   commit identity, compute its SHA-256 digest. Stop if neither can be
+   established unless the user explicitly accepts a mutable source.
 2. Inspect `SKILL.md`, referenced scripts or executables, and symlinks from the
-   exact resolved tree that will be vendored. Stop on secret collection,
-   unexplained network execution, destructive behavior, or content outside the
-   stated purpose. For GitHub sources, prefer `gh skill preview
+   exact resolved tree to be vendored. Stop on secret collection, unexplained
+   network execution, destructive behavior, or content outside the stated
+   purpose. For GitHub sources, prefer `gh skill preview
    <owner>/<repo> <skill>@<commit-sha>` when available.
-3. Vendor the reviewed skill under `.agents/skills/<name>/` and require a valid
+3. Vendor the reviewed skill under `.agents/skills/<name>/` with a valid
    `SKILL.md`.
-4. Write `.agents/skills/<name>/.source.yaml` with source URL and path, requested
-   ref when applicable, resolved commit SHA or archive digest, install time,
+4. Write `.agents/skills/<name>/.source.yaml` with source URL and path,
+   requested ref (if any), resolved commit SHA or archive digest, install time,
    reason, reviewed executable paths, and license when available.
-5. Add only the target-platform discovery bridges requested above.
+5. Add only the requested platform discovery bridges listed above.
 
 ## Agent fragments
 
-Shared fragments live under:
+Shared fragments live in `~/.agent-share/agents-fragments/AGENT-*.md`.
 
-```text
-~/.agent-share/agents-fragments/AGENT-*.md
-```
-
-Choose fragments from that directory based on the user request and lightweight
-project context (`README*`, manifests, existing agent docs). Use no fragment by
-default if none fits; an empty fragment set is valid when the request is
-skills-only. Then create links under the target project's fragment directory:
+Select fragments from the user request and lightweight project context
+(`README*`, manifests, existing agent docs). Use no fragment by default if none
+fits; an empty fragment set is valid for a skills-only request. Link selected
+fragments under:
 
 ```text
 .agents/fragments/AGENT-<NAME>.md -> <relative path to ~/.agent-share/agents-fragments/AGENT-<NAME>.md>
 ```
 
-Prefer this directory layout over root-level `AGENT-*.md` links. If an older
-project already has expected root-level `AGENT-*.md` symlinks, migrate them into
-`.agents/fragments/` when the user requests a setup update and no conflict
-exists; otherwise skip and report the migration plan.
+Root-level `AGENT-*.md` files are legacy inputs only: never create new ones. If
+a project already has expected root-level `AGENT-*.md` symlinks, migrate them
+into `.agents/fragments/` during a setup update when conflict-free (otherwise
+skip and report the migration plan), and read them as build inputs only if the
+project is unmigrated and `.agents/fragments/` is empty.
 
 For a skills-only request with no instruction update, skip `AGENTS.md`
-generation and leave any existing instruction file unchanged. Create a native
-instruction alias only when a nonempty `AGENTS.md` already exists; never create
-a marker-only instruction file.
+generation and leave existing instruction files untouched.
 
 ## Build `AGENTS.md`
 
-A generated file starts with this exact ownership marker:
+A generated `AGENTS.md` begins with this exact ownership marker:
 
 ```md
 <!-- generated by project-setup; edit .agents/fragments, not this file -->
 ```
 
-Generate the target project's `AGENTS.md` by concatenating linked
-`.agents/fragments/AGENT-*.md` files in this order:
+Concatenate linked `.agents/fragments/AGENT-*.md` files in this order:
 
-1. core persona / collaboration rules (`core`, `standard`, `orthodox`, `general`, `base`)
-2. project/process rules (`project`, `workflow`, `ops`, `security`)
-3. domain profiles (`research`, `science`, `product`, etc.)
-4. tool/runtime notes (`pi`, `claude`, `codex`, `gemini`, etc.)
-5. everything else alphabetically by filename
+1. Core persona / collaboration rules (`core`, `standard`, `orthodox`, `general`, `base`)
+2. Project / process rules (`project`, `workflow`, `ops`, `security`)
+3. Domain profiles (`research`, `science`, `product`, etc.)
+4. Tool / runtime notes (`pi`, `claude`, `codex`, `gemini`, etc.)
+5. Remaining fragments alphabetically by filename
 
-When a fragment fits multiple tiers, use the most specific tier. Wrap each
-fragment with boundary comments naming its `.agents/fragments/...` source.
+When a fragment fits multiple tiers, place it in the most specific tier. Wrap
+each fragment with boundary comments naming its `.agents/fragments/...` source.
 When the request includes instruction setup or sync, rebuild marker-owned
-`AGENTS.md` from the current fragment contents even if the link set did not
-change; for skills-only requests, skip this section and leave existing
-instruction files untouched. If the first nonblank line is not the exact
-marker, treat the file as handwritten: do not overwrite it unless the user
-asks; report the migration plan. Root-level `AGENT-*.md` files are legacy
-inputs only: do not create new ones, and do not include them in generation
-unless the project has not yet been migrated and `.agents/fragments/` is empty.
+`AGENTS.md` from current fragment contents even if the link set did not change.
+If the first non-blank line is not the exact marker, treat `AGENTS.md` as
+handwritten: do not overwrite it unless asked, and report the migration plan.
 
 ## Instruction aliases
 
-Create aliases only for target agents that need a native instruction filename:
+Create native instruction aliases only when a non-empty `AGENTS.md` exists
+(never create a marker-only file) and only for target agents that require one:
 
 ```text
 CLAUDE.md -> AGENTS.md  # Claude Code
 GEMINI.md -> AGENTS.md  # Gemini CLI
 ```
 
-Codex, Qwen Code, GitHub Copilot agents, OpenCode, Windsurf, and Pi read
-`AGENTS.md` directly; do not create `CODEX.md`, `QWEN.md`, `Copilot.md`, or
-other aliases they do not need. Current official client behavior overrides this
-list when it changes. Skip and report every existing real file or nonmatching
-symlink.
+Codex, Qwen Code, GitHub Copilot, OpenCode, Windsurf, and Pi read `AGENTS.md`
+directly; do not create `CODEX.md`, `QWEN.md`, `Copilot.md`, or other unneeded
+aliases. Current official client behavior overrides this list if it changes.
 
 Do not create tool-specific rule directories or alternate formats (e.g.,
 `.cursor/rules/`, `.github/copilot-instructions.md`, `.clinerules/`,
-`.continue/rules`, `.windsurf/rules/`, `REVIEW.md`) unless explicitly requested.
+`.continue/rules/`, `.windsurf/rules/`, `REVIEW.md`) unless explicitly
+requested.
 
 ## Validation and report
 
 Before reporting completion, verify:
 
-- every new skill, fragment, platform bridge, and alias symlink resolves to the
-  exact expected target;
-- when `AGENTS.md` was generated or synced, marker-owned `AGENTS.md` equals the
-  current fragments in the declared order, including only the fixed marker and
-  boundary comments outside fragment text;
-- a second generation pass produces no diff;
-- skipped conflicts and handwritten files are byte-unchanged.
+- Every created skill, fragment, platform bridge, and alias symlink resolves to
+  its exact expected target.
+- When `AGENTS.md` was generated or synced, marker-owned `AGENTS.md` matches
+  the current fragments in the declared order, with only the ownership marker
+  and boundary comments outside fragment text, and a second pass produces no
+  diff.
+- Skipped conflicts and handwritten files remain untouched.
 
 Report installed canonical and platform skill links, linked fragments,
 generated `AGENTS.md`, instruction aliases, external provenance, validation

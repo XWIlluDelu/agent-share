@@ -184,15 +184,14 @@ deleting anything remote.
 Leaving is part of the run: kill tmux/screen sessions you started, close
 tunnels, cancel orphaned scheduler jobs, and remove the run dir's scratch
 once outputs are confirmed local (keep the run dir itself if resuming is
-plausible, and say which you did). On billed or shared machines, idle things
-you left running cost money or goodwill; end the task with nothing of yours
+plausible, and say which you did). On billed or shared machines, idle jobs or
+sessions left running cost money or goodwill; end the task with nothing of yours
 running that the user did not ask to keep. Then update the host note if the
 session taught something durable.
 
 ## When a run fails
 
-Read the exit code and log tail first; they usually say which failure you
-have. An infrastructure failure (wrong partition or account, environment not
+Read the exit code and log tail first; they usually identify the failure class. An infrastructure failure (wrong partition or account, environment not
 activated, missing module, out-of-memory, walltime, disk quota) is yours to
 fix: adjust, record the fix in the host note, relaunch. A tool failure (the
 tool ran and errored on its inputs or flags) needs the invocation or the
@@ -234,15 +233,14 @@ matching the hardware.
 **Long-running service** (a model server, a database, a notebook). Bind to
 `127.0.0.1` and reach it through an SSH tunnel
 (`ssh -L <port>:127.0.0.1:<port> <alias>`), never a publicly exposed port.
-Make start idempotent (already-running is success), readiness mean answering
-a real request correctly (not the process merely existing), and stop
-verified (the port actually freed). Secrets reach the service via
+Make start idempotent (succeed if already running), define readiness as
+answering a real request (not merely a live PID), and verify stop by confirming
+the port is free. Secrets reach the service via
 environment variables or tight-mode files, never argv (world-readable in
 `ps`), and caches are never world-writable on a shared host. Run it under a
 supervisor that survives logout: the scheduler, a `systemctl --user` unit,
 or a tmux session named after the service.
 
-**Sudo/admin.** Established in Orient, used sparingly: prefer the user-space
-route even when sudo exists, and reach for it when the task genuinely
-requires it (drivers, system packages, ports below 1024). On shared
-machines, confirm with the user before system-level changes.
+**Sudo/admin.** Follow the authorization rules in Orient: default to
+user-space even when sudo works, and reserve sudo for tasks that genuinely
+require it (drivers, system packages, ports below 1024).

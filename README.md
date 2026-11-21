@@ -61,13 +61,9 @@ not the newest fetched commit. `notes` records why and where this copy differs.
 Custom skills use `source_repo: custom`; their versions are in this repo's Git
 history.
 
-For an update: inspect the old baseline and local delta, fetch and review an
-exact new tree, build a fresh temporary candidate, reapply only still-needed
-normalizations, validate, then replace `lib/<name>` and advance its commit.
-Retire patches already covered upstream. Fetching alone does not update an
-installed skill. Keep this one manifest rather than a separate lockfile,
-per-skill source files, or a patch queue. Detailed lifecycle procedures live
-in `skill-manager`.
+Fetching into `sources/` alone never updates an installed skill. Keep this
+single manifest rather than a separate lockfile, per-skill source files, or a
+patch queue. Detailed update and lifecycle procedures live in `skill-manager`.
 
 Cloning this repository supplies tracked `lib/` content without needing
 `sources/`. Source comparison and updates require the relevant clones.

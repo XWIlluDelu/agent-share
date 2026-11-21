@@ -36,16 +36,16 @@ Find the nearest applicable `<unit>/docdoki/` (following child unit links in `no
 
 ## Ordinary work
 
-1. **Orient:** Read `northstar.md`, `overview.md`, and the relevant `specs/`, active `work/`, and `notes/`. In larger repositories, run the bundled lookup script to find every spec, active work stream, and note matching a code path:
+1. **Orient:** Read `northstar.md`, `overview.md`, and the relevant `specs/`, active `work/`, and `notes/`. In larger repositories, run the bundled lookup script (resolving `<skill-dir>` to the canonical `docdoki` directory) to find every spec, active work stream, and note matching a code path:
    ```sh
-   python3 /path/to/docdoki/scripts/validate.py /path/to/unit --for src/path/to/file.py
+   python3 <skill-dir>/scripts/validate.py <unit-path> --for src/path/to/file.py
    ```
 2. **Respect authority:** Implement within authorized scope using decided specs (`status: decided`, the default). Treat `status: proposed` specs and undecided options as proposals until confirmed. Surface material missing decisions in `overview.md` under `## Open decisions` rather than inventing binding policy.
 3. **Verify honestly:** Run checks appropriate to the claim and record scope and limits.
 4. **Maintain affected records:** Update affected contracts (if design changed within authority), active `work/` state, affected spec `progress`, and durable `notes/`. Do not mirror per-spec summaries or active checklists into `overview.md`—update each fact in its authoritative home.
 5. **Validate mechanics:** Whenever document paths, frontmatter, links, or visibility change, run:
    ```sh
-   python3 /path/to/docdoki/scripts/validate.py /path/to/unit
+   python3 <skill-dir>/scripts/validate.py <unit-path>
    ```
 
 ## Focused workflows
@@ -63,7 +63,7 @@ Natural-language intent selects the workflow; read the relevant section of [Oper
 Launch directly without installing files into the project:
 
 ```sh
-python3 /path/to/docdoki/panel/panel.py /path/to/unit
+python3 <skill-dir>/panel/panel.py <unit-path>
 ```
 
 See [Panel model](panel/panel-model.md) for the optional steering board and local editor. Only copy `scripts/panel_launcher.py` into `<unit>/docdoki/panel.py` when the user explicitly wants a project-local launcher.

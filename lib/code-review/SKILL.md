@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review a repository or requested scope for evidenced bugs, architecture/maintainability problems, cognitive load, duplication, dead code, and obsolete compatibility; fix only when authorized. Use for explicit code reviews, repository audits, codebase-health, architecture/coupling, or redundancy/dead-code assessments. Default to the whole repository without a scope; do not trigger for routine changed-code review or implementing a known issue.
+description: Review a repository or requested scope for evidenced bugs, architecture and maintainability problems, cognitive load, duplication, dead code, and obsolete compatibility; fix only when authorized. Use for explicit code reviews, repository audits, or codebase health, architecture, coupling, and dead-code assessments. Default to the whole repository when no scope is specified; do not trigger for routine changed-code review or implementing a known issue.
 ---
 
 # Code Review
@@ -29,18 +29,16 @@ compliance or personal taste.
   autonomous personal or small-team project. Without positive evidence, assume
   compatibility and external consumers matter.
 
-Stay read-only while forming the review. If fixes were authorized in the
-invocation, finish and vet the review before editing; otherwise present the
-findings and ask what to fix.
+Stay read-only while forming and vetting the review, even when fixes were
+authorized upfront.
 
 ## Map before judging
 
 Read the repository shape, entrypoints, package boundaries, public surfaces,
 data and control flow, persistence boundaries, and existing verification
 commands. Build a working model of which module owns each important concept and
-which direction dependencies should flow. For the usually small repositories
-this skill targets, inspect the complete in-scope first-party code rather than
-sampling only hotspots.
+which direction dependencies should flow. For small-to-medium repositories,
+inspect all in-scope first-party code rather than sampling only hotspots.
 
 Trace behavior through imports, routes, registrations, configuration, and tests.
 A text search is a lead, not proof of reachability or non-use. Pay special
@@ -144,7 +142,8 @@ vetting, say so directly and name the residual uncertainty.
 Do not generate implementation plans, create issues, or modify code unless the
 user asks. Without prior authorization, ask which findings to fix. With prior or
 subsequent authorization, implement the vetted changes in root-cause order and
-run the cheapest decisive project checks. Autonomous-project authorization may
-include deleting compatibility paths or changing public interfaces and
-repository-local migration code; it does not by itself authorize applying a
-migration, publishing, deploying, or changing any live external state.
+run the cheapest decisive project checks. In an autonomous project, fix
+authorization may include deleting compatibility paths or changing public
+interfaces and repository-local migration code; it does not by itself authorize
+applying a migration, publishing, deploying, or changing any live external
+state.

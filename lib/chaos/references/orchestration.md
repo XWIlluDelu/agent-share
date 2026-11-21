@@ -3,10 +3,9 @@
 ## Execution backends
 
 CHAOS requires independent adviser runs, not a particular orchestration product.
-Discover the host's execution and model-routing capabilities before launch; when
-choosing among available models, you may look up the strengths, style, and
-reported weaknesses of the specific models available for the task. Then choose
-the narrowest backend that satisfies the contract:
+Discover the host's live execution and model-routing capabilities before launch
+(see `protocols.md` for model selection), then choose the narrowest backend
+that satisfies the contract:
 
 1. **Native subagents.** Use them when the host can create a fresh isolated run
    for each adviser, select the intended model or route, dispatch the complete

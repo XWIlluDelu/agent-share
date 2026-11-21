@@ -5,106 +5,97 @@ description: "Author and evaluate skills end to end: capability/trigger design, 
 
 # Skill Creator
 
-The full skill lifecycle: scaffold, write, validate, evaluate, iterate, optimize
-triggering, package. This wraps two underlying creator guides —
-`openai-skill-creator/` for authoring and `anthropic-skill-creator/` for
-evaluation and optimization — bundled here as symlinks so their scripts and
-references stay current. Drive both through this skill; never invoke either
+End-to-end skill lifecycle: scaffold, write, validate, evaluate, iterate,
+optimize triggering, and package. This skill wraps two sibling guides bundled
+as relative symlinks — `openai-skill-creator/` for authoring and
+`anthropic-skill-creator/` for evaluation and optimization — so their scripts
+and references stay current. Drive both through this skill; never invoke either
 directly.
 
 ## Produce portable skills
 
-Follow symlinks to the canonical path of this `SKILL.md`, then resolve
-`<library-dir>` as the parent of its containing skill directory (where the
-bundled `openai-skill-creator/` and `anthropic-skill-creator/` symlinks point
-to sibling directories). Confirm both sibling directories exist before running
-anything. Never derive bundled script paths from the lexical runtime symlink or
-the user's current project. Commands use `python3`; substitute another command
-only when it is verified to run Python 3.
+Resolve this `SKILL.md` through symlinks to its canonical path, then set
+`<library-dir>` to the parent of its containing directory (where the sibling
+`openai-skill-creator/` and `anthropic-skill-creator/` symlinks point). Confirm
+both sibling directories exist before running commands. Never derive bundled
+script paths from a lexical runtime symlink or the caller's project. Run
+scripts with `python3` (or a verified Python 3 environment such as
+`.venv/bin/python` when PyYAML is required).
 
-The two bundled guides are each written for one vendor (Claude/Anthropic,
-Codex/OpenAI). Strip that specificity:
+Both bundled guides target a single vendor (Claude/Anthropic, Codex/OpenAI).
+Strip that vendor bias from every skill you produce:
 
-- Read every product, agent, org, or model name in them — Claude, Anthropic,
-  Cowork, Claude.ai, Codex, OpenAI, GPT — as the generic "the agent", "the
-  platform", or "the model". Do not carry these names into the skill you
-  produce: its name, description, and body stay vendor-neutral unless the skill
-  is genuinely about that product.
+- Read product, agent, org, and model names (`Claude`, `Anthropic`, `Cowork`,
+  `Claude.ai`, `Codex`, `OpenAI`, `GPT`) as generic terms ("the agent", "the
+  platform", "the model"). Keep generated skill names, descriptions, and bodies
+  vendor-neutral unless the skill genuinely targets that product.
 - Treat `openai-skill-creator`'s "UI Metadata and Invocation Policy" section as
-  Codex-specific reference material.
-  The scaffold creates that file only when you pass `--interface`; leave it off
-  unless the user explicitly targets the OpenAI/Codex platform.
-- Treat environment-specific sections (Claude.ai-specific, Cowork-specific) as
-  "adapt to the current environment": no subagents → run sequentially; no
-  browser or display → write static HTML or review inline.
-- The description-optimization loop
-  (`anthropic-skill-creator/scripts/run_loop.py`) is one implementation of a
-  portable idea that shells out to a specific agent CLI. Use it when that CLI is
-  present; otherwise apply its principles by hand (step 8). The script's binding
-  is not a reason the capability is vendor-locked.
+  Codex-specific reference material; pass `--interface` during scaffolding only
+  when explicitly targeting OpenAI/Codex.
+- Adapt environment-specific workflows (`Claude.ai`, `Cowork`, CLI-bound
+  scripts) to live capabilities: run sequentially when independent subagents
+  are unavailable, write static HTML or review inline without a browser or
+  display, and apply description optimization manually when the required agent
+  CLI is absent. Report reduced evidence whenever a fallback is used.
 
 ## Workflow
 
-Find where the user is and jump in. Stages are flexible and skippable — if the
-user just wants to "vibe", do that. Before choosing an evaluation route, check
-whether independent runs, the required agent CLI, and a browser/display are
-available; use the documented sequential or static fallback and report reduced
-evidence when they are not.
+Start at the user's current stage; skip formal evaluation when the user wants
+to iterate informally.
 
-1. **Capture intent and concrete examples.** What the skill does, when it
-   triggers, the output format, and how outputs should be judged. Objectively
-   verifiable outputs use assertions; subjective writing/design still uses
+1. **Capture intent and concrete examples.** Define what the skill does, when
+   it triggers, the output format, and how outputs are judged. Use assertions
+   for objectively verifiable outputs; for subjective writing or design, use
    realistic cases, a predefined qualitative rubric or blind comparison, and
-   user review, but not forced quantitative assertions. If the conversation
-   already contains the workflow, extract it first. See
-   "Create or Update a Skill" in `openai-skill-creator/SKILL.md` and "Capture
-   Intent" in `anthropic-skill-creator/SKILL.md`.
-2. **Plan reusable contents** — scripts, references, assets — and set degrees of
-   freedom and progressive-disclosure structure. See "Anatomy of a Skill" and
-   "Progressive Disclosure in Practice" in `openai-skill-creator/SKILL.md`.
+   user review instead of forced quantitative assertions. Extract existing
+   workflows from the conversation first. See "Create or Update a Skill" in
+   `openai-skill-creator/SKILL.md` and "Capture Intent" in
+   `anthropic-skill-creator/SKILL.md`.
+2. **Plan reusable contents** — scripts, references, assets — and choose
+   degrees of freedom and progressive-disclosure layout. See "Anatomy of a
+   Skill" and "Progressive Disclosure in Practice" in
+   `openai-skill-creator/SKILL.md`.
 3. **Scaffold:** `python3
    <library-dir>/openai-skill-creator/scripts/init_skill.py <name> --path <dir>
    [--resources scripts,references,assets]`. Omit `--interface` unless
-   explicitly targeting the OpenAI/Codex platform; without it no
-   `agents/openai.yaml` is created.
-4. **Write SKILL.md.** The `description` is the trigger: state what it does AND
-   when to use it, and make it a little pushy to counter under-triggering. Keep
-   the body lean (<500 lines) and push detail into `references/`. Anatomy and
-   writing patterns: `openai-skill-creator/SKILL.md`.
-5. **Validate.** In managed libraries, use the `skill-manager` audit to check
-   frontmatter, including boolean `disable-model-invocation`. For standalone
-   skills, check the [Agent Skills format](https://agentskills.io/specification).
-   Test changed entry points when the task warrants it.
-6. **Evaluate.** Follow `anthropic-skill-creator/SKILL.md` "Running and
-   evaluating test cases": write `evals/evals.json`, spawn with-skill and
-   baseline runs in the same turn when independent runs are available, and
-   grade objective outputs against assertions
-   (`anthropic-skill-creator/agents/grader.md`; schema in
-   `anthropic-skill-creator/references/schemas.md`). Aggregate with `(cd
-   <library-dir>/anthropic-skill-creator && python3 -m
-   scripts.aggregate_benchmark ...)`, and run
+   targeting OpenAI/Codex.
+4. **Write SKILL.md.** The `description` is the trigger: state both what the
+   skill does and when to use it, leaning slightly assertive to counter
+   under-triggering. Keep the body concise (<500 lines) and push details into
+   `references/`. See `openai-skill-creator/SKILL.md` for anatomy and writing
+   patterns.
+5. **Validate.** In managed `.agent-share` libraries, run the `skill-manager`
+   audit (using a PyYAML-enabled Python such as `.venv/bin/python`). For
+   standalone skills, check against the
+   [Agent Skills format](https://agentskills.io/specification). Test changed
+   entry points when warranted.
+6. **Evaluate.** Follow "Running and evaluating test cases" in
+   `anthropic-skill-creator/SKILL.md`: write `evals/evals.json`, spawn
+   with-skill and baseline runs in parallel when supported, and grade objective
+   outputs against assertions (`anthropic-skill-creator/agents/grader.md`;
+   schemas in `anthropic-skill-creator/references/schemas.md`). Aggregate via
+   `(cd <library-dir>/anthropic-skill-creator && python3 -m
+   scripts.aggregate_benchmark ...)`, launch
    `<library-dir>/anthropic-skill-creator/eval-viewer/generate_review.py` for
-   the user before forming your own opinion. Then read `feedback.json`.
-7. **Improve and iterate.** Generalize from feedback instead of overfitting,
-   keep it lean, explain the why, and bundle any script the test runs kept
-   re-writing. See `anthropic-skill-creator/SKILL.md` "Improving the skill".
-   Re-run into a new iteration; stop when the user is satisfied or progress
-   stalls.
+   user review before forming your own judgment, then read `feedback.json`.
+7. **Improve and iterate.** Generalize from feedback rather than overfitting,
+   keep instructions lean, explain the *why*, and bundle scripts that test runs
+   repeatedly recreate. See "Improving the skill" in
+   `anthropic-skill-creator/SKILL.md`. Re-run into a new iteration until the
+   user is satisfied or progress stalls.
 8. **Optimize description triggering.** Build ~20 realistic queries split
-   should-trigger / should-not-trigger (favor near-misses over gimmes), hold out
-   a test portion, and select the description by held-out score. Automated:
-   `(cd <library-dir>/anthropic-skill-creator && python3 -m scripts.run_loop
-   ...)` (needs the agent CLI). Without it, run the same loop by hand.
+   between should-trigger and should-not-trigger (favor near-misses over
+   obvious cases), hold out a test split, and select by held-out score.
+   Automated: `(cd <library-dir>/anthropic-skill-creator && python3 -m
+   scripts.run_loop ...)` when the agent CLI is available; otherwise run the
+   same loop manually.
 9. **Package:** `python3 <library-dir>/skill-creator/scripts/package_skill.py
-   <skill-folder> <output-dir>` (using a Python environment containing PyYAML,
-   such as `.venv/bin/python` in `.agent-share`) when a `.skill` artifact is
-   wanted. This wrapper reuses `skill-manager/scripts/skill_validation.py` so
-   packaging enforces the exact same PyYAML frontmatter rules as library audit
-   (including duplicate-key rejection, non-empty string `name`/`description`,
-   `name == <folder>`, and boolean `disable-model-invocation`), delegates
-   archive creation to `anthropic-skill-creator/scripts/package_skill.py`
-   without patching it, and refuses output directories inside the bundled
-   creators.
+   <skill-folder> [output-dir]` (with a PyYAML-enabled Python such as
+   `.venv/bin/python`) when a `.skill` archive is requested. This wrapper
+   enforces the shared `skill-manager` frontmatter rules (including boolean
+   `disable-model-invocation`), delegates zip creation to
+   `anthropic-skill-creator/scripts/package_skill.py`, and rejects output
+   directories inside the bundled creators.
 
 ## Routing
 
@@ -112,5 +103,5 @@ evidence when they are not.
 |---|---|
 | Scaffold, structure, naming, degrees of freedom | `openai-skill-creator/` |
 | Test cases, grading, benchmarks, viewer, blind compare, description optimization | `anthropic-skill-creator/` |
-| Packaging (preserving library-supported invocation controls) | `scripts/package_skill.py` (wraps `anthropic-skill-creator/`) |
-| Progressive disclosure, anatomy, description-as-trigger | either; `openai-skill-creator/` is canonical |
+| Packaging (with shared library validation) | `scripts/package_skill.py` |
+| Progressive disclosure, anatomy, description-as-trigger | either (`openai-skill-creator/` is canonical) |

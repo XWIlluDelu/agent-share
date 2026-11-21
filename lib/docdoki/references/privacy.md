@@ -20,9 +20,9 @@ Append this anchored rule to the **unit's** `.gitignore` without replacing exist
 Verify the boundary after setup and whenever document paths, links, or visibility change:
 
 ```sh
-python3 /path/to/docdoki/scripts/validate.py /path/to/unit
+python3 <skill-dir>/scripts/validate.py <unit-path>
 # or privacy-only:
-python3 /path/to/docdoki/scripts/validate.py /path/to/unit --privacy
+python3 <skill-dir>/scripts/validate.py <unit-path> --privacy
 ```
 
 `validate.py` checks Git ignore rules, tracked private files, duplicate stems across scopes/archives, and recognized public-to-private references without modifying the project. Passing does not guarantee the absence of sensitive prose or historical commits—review prose as well.

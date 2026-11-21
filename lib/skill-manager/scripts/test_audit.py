@@ -106,8 +106,11 @@ class AuditTests(unittest.TestCase):
     def test_git_metadata_is_not_skill_content(self):
         path = self.root / "lib/demo/.git"
         path.mkdir()
-        (path / "config").write_text("do not import me")
         self.error("repository internals in skill")
+        (path / "config").write_text("do not import me")
+        errors, _, _ = self.check()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("repository internals in skill", errors[0])
 
     def test_exact_always_on_target(self):
         link = self.root / "skills/demo"
@@ -187,6 +190,11 @@ class AuditTests(unittest.TestCase):
         (runtime / "demo").unlink()
         (runtime / "demo").mkdir()
         self.error("expected relative skill link", runtimes=[runtime])
+
+    def test_missing_runtime_reports_single_error(self):
+        missing = self.root / "no-such-runtime"
+        errors, _, _ = self.check(runtimes=[missing])
+        self.assertEqual(errors, [f"Runtime root missing: {missing}"])
 
 
 if __name__ == "__main__":
