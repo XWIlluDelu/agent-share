@@ -815,11 +815,11 @@ def _list_unit_files(unit: Path) -> list[str]:
     """List unit-relative non-ignored code/data files for covers/scope validation."""
     top = _git(unit, "rev-parse", "--show-toplevel")
     if top.returncode == 0:
-        listed = _git(unit, "ls-files", "-co", "--exclude-standard", "--", ".")
+        listed = _git(unit, "ls-files", "-z", "-co", "--exclude-standard", "--", ".")
         if listed.returncode == 0:
             return [
-                rel for rel in listed.stdout.splitlines()
-                if rel and not rel.startswith("docdoki/")
+                rel for rel in listed.stdout.split("\0")
+                if rel and not rel.startswith("docdoki/") and (unit / rel).exists()
             ]
     skip = {".git", "docdoki", "node_modules", ".venv", "__pycache__", ".pytest_cache"}
     files: list[str] = []
@@ -1020,6 +1020,7 @@ def find_for_path(unit: Path, target: str) -> dict[str, list[dict]]:
             matched_spec_stems.add(doc["stem"])
 
     matched_work: list[dict] = []
+    matched_work_stems: set[str] = set()
     for doc in docs:
         if doc["kind"] != "work" or doc["archived"] or doc["error"]:
             continue
@@ -1034,7 +1035,9 @@ def find_for_path(unit: Path, target: str) -> dict[str, list[dict]]:
                 "title": doc["title"],
                 "status": doc["fm"].get("status"),
             })
+            matched_work_stems.add(doc["stem"])
 
+    related_stems = matched_spec_stems | matched_work_stems
     matched_notes: list[dict] = []
     for doc in docs:
         if doc["kind"] != "note" or doc["archived"] or doc["error"]:
@@ -1042,7 +1045,7 @@ def find_for_path(unit: Path, target: str) -> dict[str, list[dict]]:
         covers = doc["fm"].get("covers") or []
         relates = doc["fm"].get("relates") or []
         by_cover = isinstance(covers, list) and any(isinstance(g, str) and glob_match(rel_target, g) for g in covers)
-        by_relate = isinstance(relates, list) and any(s in matched_spec_stems for s in relates)
+        by_relate = isinstance(relates, list) and any(s in related_stems for s in relates)
         if by_cover or by_relate:
             matched_notes.append({
                 "path": doc["path"],

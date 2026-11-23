@@ -95,6 +95,10 @@ def main() -> int:
             "---\npurpose: Atomic rename notes\nrelates: [export]\ncovers: [src/export.py]\n---\n# FS gotchas\n\nLink to [[export]].\n",
         )
         write(
+            unit / "docdoki/notes/work-finding.md",
+            "---\npurpose: Experiment notes for atomic export\nrelates: [atomic-export]\n---\n# Work finding\n\nObserved on [[atomic-export]].\n",
+        )
+        write(
             unit / "docdoki/private/notes/compute.md",
             "---\npurpose: local compute\n---\n# Compute\n",
         )
@@ -107,11 +111,24 @@ def main() -> int:
         )
         assert_true(check_privacy(unit) == [], "privacy_only passes on valid library")
 
+        # Unstaged deletion of a Git-tracked file should immediately trigger covers warning
+        run("git", "add", "src/validate.py", cwd=unit)
+        (unit / "src/validate.py").unlink()
+        _, del_warnings = validate_library(unit)
+        assert_true(
+            any("covers globs matching no files" in w and "src/validate.py" in w for w in del_warnings),
+            f"unstaged deletion triggers done-spec covers warning (got {del_warnings})",
+        )
+        write(unit / "src/validate.py", "def validate(): pass\n")
+
         # --for lookup
         matches = find_for_path(unit, "src/export.py")
         assert_true([s["stem"] for s in matches["specs"]] == ["export"], "--for matches spec by covers")
         assert_true([w["stem"] for w in matches["work"]] == ["atomic-export"], "--for matches active work")
-        assert_true([n["stem"] for n in matches["notes"]] == ["fs-gotchas"], "--for matches note by relates/covers")
+        assert_true(
+            sorted(n["stem"] for n in matches["notes"]) == ["fs-gotchas", "work-finding"],
+            f"--for matches notes linked via spec or matched work (got {matches['notes']})",
+        )
 
         # --index output
         index_md = render_spec_index(unit)
