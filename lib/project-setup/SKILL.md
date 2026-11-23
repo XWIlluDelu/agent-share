@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: "Set up or sync repository agent assets from .agent-share: shared-skill links, generated AGENTS.md/fragments, platform discovery links, and required instruction aliases. Use for coding-agent project configuration across Claude, Codex, Gemini, Qwen, Copilot, OpenCode, Windsurf, or Pi."
+description: "Set up or sync project skills and instructions from .agent-share for coding agents such as Codex, Claude Code, Antigravity CLI (agy), GitHub Copilot, Pi, and OpenCode. Link skills, generate AGENTS.md from fragments, and add client-specific links as needed."
 ---
 
 # Project Setup
@@ -11,8 +11,8 @@ agent instructions.
 ## Boundaries
 
 - Treat `~/.agent-share` as read-only during project setup.
-- Write only target-project agent assets: `.agents/skills/`, requested
-  platform discovery links, `.agents/fragments/`, vendored external-skill
+- Write only target-project agent assets: `.agents/skills/`, client-specific
+  skill links, `.agents/fragments/`, vendored external-skill
   `.source.yaml` files, `AGENTS.md`, and requested instruction aliases or
   platform rule files. Never run `project-setup` against `.agent-share` itself
   (which keeps only its own root `AGENTS.md`); maintaining `.agent-share`
@@ -25,49 +25,21 @@ agent instructions.
 - Skip `manifest.yaml` entries with `pack: always-on` when linking project
   skills unless explicitly requested — they are already globally available.
 
-## Target agents and shared skills
+## Project skills
 
-Read `~/.agent-share/manifest.yaml` and `~/.agent-share/lib/*/SKILL.md`. Target
-the agents the user named. If none were named, infer targets only from
-unambiguous repository evidence (such as existing agent config) and report the
-inference; otherwise ask before creating platform-specific files.
+Read `~/.agent-share/manifest.yaml` and `~/.agent-share/lib/*/SKILL.md`.
 
-Keep one canonical project skill set under `.agents/skills/`:
+Link each requested skill from `~/.agent-share/lib/` into `.agents/skills/`.
+If the user requests a pack, link its skills.
 
-- Link only explicitly requested skill names or packs; never link all
-  non-`always-on` entries by default.
-- Create `.agents/skills/<name> -> <relative path to ~/.agent-share/lib/<name>>`.
-- `.agents/skills/` is discovered directly by Pi, Codex, Gemini CLI, OpenCode,
-  and GitHub Copilot. Add per-skill bridges
-  `-> ../../.agents/skills/<name>` only for requested platforms that need them,
-  preserving platform-owned content:
-  - Claude Code: `.claude/skills/<name>`
-  - Qwen Code: `.qwen/skills/<name>`
-  - Windsurf: `.windsurf/skills/<name>`
-- Do not claim skill discovery for a client whose current official release does
-  not expose a compatible project skill root. Instruction-file support and
-  skill discovery are separate capabilities.
+Clients such as Codex, agy, GitHub Copilot, Pi, and OpenCode read
+`.agents/skills/` directly. For each project skill, link `.claude/skills/<name>`
+to `../../.agents/skills/<name>` so Claude Code can read it too.
 
 ## External skills
 
-Use external sources only when the user explicitly names an external repository
-or URL.
-
-1. Resolve a Git source to a commit SHA; record a requested tag or branch only
-   as provenance, never as the immutable identity. For an archive without a
-   commit identity, compute its SHA-256 digest. Stop if neither can be
-   established unless the user explicitly accepts a mutable source.
-2. Inspect `SKILL.md`, referenced scripts or executables, and symlinks from the
-   exact resolved tree to be vendored. Stop on secret collection, unexplained
-   network execution, destructive behavior, or content outside the stated
-   purpose. For GitHub sources, prefer `gh skill preview
-   <owner>/<repo> <skill>@<commit-sha>` when available.
-3. Vendor the reviewed skill under `.agents/skills/<name>/` with a valid
-   `SKILL.md`.
-4. Write `.agents/skills/<name>/.source.yaml` with source URL and path,
-   requested ref (if any), resolved commit SHA or archive digest, install time,
-   reason, reviewed executable paths, and license when available.
-5. Add only the requested platform discovery bridges listed above.
+When the user names an external repository or URL, copy the requested skill
+into `.agents/skills/<name>/` and record its source URL in `.source.yaml`.
 
 ## Agent fragments
 
@@ -104,7 +76,7 @@ Concatenate linked `.agents/fragments/AGENT-*.md` files in this order:
 1. Core persona / collaboration rules (`core`, `standard`, `orthodox`, `general`, `base`)
 2. Project / process rules (`project`, `workflow`, `ops`, `security`)
 3. Domain profiles (`research`, `science`, `product`, etc.)
-4. Tool / runtime notes (`pi`, `claude`, `codex`, `gemini`, etc.)
+4. Tool and runtime notes
 5. Remaining fragments alphabetically by filename
 
 When a fragment fits multiple tiers, place it in the most specific tier. Wrap
@@ -114,24 +86,10 @@ When the request includes instruction setup or sync, rebuild marker-owned
 If the first non-blank line is not the exact marker, treat `AGENTS.md` as
 handwritten: do not overwrite it unless asked, and report the migration plan.
 
-## Instruction aliases
+## Client-specific instructions
 
-Create native instruction aliases only when a non-empty `AGENTS.md` exists
-(never create a marker-only file) and only for target agents that require one:
-
-```text
-CLAUDE.md -> AGENTS.md  # Claude Code
-GEMINI.md -> AGENTS.md  # Gemini CLI
-```
-
-Codex, Qwen Code, GitHub Copilot, OpenCode, Windsurf, and Pi read `AGENTS.md`
-directly; do not create `CODEX.md`, `QWEN.md`, `Copilot.md`, or other unneeded
-aliases. Current official client behavior overrides this list if it changes.
-
-Do not create tool-specific rule directories or alternate formats (e.g.,
-`.cursor/rules/`, `.github/copilot-instructions.md`, `.clinerules/`,
-`.continue/rules/`, `.windsurf/rules/`, `REVIEW.md`) unless explicitly
-requested.
+Use `AGENTS.md` for shared project instructions. Create client-specific
+instruction files only when explicitly requested.
 
 ## Validation and report
 

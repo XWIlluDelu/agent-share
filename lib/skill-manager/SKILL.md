@@ -68,26 +68,15 @@ a skill should exist.
 
 ### Runtime activation
 
-In audit mode, report discrepancies without changing runtime roots; apply link
-changes only when syncing or repairing runtime activation.
+Keep existing global skill directories that work. For new setups, use
+`~/.agents/skills` where supported. Use `~/.claude/skills` for Claude Code
+and `~/.gemini/antigravity-cli/skills` for `agy`.
 
-1. Compare `pack: always-on` entries in `manifest.yaml` against `skills/`.
-2. Inspect roots already in use rather than every root an installed agent
-   supports. Shared-standard roots include `~/.agents/skills` (Codex, Pi,
-   Gemini CLI, OpenCode, GitHub Copilot); platform roots include
-   `~/.pi/agent/skills`, `~/.claude/skills`, and `~/.qwen/skills`. Verify live
-   client docs or config before changing them.
-3. Treat an existing `~/.codex/skills` as legacy or installation-specific:
-   preserve platform-owned payload such as `.system/`, and do not create it as
-   the canonical Codex root without live evidence.
-4. For a runtime root with no platform-owned payload, prefer one relative
-   directory symlink to `~/.agent-share/skills`. Otherwise preserve the
-   directory and add per-skill relative symlinks to
-   `~/.agent-share/skills/<name>`.
-5. Do not create roots for absent agents or add parallel shared/platform roots
-   merely for naming consistency; clients may discover duplicates. Keep working
-   activation paths unless asked or fixing a verified discovery gap.
-6. Skip and report real files or nonmatching symlinks.
+Add a relative symlink to `~/.agent-share/skills/<name>` for each `always-on`
+skill with no entry. Leave existing files and links untouched.
+
+Report missing or incorrect links for `always-on` skills. List any links for
+skills that `manifest.yaml` does not mark as `always-on`.
 
 ### Sync upstream
 

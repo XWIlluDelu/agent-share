@@ -158,7 +158,8 @@ def audit(root, sources=False, runtimes=()):
     links = root / "skills"
     require(links.is_dir() and not links.is_symlink(), "skills/ must be the materialized directory")
     if links.is_dir():
-        require({p.name for p in links.iterdir()} == always_on, "skills/ does not match pack: always-on")
+        for entry in sorted(links.iterdir()):
+            require(entry.name in always_on, f"{entry}: not listed as always-on in manifest.yaml")
     for name in sorted(always_on):
         link = links / name
         require(link.is_symlink() and os.readlink(link) == f"../lib/{name}" and link.is_dir(), f"skills/{name}: expected -> ../lib/{name}")
@@ -176,6 +177,9 @@ def audit(root, sources=False, runtimes=()):
             for name in sorted(always_on):
                 link = runtime / name
                 require(link.is_symlink() and not os.path.isabs(os.readlink(link)) and link.is_dir() and link.resolve() == (links / name).resolve(), f"{link}: expected relative skill link")
+            for entry in sorted(runtime.iterdir()):
+                if entry.is_symlink() and entry.name not in always_on:
+                    errors.append(f"{entry}: linked skill is not listed as always-on in manifest.yaml")
     return errors, reviews, len(skills)
 
 

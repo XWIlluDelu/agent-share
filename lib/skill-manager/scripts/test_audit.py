@@ -121,7 +121,7 @@ class AuditTests(unittest.TestCase):
     def test_unregistered_entries(self):
         (self.root / "skills/extra").symlink_to("../lib/demo")
         (self.root / "lib/extra").mkdir()
-        self.error("does not match pack: always-on")
+        self.error("not listed as always-on in manifest.yaml")
         self.error("Unregistered lib entry")
 
     def test_broken_inner_link(self):
@@ -190,6 +190,18 @@ class AuditTests(unittest.TestCase):
         (runtime / "demo").unlink()
         (runtime / "demo").mkdir()
         self.error("expected relative skill link", runtimes=[runtime])
+
+    def test_runtime_reports_unexpected_links(self):
+        runtime = self.root / "runtime"
+        runtime.mkdir()
+        (runtime / "demo").symlink_to("../skills/demo")
+        for name in ("extra-one", "extra-two"):
+            (runtime / name).symlink_to("../skills/demo")
+        errors, _, _ = self.check(runtimes=[runtime])
+        self.assertEqual(errors, [
+            f"{runtime / name}: linked skill is not listed as always-on in manifest.yaml"
+            for name in ("extra-one", "extra-two")
+        ])
 
     def test_missing_runtime_reports_single_error(self):
         missing = self.root / "no-such-runtime"
